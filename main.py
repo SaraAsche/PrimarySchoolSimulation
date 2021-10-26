@@ -124,7 +124,48 @@ def heatmap(graph):
     sns.heatmap(A_M)
     plt.show()
 
+def histDistribution(graph):
+    degs = {}
+    for n in graph.nodes ():
+        deg = graph.degree(n, weight='weight')
+        degs[n] = deg
 
+    items = sorted(degs.items())
+    
+    data = []
+    for line in items:
+        data.append(line[1])
+
+    plt.hist(data, bins=10, color='skyblue', ec = 'black') #col = 'skyblue for day2, mediumseagreen for day1
+    plt.xlabel('Degree')
+    plt.ylabel('Frequency')
+    plt.show()
+    
+def plot_degree_distribution(G):
+    degs = {}
+    for n in G.nodes ():
+        deg = G.degree(n, weight='weight')
+        degs[n] = deg
+
+    items = sorted(degs.items())
+    
+    data = []
+    for line in items:
+        data.append(line[1])
+
+    fig = plt.figure()
+
+    values, base = np.histogram(data, bins=40)
+    print(data)
+    cumulative = np.cumsum(values)
+    # plot the cumulative function
+    plt.plot(base[:-1], cumulative, c='skyblue')
+    
+    plt.title("Primary school degree distribution")
+    plt.xlabel('Degree')
+    plt.ylabel('Frequency')
+    plt.show()
+    #fig.savefig("degree_distribution.png")
 
 heatmap(generate_network(225, 5, 2))
 
