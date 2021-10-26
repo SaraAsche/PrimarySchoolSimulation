@@ -31,7 +31,6 @@ def interaction_between_persons(p1, p2, simGrid):
         return False
 
 
-
 def generate_network(num_students, num_grades, num_classes, class_treshold = 20):
     available_grades = [i for i in range(1, num_grades + 1)]
     available_classes = [chr(i) for i in range(97, 97 + num_classes)]
@@ -76,13 +75,15 @@ def generate_interactions_for_network(students, network):
 
     checked_students = students.copy()
 
+    simGrid = generate_similarity_Grid(network)
+
     for i in range(len(students)):
         stud = students[i]
         for j  in range(i + 1,len(checked_students)):
             pers = checked_students[j]
             if pers.getID in stud.find_all_interactions_for_person(pers, interactions):
                 break
-            elif interaction_between_persons(stud, pers, generate_similarity_Grid(network)):
+            elif interaction_between_persons(stud, pers, simGrid):
                 interactions.append(Interaction(stud, pers))
 
     return interactions
