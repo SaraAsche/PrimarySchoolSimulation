@@ -1,6 +1,13 @@
 import random
 import itertools
 import enum
+import networkx as nx
+import seaborn as sns
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from pprint import pprint
 
 from person import Person, Interaction
 from enums import Grade, Age_group
@@ -10,24 +17,26 @@ school =[]
 def weightedFlip(p):
     return random.random() < p
 
-def interaction_between_persons(p1, p2):
-    if p1.getGrade() == p2.getGrade() and (p1.getClass()==p2.getClass()):
-        if random.random()<0.85:
-           return True
-    elif p1.getGrade()==p2.getGrade():
-        if random.random()<0.60:
-            return True
-    else: 
-        False # interaksjon, returnerer true/false. Henter inn layers og bruker sansynlighet til å si om en interaksjon finner sted eller ikke
 
-available_grades = []
+def interaction_between_persons(p1, p2, simGrid):
+
+    
+    similar = len(simGrid[p1.getID()][p2.getID()])
+    
+    p = similar/5
+
+    if random.random()<similar:
+           return True
+    else:
+        return False
+
 
 
 def generate_network(num_students, num_grades, num_classes, class_treshold = 20):
     available_grades = [i for i in range(1, num_grades + 1)]
     available_classes = [chr(i) for i in range(97, 97 + num_classes)]
 
-    print(available_classes)
+   #print(available_classes)
 
     students = []
     
@@ -47,17 +56,75 @@ def generate_network(num_students, num_grades, num_classes, class_treshold = 20)
                             students.append(Person(grade, random.choice(available_classes))) # Legg til studenter i randome klasser
                 if has_filled: # Break dersom vi har fylt random
                     break
+    graph = nx.Graph()
+
+    for student in students:
+        graph.add_node(student.getID(), grade=student.getGrade(), klasse = student.getClass(), lunchgroup = student.getLunchgroup())
+
+    interactions = generate_interactions_for_network(students, graph)
     
+    for interaction in interactions:
+        p1 = interaction.getp1().getID()
+        p2 = interaction.getp1().getID()
+
+        graph.add_edge(p1, p2)
+    
+    return graph
+
+def generate_interactions_for_network(students, network):
     interactions = []
 
-    for stud in students:
-        print(stud)
-        for pers in students:
+    checked_students = students.copy()
+
+    for i in range(len(students)):
+        stud = students[i]
+        for j  in range(i + 1,len(checked_students)):
+            pers = checked_students[j]
             if pers.getID in stud.find_all_interactions_for_person(pers, interactions):
                 break
-            elif interaction_between_persons(stud, pers):
-                Interaction(stud, pers)
-    print(interactions)
+            elif interaction_between_persons(stud, pers, generate_similarity_Grid(network)):
+                interactions.append(Interaction(stud, pers))
+
+    return interactions
+
+def generate_similarity_Grid(network):
+    n = network.number_of_nodes()
+    simGrid = ['']*n
+    for x in range(n):
+        simGrid[x] = ['']*n
+
+    #print(simGrid)
+
+    similar = ['S'] #same school
+
+    for i in network.nodes():
+        for j in network.nodes():
+            if (network.nodes[i]['klasse']==network.nodes[j]['klasse']) and network.nodes[i]['grade']==network.nodes[j]['grade']:
+                similar.append('K')
+            if network.nodes[i]['grade']==network.nodes[j]['grade']:
+                similar.append('G') #samme trinn
+            if network.nodes[i]['lunchgroup'] ==network.nodes[j]['lunchgroup']:
+                similar.append('L')
+            
+            simGrid[i][j] = similar
+
+            similar = ['S']
+    
+    return simGrid
+     
+def displayNetwork(graph):
+    nx.draw(graph)
+    plt.show()
+
+def heatmap(graph):
+    A = nx.adjacency_matrix(graph)
+    A_M = A.todense()
+
+    sns.heatmap(A_M)
+    plt.show()
 
 
-netw = generate_network(225, 5, 2)
+
+heatmap(generate_network(225, 5, 2))
+
+
