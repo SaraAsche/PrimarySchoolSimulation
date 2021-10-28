@@ -1,37 +1,36 @@
 import random
 import itertools
 import enum
+import cProfile
+
+
 import networkx as nx
 import seaborn as sns
-
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
 from pprint import pprint
+
 
 from person import Person, Interaction
 from enums import Grade, Age_group
 from layers import Grades, Klasse, Lunchbreak, Recess
 
-school =[] 
 def weightedFlip(p):
     return random.random() < p
 
 
 def interaction_between_persons(p1, p2, simGrid):
 
-    
+
     similar = len(simGrid[p1.getID()][p2.getID()])
     
-    p = similar/5
+    #p = similar/5
+    p=similar*10;
 
-    if random.random()<similar:
-           return True
-    else:
-        return False
+    return np.random.poisson(similar)
 
-
-def generate_network(num_students, num_grades, num_classes, class_treshold = 20):
+def generate_students(num_students, num_grades, num_classes, class_treshold = 20):
     available_grades = [i for i in range(1, num_grades + 1)]
     available_classes = [chr(i) for i in range(97, 97 + num_classes)]
 
@@ -55,18 +54,23 @@ def generate_network(num_students, num_grades, num_classes, class_treshold = 20)
                             students.append(Person(grade, random.choice(available_classes))) # Legg til studenter i randome klasser
                 if has_filled: # Break dersom vi har fylt random
                     break
+    return students
+
+def generate_network(students):
+    
     graph = nx.Graph()
 
     for student in students:
         graph.add_node(student.getID(), grade=student.getGrade(), klasse = student.getClass(), lunchgroup = student.getLunchgroup())
 
-    interactions = generate_interactions_for_network(students, graph)
+    # interactions = generate_interactions_for_network(students, graph)
     
-    for interaction in interactions:
+    for interaction in generate_interactions_for_network(students, graph):
         p1 = interaction.getp1().getID()
-        p2 = interaction.getp1().getID()
+        p2 = interaction.getp2().getID()
+        weight = interaction.getcount()
 
-        graph.add_edge(p1, p2)
+        graph.add_edge(p1, p2, count=weight)
     
     return graph
 
@@ -83,16 +87,23 @@ def generate_interactions_for_network(students, network):
             pers = checked_students[j]
             if pers.getID in stud.find_all_interactions_for_person(pers, interactions):
                 break
-            elif interaction_between_persons(stud, pers, simGrid):
-                interactions.append(Interaction(stud, pers))
-
-    return interactions
+            else:
+                weight = interaction_between_persons(stud, pers, simGrid)
+                if weight:
+                    # interactions.append(Interaction(stud, pers, weight))
+                    yield Interaction(stud, pers, weight)
+              
+    # return interactions
 
 def generate_similarity_Grid(network):
     n = network.number_of_nodes()
-    simGrid = ['']*n
-    for x in range(n):
-        simGrid[x] = ['']*n
+    print(n)
+    # simGrid = ['']*n
+    # for x in range(n):
+    #     simGrid[x] = ['']*n
+
+    simGrid = [['' for _ in range(n)] for _ in range(n)]
+
 
     #print(simGrid)
 
@@ -110,7 +121,7 @@ def generate_similarity_Grid(network):
             simGrid[i][j] = similar
 
             similar = ['S']
-    
+
     return simGrid
      
 def displayNetwork(graph):
@@ -118,7 +129,7 @@ def displayNetwork(graph):
     plt.show()
 
 def heatmap(graph):
-    A = nx.adjacency_matrix(graph)
+    A = nx.adjacency_matrix(graph, weight='count')
     A_M = A.todense()
 
     sns.heatmap(A_M)
@@ -140,7 +151,7 @@ def histDistribution(graph):
     plt.xlabel('Degree')
     plt.ylabel('Frequency')
     plt.show()
-    
+
 def plot_degree_distribution(G):
     degs = {}
     for n in G.nodes ():
@@ -167,6 +178,7 @@ def plot_degree_distribution(G):
     plt.show()
     #fig.savefig("degree_distribution.png")
 
-heatmap(generate_network(225, 5, 2))
+students = generate_students(10000, 100, 5)
 
-
+cProfile.run('generate_network(students)')
+heatmap(generate_network(students)) 

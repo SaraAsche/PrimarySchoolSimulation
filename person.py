@@ -17,6 +17,7 @@ class Person:
         self.age_group = self.set_age_group()
         self.class_group = str(class_group)
         self.lunch_group = 1
+        self.interactions = []
     
     def get_valid_age(self, grade, is_teacher = False):
         return random.choice([grade + 4, grade + 5])
@@ -30,6 +31,10 @@ class Person:
                 return group
         return None
 
+    def add_interaction(self, interaction):
+        if interaction not in self.interactions:
+            self.interactions.append(interaction)
+
     def interacted(self, p):
         return True
 
@@ -39,14 +44,16 @@ class Person:
         return 1 if random.random() > .2 else 0
 
     def find_all_interactions_for_person(self, p, interactions):
-        interactions_t = filter(lambda x: x.p1 == p or x.p2 == p, interactions) 
+        # interactions_t = filter(lambda x: x.p1 == p or x.p2 == p, interactions) 
         ids = []
-        for interaction in interactions_t:
+        for interaction in self.interactions:
             if interaction.p1 == p:
-                ids.append(interaction.p2.id)
+                yield interaction.p2.id
+                # ids.append(interaction.p2.id)
             else:
-                ids.append(interaction.p1.id)
-        return ids
+                yield interaction.p1.id
+                # ids.append(interaction.p1.id)
+        # return ids
     
     def getID(self):
         return self.id
@@ -68,16 +75,21 @@ class Person:
 
 class Interaction:
     
-    def __init__(self, p1, p2):
+    def __init__(self, p1, p2, count=1):
         self.p1 = p1
         self.p2 = p2
-        self.count = 1
+        self.count = count
+        self.p1.add_interaction(self)
+        self.p2.add_interaction(self)
     
     def getp1 (self):
         return self.p1
 
     def getp2 (self):
         return self.p2
+
+    def getcount (self):
+        return self.count
 
     def add_to_count(self, count = 1) -> None:
         self.count += count
