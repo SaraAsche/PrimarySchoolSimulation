@@ -5,6 +5,7 @@ import cProfile
 
 
 import networkx as nx
+from networkx.generators.small import house_graph
 import seaborn as sns
 import numpy as np
 import matplotlib as mpl
@@ -21,14 +22,25 @@ def weightedFlip(p):
 
 
 def interaction_between_persons(p1, p2, simGrid):
+    similarityList = simGrid[p1.getID()][p2.getID()]
 
+    similar = len(similarityList)
 
-    similar = len(simGrid[p1.getID()][p2.getID()])
-    
-    #p = similar/5
-    p=similar*10;
+    p = random.randint(0,2) #adding noise
 
-    return np.random.poisson(similar)
+    for element in similarityList: #add up to max 10
+        if element == 'L':
+            p+=random.randint(0,1)
+        if element == 'G':
+            p+=random.randint(1,4)
+        if element == 'K':
+            p+=random.randint(2,5)
+
+    #p=similar*10;
+
+    return np.random.poisson(p)
+    #return np.random.normal(p)
+    #return np.random.uniform(0,p)
 
 def generate_students(num_students, num_grades, num_classes, class_treshold = 20):
     available_grades = [i for i in range(1, num_grades + 1)]
@@ -98,14 +110,8 @@ def generate_interactions_for_network(students, network):
 def generate_similarity_Grid(network):
     n = network.number_of_nodes()
     print(n)
-    # simGrid = ['']*n
-    # for x in range(n):
-    #     simGrid[x] = ['']*n
 
     simGrid = [['' for _ in range(n)] for _ in range(n)]
-
-
-    #print(simGrid)
 
     similar = ['S'] #same school
 
@@ -115,7 +121,7 @@ def generate_similarity_Grid(network):
                 similar.append('K')
             if network.nodes[i]['grade']==network.nodes[j]['grade']:
                 similar.append('G') #samme trinn
-            if network.nodes[i]['lunchgroup'] ==network.nodes[j]['lunchgroup']:
+            if network.nodes[i]['lunchgroup'] == network.nodes[j]['lunchgroup']:
                 similar.append('L')
             
             simGrid[i][j] = similar
@@ -178,7 +184,34 @@ def plot_degree_distribution(G):
     plt.show()
     #fig.savefig("degree_distribution.png")
 
-students = generate_students(10000, 100, 5)
+def generate_a_day(students, hourDay=8):
+    hourly_list = []
+    for i in range(hourDay):
+        hourly_list.append(generate_network(students))
+    
+    dayGraph = nx.empty_graph(hourly_list[0])
+    # dayGraph.add_edges_from(hourly_list[0].edges(data=True)+hourly_list[1].edges(data=True))
 
-cProfile.run('generate_network(students)')
-heatmap(generate_network(students)) 
+    edges = []
+    nodes = set()
+    for i in range(len(students)):
+        first_id = students[i].getID()
+        nodes.add(first_id)
+        for j in range(i+1, len(students)):
+            second_id = students[j].getID()
+            count = 0
+            for graph in hourly_list:
+                data = graph.get_edge_data(first_id, second_id)
+                if data is not None:
+                    count += data['count']
+            edges.append((first_id, second_id, {'count': count}))
+    
+    dayGraph.add_edges_from(edges)         
+
+    return dayGraph
+
+students = generate_students(225, 5, 2)
+
+#cProfile.run('generate_network(students)')
+#heatmap(generate_network(students)) 
+heatmap(generate_a_day(students))

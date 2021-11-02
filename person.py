@@ -16,7 +16,7 @@ class Person:
         self.age = self.get_valid_age(grade)
         self.age_group = self.set_age_group()
         self.class_group = str(class_group)
-        self.lunch_group = 1
+        self.lunch_group = self.set_lunch_group()
         self.interactions = []
     
     def get_valid_age(self, grade, is_teacher = False):
@@ -24,6 +24,12 @@ class Person:
 
     def calc_probability_of_interacting(self, person):
         return random.random()
+
+    def set_lunch_group(self):
+        if self.grade <4:
+            return 1
+        else:
+            return 0
 
     def set_age_group(self):
         for group in Age_group:
