@@ -18,6 +18,7 @@ class Person:
         self.class_group = str(class_group)
         self.lunch_group = self.set_lunch_group()
         self.interactions = []
+        
     
     def get_valid_age(self, grade, is_teacher = False):
         return random.choice([grade + 4, grade + 5])
