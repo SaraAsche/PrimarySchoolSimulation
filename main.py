@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from pprint import pprint
 import math as math
 import scipy as sp
+from scipy import stats
 from matplotlib.colors import LogNorm
 import pickle
 import functools
@@ -36,17 +37,17 @@ def interaction_between_persons(p1, p2, simGrid):
         if element == 'L':
             p+=random.randint(0,1)
         if element == 'G':
-            p+=random.randint(0,2)
+            p+=random.randint(0,3)
         if element == 'K':
-            p+=random.randint(0,8)
+            p+=random.randint(1,70)
     
     p=p*p1.bias*p2.bias
 
     #p=similar*10;
 
-    d = (2/3)*pow(10,-6)
+    d = (2/3)*pow(10,-5.1)
 
-    return np.random.poisson(p*d)
+    return int(np.random.poisson(p*d))
     #return np.random.normal(p)
     #return np.random.uniform(0,p)
 
@@ -75,7 +76,7 @@ def generate_students(num_students, num_grades, num_classes, class_treshold = 20
                 if has_filled: # Break dersom vi har fylt random
                     break
     for i in range(len(students)):
-        students[i].constBias = 50*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
+        students[i].constBias = 40*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
 
     return students
 
@@ -88,7 +89,7 @@ def generate_network(students):
 
     # interactions = generate_interactions_for_network(students, graph)
     for i in range(len(students)):
-        students[i].bias = students[i].constBias + 150*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
+        students[i].bias = students[i].constBias + 160*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
 
     for interaction in generate_interactions_for_network(students, graph):
         
@@ -227,7 +228,7 @@ def histDistributionLog(graph, logX, logY): #Cumulative distribution
     data = []
     for line in items:
         data.append(line[1])
-
+    print(data)
     N = len(data)
     sorteddata = np.sort(data)
     d = toCumulative(sorteddata)
@@ -320,24 +321,33 @@ def plot_Correlation_between_Days(day1, day2):
     plt.scatter(degday1, degday2)
     print("Pearson correlation:")
     print(np.corrcoef(degday1, degday2))
+    print(stats.pearsonr(degday1, degday2))
     plt.show()
+
 
 
 #Lunch (720-820). 1 hour from hour 3-4
 #Entire network
 
 #######################################################################################
-
+'''
 day1=generate_a_day(students)
 day2=generate_a_day(students)
 
 heatmap(day1)
+heatmap(day2)
+
+histDistributionLog(day1, False,True)
+histDistributionLog(day2, False, True)
+
+
 
 plot_Correlation_between_Days(day1, day2)
-
-
-
-#classInt = createSubGraphWithoutGraph(l, True, False)
+'''
+l = generate_a_day(students) 
+heatmap(l)
+histDistributionLog(l, False, True)
+#classInt = createSubGraphWithoutGraph(l, True, True) 
 #heatmap(classInt)
 #histDistributionLog(classInt, False, True)
 
