@@ -41,11 +41,11 @@ def interaction_between_persons(p1, p2, simGrid):
         if element == 'K':
             p+=random.randint(1,70)
     
-    p=p*p1.bias*p2.bias
-
+    #p=p*p1.bias*p2.bias#*historie om disse to har interagert
+    p=p*p1.biasVector[p2.getID()]*p2.biasVector[p1.getID()]
     #p=similar*10;
 
-    d = (2/3)*pow(10,-5.1)
+    d = (2/3)*pow(10,-5.1) 
 
     return int(np.random.poisson(p*d))
     #return np.random.normal(p)
@@ -77,6 +77,10 @@ def generate_students(num_students, num_grades, num_classes, class_treshold = 20
                     break
     for i in range(len(students)):
         students[i].constBias = 40*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
+        students[i].bias = students[i].constBias + 160*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
+        students[i].biasVector = {}
+        for j in range(len(students)):
+            students[i].biasVector[j] = students[i].constBias
 
     return students
 
@@ -88,9 +92,10 @@ def generate_network(students):
         graph.add_node(student)
 
     # interactions = generate_interactions_for_network(students, graph)
-    for i in range(len(students)):
-        students[i].bias = students[i].constBias + 160*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
+    #for i in range(len(students)):
+    #    students[i].bias = students[i].constBias + 160*(math.log(1/random.random()))#pow(random.random(),exp) #powerlaw
 
+    
     for interaction in generate_interactions_for_network(students, graph):
         
         p1 = interaction.getp1()
@@ -161,7 +166,7 @@ def heatmap(graph):
     
     A = nx.adjacency_matrix(graph, weight='count')
     A_M = A.todense()
-    sns.heatmap(A_M)
+    sns.heatmap(A_M, robust=True)
     plt.show()
 
 
@@ -267,7 +272,21 @@ def toCumulative(l):
         cumul -= float(dictHist[i])/float(n)
     return cHist
 
+def renormalize(biasVector, normTarget):
+    oldMean = np.mean(list(biasVector.values()))
+    correction = normTarget/oldMean
+    newVector = {}
+    
+    for i in biasVector:
+        newVector[i] = biasVector[i]*correction
+        
+    return newVector
+
 def generate_a_day(students, hourDay=8):
+    for i in range(len(students)):
+        normTarget = students[i].bias
+        renormalize(students[i].biasVector, normTarget)
+    
     hourly_list = []
     for i in range(hourDay):
         hourly_list.append(generate_network(students))
@@ -287,9 +306,25 @@ def generate_a_day(students, hourDay=8):
                     count += data['count']
             edges.append((first_id, second_id, {'count': count}))
     
-    dayGraph.add_edges_from(edges)         
+    dayGraph.add_edges_from(edges)
+
+    for i in range(len(students)):
+        for j in range(len(students)):
+            if i == j:
+                continue
+            students[i].biasVector[j] += dayGraph[students[i]][students[j]]['count'] # evt  += dayGraph[i][j]['count']*stortNokTall         
 
     return dayGraph
+
+def generateXdays(students, numDays):
+    daily_list = []
+    for i in range(numDays):
+        daily_list.append(generate_a_day(students))
+    
+    dayNumberX = daily_list[-1]
+
+    
+    return dayNumberX
 
 students = generate_students(225, 5, 2)
 
@@ -324,6 +359,8 @@ def plot_Correlation_between_Days(day1, day2):
     print(stats.pearsonr(degday1, degday2))
     plt.show()
 
+# normTarget = students[i].bias # Tanken er at snittet på biasVector skal være like students[i].bias
+
 
 
 #Lunch (720-820). 1 hour from hour 3-4
@@ -343,10 +380,11 @@ histDistributionLog(day2, False, True)
 
 
 plot_Correlation_between_Days(day1, day2)
-'''
+
 l = generate_a_day(students) 
 heatmap(l)
 histDistributionLog(l, False, True)
+'''
 #classInt = createSubGraphWithoutGraph(l, True, True) 
 #heatmap(classInt)
 #histDistributionLog(classInt, False, True)
@@ -359,5 +397,8 @@ histDistributionLog(l, False, True)
 #histDistributionLog(classInt, True, False)
 
 
+l = generateXdays(students, 5)
+heatmap(l)
+histDistributionLog(l, False, True)
 
 

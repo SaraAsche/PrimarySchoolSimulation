@@ -78,7 +78,7 @@ class Person:
         return f'Person {self.id}, is in grade {self.grade} and class {self.class_group}, is a {self.sex} and is {self.age} years old' 
 
     def __repr__(self) -> str:
-        return str(self.id)
+        return str(self.id) + "hei"
 
 class Interaction:
     
