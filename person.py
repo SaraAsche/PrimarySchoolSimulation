@@ -78,7 +78,20 @@ class Person:
         return f'Person {self.id}, is in grade {self.grade} and class {self.class_group}, is a {self.sex} and is {self.age} years old' 
 
     def __repr__(self) -> str:
-        return str(self.id) + "hei"
+        return str(self.id) 
+    
+    # def __cmp__(self, x, y):
+    #     if x[0].getID() > y[0].getID():
+    #         return 1
+    #     elif x[0].getID() < y[0].getID():
+    #         return -1
+    #     return 0
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def __gt__(self, other):
+        return self.id > other.id
 
 class Interaction:
     
@@ -105,3 +118,13 @@ class Interaction:
         return f'{self.p1.id} has interacted {self.count} times with {self.p2.id}'
 
 
+if __name__ == '__main__':
+    p1 = Person(1, "B")
+    p2 = Person(1, "B")
+
+    print(p1.id)
+    print(p2.id)
+
+    l = [p2, p1]
+    print(l)
+    print(sorted(l))
