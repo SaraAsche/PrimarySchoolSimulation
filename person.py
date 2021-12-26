@@ -1,6 +1,11 @@
 import itertools
 import random
 
+
+import math
+import numpy as np
+
+
 from enums import Age_group
 from enums import Grade
 from layers import Grades, Klasse, Lunchbreak, Recess
@@ -17,8 +22,10 @@ class Person:
         self.age_group = self.set_age_group()
         self.class_group = str(class_group)
         self.lunch_group = self.set_lunch_group()
-        self.interactions = []
-        
+        self.interactions = {}
+        self.const_bias = 40*(math.log(1/random.random()))
+        self.bias_vector = {}
+        self.p_vector = {}
     
     def get_valid_age(self, grade, is_teacher = False):
         return random.choice([grade + 4, grade + 5])
@@ -39,8 +46,15 @@ class Person:
         return None
 
     def add_interaction(self, interaction):
-        if interaction not in self.interactions:
-            self.interactions.append(interaction)
+        p1 = interaction.p1
+        p2 = interaction.p2
+
+        other = p1 if p1 != self else p2
+
+        self.interactions[other] = interaction
+    
+    def get_interaction(self, p):
+        return self.interactions.get(p, Interaction(self, p, 0))
 
     def interacted(self, p):
         return True
@@ -50,17 +64,10 @@ class Person:
     def get_vaccinated_status(self):
         return 1 if random.random() > .2 else 0
 
-    def find_all_interactions_for_person(self, p, interactions):
-        # interactions_t = filter(lambda x: x.p1 == p or x.p2 == p, interactions) 
-        ids = []
-        for interaction in self.interactions:
-            if interaction.p1 == p:
-                yield interaction.p2.id
-                # ids.append(interaction.p2.id)
-            else:
-                yield interaction.p1.id
-                # ids.append(interaction.p1.id)
-        # return ids
+    def has_interacted_with(self, p):
+        # if p in self.interactions:
+        #     print(self.interactions[p])
+        return p in self.interactions
     
     def getID(self):
         return self.id
@@ -73,12 +80,46 @@ class Person:
     
     def getLunchgroup(self):
         return self.lunch_group
+    
+    def generate_bias_vector(self, students):
+        for i in range(len(students)):
+            self.bias_vector[students[i]] = self.const_bias
+
+    def generate_p_vector(self, students):
+        for i in range(len(students)):    
+            p = random.randint(0,1)
+
+            if self.lunch_group == students[i].lunch_group:
+                p+=random.randint(0,1)
+            if self.grade == students[i].grade:
+                p+=random.randint(0,3)
+            if self.class_group == students[i].class_group and self.grade == students[i].grade:
+                p+=random.randint(1,70)
+        
+            self.p_vector[students[i]]=p*self.bias_vector[students[i]]*students[i].bias_vector[self]
+
+    def renormalize(self):
+        self.bias = self.const_bias + 160*(math.log(1/random.random()))
+        normTarget = self.bias
+
+
+        oldMean = np.mean(list(self.bias_vector.values()))
+        
+        correction = normTarget/oldMean
+        newVector = {}
+        
+        for i in self.bias_vector:
+            newVector[i] = self.bias_vector[i]*correction
+            
+        self.bias_vector = newVector
+    
+            
 
     def __str__(self):
         return f'Person {self.id}, is in grade {self.grade} and class {self.class_group}, is a {self.sex} and is {self.age} years old' 
 
     def __repr__(self) -> str:
-        return str(self.id) 
+        return str(self.id) + "hei"
     
     # def __cmp__(self, x, y):
     #     if x[0].getID() > y[0].getID():
