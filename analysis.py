@@ -58,7 +58,7 @@ class Analysis:
             plt.show()
 
     # Generates histogram of degree distribution
-    def histDistribution(graph):
+    def histDistribution(self, graph):
         degs = {}
         for n in graph.nodes ():
             deg = graph.degree(n, weight='count')
@@ -75,8 +75,24 @@ class Analysis:
         plt.ylabel('Frequency')
         plt.show()
 
+    def toCumulative(self,l):                                                                                               
+            n = len(l)                                                                                                      
+            dictHist = {}                                                                                                   
+            for i in l:                                                                                                     
+                if i not in dictHist:                                                                                       
+                    dictHist[i] = 1                                                                                         
+                else:                                                                                                       
+                    dictHist[i] += 1                                                                                        
+            cHist = {}                                                                                                      
+            cumul = 1                                                                                                       
+            for i in dictHist:                                                                                              
+                cHist[i] = cumul                                                                                            
+                cumul -= float(dictHist[i])/float(n)
+            return cHist
+
     #Generates comulative distribution. For the project logX=False, logY=True for semilog
-    def histDistributionLog(graph, logX, logY, axis=None):
+    def histDistributionLog(self, graph, logX=False, logY=True, axis=None):
+
         degs = {}
         for n in graph.nodes():
             deg = graph.degree(n, weight='count')
@@ -88,10 +104,10 @@ class Analysis:
         data = []
         for line in items:
             data.append(line[1])
-        print(data)
         N = len(data)
         sorteddata = np.sort(data)
-        d = toCumulative(sorteddata)
+
+        d = self.toCumulative(sorteddata)
 
         if axis:
             axis.plot(d.keys(), d.values())
@@ -114,36 +130,21 @@ class Analysis:
 
             plt.show()
 
-    def toCumulative(l):                                                                                               
-        n = len(l)                                                                                                      
-        dictHist = {}                                                                                                   
-        for i in l:                                                                                                     
-            if i not in dictHist:                                                                                       
-                dictHist[i] = 1                                                                                         
-            else:                                                                                                       
-                dictHist[i] += 1                                                                                        
-        cHist = {}                                                                                                      
-        cumul = 1                                                                                                       
-        for i in dictHist:                                                                                              
-            cHist[i] = cumul                                                                                            
-            cumul -= float(dictHist[i])/float(n)
-        return cHist
-
-    def runAnalysis(graph):
+    
+    def runAnalysis(self, graph):
         figure, axis = plt.subplots(2, 2)
 
         ######## Degree distribution ########
-        print(axis)
-        histDistributionLog(graph, False, True, axis[0,0])
+        self.histDistributionLog(graph, False, True, axis[0,0])
         axis[0,0].set_title("Degree dist")
 
         ######## Heatmap ########
-        heatmap(graph,axis[1,0])
+        self.heatmap(graph,axis[1,0])
         axis[1,0].set_title("Heatmap")
         
 
         ######## Weight Frequency of node 1 ########
-        displayNetwork(graph,axis[0,1])
+        self.displayNetwork(graph,axis[0,1])
         axis[0,1].set_title("network")
         
         for ax in axis.flat:

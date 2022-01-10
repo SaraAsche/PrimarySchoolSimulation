@@ -8,7 +8,7 @@ from person import Person, Interaction
 class Network:
     def __init__(self, num_students, num_grades, num_classes, class_threshhold=20) -> None:
         self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_threshhold)
-        self.d = (2/3)*pow(10,-5.1)
+        self.d = (2/3)*pow(10,-3.5) #5.1
         self.graph = self.generate_network(100)
         self.daily_list = []
 
@@ -64,7 +64,7 @@ class Network:
         return graph
 
     def generate_interactions_for_network(self, i):
-        print(f'Jeg har kjørt {i+1} ganger')
+        #print(f'Jeg har kjørt {i+1} ganger')
         for i in range(len(self.students)):
             stud = self.students[i]
             for j  in range(i + 1,len(self.students)):

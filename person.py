@@ -65,8 +65,6 @@ class Person:
         return 1 if random.random() > .2 else 0
 
     def has_interacted_with(self, p):
-        # if p in self.interactions:
-        #     print(self.interactions[p])
         return p in self.interactions
     
     def getID(self):
@@ -87,14 +85,14 @@ class Person:
 
     def generate_p_vector(self, students):
         for i in range(len(students)):    
-            p = random.randint(0,1)
+            p = random.randint(0,5)
 
             if self.lunch_group == students[i].lunch_group:
-                p+=random.randint(0,1)
+                p+=random.randint(0,10)
             if self.grade == students[i].grade:
-                p+=random.randint(0,3)
+                p+=random.randint(0,50)
             if self.class_group == students[i].class_group and self.grade == students[i].grade:
-                p+=random.randint(1,70)
+                p+=random.randint(0,150)
         
             self.p_vector[students[i]]=p*self.bias_vector[students[i]]*students[i].bias_vector[self]
 
