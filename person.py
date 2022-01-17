@@ -23,7 +23,8 @@ class Person:
         self.class_group = str(class_group)
         self.lunch_group = self.set_lunch_group()
         self.interactions = {}
-        self.const_bias = 40*(math.log(1/random.random()))
+        #self.const_bias = 20*(math.log(1/random.random()))
+        self.const_bias = 35 - 0.06*random.random()
         self.bias_vector = {}
         self.p_vector = {}
     
@@ -85,19 +86,20 @@ class Person:
 
     def generate_p_vector(self, students):
         for i in range(len(students)):    
-            p = random.randint(0,5)
+            p = random.randint(0,2)
 
             if self.lunch_group == students[i].lunch_group:
-                p+=random.randint(0,10)
+                p+=random.randint(0,5)
             if self.grade == students[i].grade:
-                p+=random.randint(0,50)
+                p+=random.randint(0,20)
             if self.class_group == students[i].class_group and self.grade == students[i].grade:
-                p+=random.randint(0,150)
+                p+=random.randint(0,100)
         
             self.p_vector[students[i]]=p*self.bias_vector[students[i]]*students[i].bias_vector[self]
 
     def renormalize(self):
-        self.bias = self.const_bias + 160*(math.log(1/random.random()))
+        #self.bias = self.const_bias + 180*(math.log(1/random.random()))
+        self.bias = self.const_bias + 67 - 0.06*random.random()
         normTarget = self.bias
 
 
@@ -111,13 +113,12 @@ class Person:
             
         self.bias_vector = newVector
     
-            
 
     def __str__(self):
         return f'Person {self.id}, is in grade {self.grade} and class {self.class_group}, is a {self.sex} and is {self.age} years old' 
 
     def __repr__(self) -> str:
-        return str(self.id) + "hei"
+        return str(self.id) + " ID"
     
     # def __cmp__(self, x, y):
     #     if x[0].getID() > y[0].getID():

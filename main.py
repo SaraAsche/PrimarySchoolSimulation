@@ -12,6 +12,7 @@ def main():
 
         network = Network(int(num_students), int(num_grades), int(num_classes))
         network.generateXdays(int(num_days))
+        
     else:
         network = Network(225, 5, 2)
         # network.generateXdays(8)
