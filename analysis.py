@@ -8,6 +8,40 @@ from scipy import stats
 class Analysis:
     def __init__(self, network) -> None:
         self.network = network
+    
+    def createSubGraphWithout(self, graph, grade, klasse):
+        
+        # grades = nx.get_node_attributes(graph, 'klasse')
+        
+        G = nx.Graph()
+
+        # nodes = set()
+        # edges = []
+        # for node, klasseAttr in grades.items():
+        #     print(node)
+        #     print(klasseAttr)
+        #     for n in graph.neighbors(node):
+        #         if grade and (not klasse):
+        #             if grades[n][0] != grades[node][0]:
+        #                 G.add_edge(node, n, weight=graph[node][n]['count'])
+        #                 G.add_node(n, klasse=graph.nodes[n]['klasse'])
+        #         elif not grade:
+        #             if grades[n] != grades[node]:
+        #                 G.add_edge(node, n, weight=graph[node][n]['count'])
+        #                 G.add_node(n, klasse=graph.nodes[n]['klasse'])
+        # self.heatmap(G)
+        # return G
+
+        for node in graph:
+            for n in graph.neighbors(node):
+                if grade and not klasse:
+                    if node.getGrade() != n.getGrade():
+                        G.add_edge(node, n, count=graph[node][n]['count'])
+                elif not grade:
+                    if node.get_class_and_grade() != n.get_class_and_grade():
+                        G.add_edge(node, n, count=graph[node][n]['count'])
+        self.heatmap(G)
+        return G
 
     def createSubGraphWithoutGraph(self, graph, diagonal, gradeInteraction):  #objektene er ikke konservert med sine atributter
 
@@ -21,10 +55,78 @@ class Analysis:
                         G.add_edge(node, n, count = graph.get_edge_data(node, n)['count'])
                         G.add_node(n)
                 if gradeInteraction:
-                    if (n.getGrade()==node.getGrade and node.getClass() != n.getClass()):
+                    if (n.getGrade()==node.getGrade() and node.getClass() != n.getClass()):
                         G.add_edge(node, n, count = graph.get_edge_data(node, n)['count'])
                         G.add_node(n)
+        self.heatmap(G)
         return G
+
+    def pixelDist(self, graph, logY, logX, axis = None):
+        A = self.heatmap(graph, output = True)
+        #print(A[np.triu_indices(236, k = 1)])
+        length = len(graph.nodes())
+
+        weights = A[np.triu_indices(length, k = 1)].tolist()[0]
+
+        data = sorted(weights)
+        
+        sorteddata = np.sort(data)
+        d = self.toCumulative(sorteddata)
+
+        #print(float(sum(sorteddata))/float(len(sorteddata)))
+
+        if axis:
+            axis.plot(d.keys(), d.values())
+
+            if logX:
+                axis.set_xscale('log')
+                axis.set_xlabel('log Degree')
+            else:
+                axis.set_xscale('linear')
+                axis.set_xlabel('Degree')
+            if logY:
+                axis.set_yscale('log')
+                axis.set_ylabel('Normalised log frequency')
+            else:
+                axis.set_yscale('linear')
+                axis.set_ylabel('Frequency')
+        else:
+            plt.plot(d.keys(), d.values())
+            if logY:
+                plt.yscale('log') 
+                plt.ylabel('Normalised log frequency')
+            else:
+                plt.yscale('linear')
+                plt.ylabel('Frequency')
+            if logX:
+                plt.xscale('log') 
+                plt.xlabel('log Degree')
+            else:
+                plt.xscale('linear')
+                plt.xlabel('Degree')
+            plt.show()
+        
+        # print(np.triu(A.todense(), k=1)) # 
+    
+    def pixel_dist_school(self, graph):
+        off_diagonal = self.createSubGraphWithout(graph, True, False)
+        grade_grade = self.createSubGraphWithoutGraph(graph, False, True)
+        class_class = self.createSubGraphWithoutGraph(graph,True, False)
+
+        figure, axis = plt.subplots(2, 2, figsize=(8,8))
+
+        self.pixelDist(graph, True, False, axis[0,0])
+        axis[0,0].set_title('Whole network')
+        self.pixelDist(off_diagonal,True, False, axis[1,0])
+        axis[1,0].set_title('Off-diagonal')
+        self.pixelDist(grade_grade,True, False, axis[0,1])
+        axis[0,1].set_title('grade-grade')
+        self.pixelDist(class_class,True, False, axis[1,1])
+        axis[1,1].set_title('class-class')
+
+        plt.savefig('pixelDistSimulated.png', bbox_inches='tight', dpi=150)
+
+        plt.show()
 
     #Investigate pearson correlation from day 1 to day 2 and plot the degree for each nodes on day 1 versus day 2
     def plot_Correlation_between_Days(self, day1, day2):
@@ -47,9 +149,12 @@ class Analysis:
             plt.show()
 
     #Generate a heatmap of the adjacency matrix of a graph. Axis can be used when plotting many graphs in the same plot
-    def heatmap(self, day, axis=None):
+    def heatmap(self, day, output=False, axis=None): 
+        A = nx.adjacency_matrix(day, nodelist=sorted(day.nodes), weight='count')
 
-        A = nx.adjacency_matrix(day, weight='count')
+        if output:
+            return A
+
         A_M = A.todense()
         if axis:
             sns.heatmap(A_M, robust=False, ax=axis)

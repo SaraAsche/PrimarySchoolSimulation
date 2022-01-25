@@ -34,9 +34,15 @@ class Network:
                                 students.append(Person(grade, random.choice(available_classes))) # Legg til studenter i randome klasser
                     if has_filled: # Break dersom vi har fylt random
                         break
+        
+        students = sorted(students, key=lambda x: x.get_class_and_grade())
+
         for i in range(len(students)):
+            students[i].id = i
             students[i].generate_bias_vector(students)
-            
+        
+        students = sorted(students)
+
         for i in range(len(students)):
             students[i].generate_p_vector(students)
         # for i in range(len(students)):
