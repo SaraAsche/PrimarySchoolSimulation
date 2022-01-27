@@ -24,7 +24,7 @@ class Person:
         self.lunch_group = self.set_lunch_group()
         self.interactions = {}
 
-        self.const_bias = 20*(math.log(1/random.random()))
+        self.const_bias = 20*(math.log10(1/random.random()))
         #self.const_bias = 5 - 0.06*random.random()
         self.bias_vector = {}
         self.p_vector = {}
@@ -91,24 +91,22 @@ class Person:
     def generate_p_vector(self, students):
         for i in range(len(students)):    
 
-            p = random.randint(0,0)
+            p = 1*(1/pow(random.random(),1)-1)
 
             if self.lunch_group == students[i].lunch_group:
-                p+=random.randint(0,15)
+               p+= 2*(1/pow(random.random(),1)-1)
+                #random.randint(0,15)
             if self.grade == students[i].grade:
-                p+=random.randint(0,10) #20
+                p+= 4*(1/pow(random.random(),1)-1)
+                #random.randint(0,10) #20
             if self.class_group == students[i].class_group and self.grade == students[i].grade:
-                p+=random.randint(0,70)
-            
-            #if p <= 10:
-            #    s = random.random()
-            #    if s <= 0.1:
-            #        p += 5
+                p+= ((1250))*(1/pow(random.random(),1)-1)
+                #random.randint(0,70)
         
             self.p_vector[students[i]]=p*self.bias_vector[students[i]]*students[i].bias_vector[self]
 
     def renormalize(self):
-        self.bias = self.const_bias + 180*(math.log(1/random.random()))
+        self.bias = self.const_bias + 180*(math.log10(1/random.random()))
         #self.bias = self.const_bias + 10 #- 0.06*random.random()
         normTarget = self.bias
 

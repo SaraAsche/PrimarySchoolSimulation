@@ -1,7 +1,10 @@
+from cProfile import label
+import pickletools
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pickle
 
 from scipy import stats
 
@@ -40,7 +43,7 @@ class Analysis:
                 elif not grade:
                     if node.get_class_and_grade() != n.get_class_and_grade():
                         G.add_edge(node, n, count=graph[node][n]['count'])
-        self.heatmap(G)
+        #self.heatmap(G)
         return G
 
     def createSubGraphWithoutGraph(self, graph, diagonal, gradeInteraction):  #objektene er ikke konservert med sine atributter
@@ -61,22 +64,29 @@ class Analysis:
         self.heatmap(G)
         return G
 
-    def pixelDist(self, graph, logY, logX, axis = None):
-        A = self.heatmap(graph, output = True)
-        #print(A[np.triu_indices(236, k = 1)])
-        length = len(graph.nodes())
+    def pixelDist(self, graph, logX, logY, axis = None, old= False):
+        if not old: 
+            A = self.heatmap(graph, output = True)
+            #print(A[np.triu_indices(236, k = 1)])
+            length = len(graph.nodes())
 
-        weights = A[np.triu_indices(length, k = 1)].tolist()[0]
+            weights = A[np.triu_indices(length, k = 1)].tolist()[0]
 
-        data = sorted(weights)
+            data = sorted(weights)
+            
+            sorteddata = np.sort(data)
+            d = self.toCumulative(sorteddata)
         
-        sorteddata = np.sort(data)
-        d = self.toCumulative(sorteddata)
+        if old: 
+            d = graph
 
         #print(float(sum(sorteddata))/float(len(sorteddata)))
 
         if axis:
-            axis.plot(d.keys(), d.values())
+            if old:
+                axis.plot(d.keys(), d.values(), label='Experimental')
+            else:
+                axis.plot(d.keys(), d.values(), label='Simulated')
 
             if logX:
                 axis.set_xscale('log')
@@ -107,22 +117,40 @@ class Analysis:
             plt.show()
         
         # print(np.triu(A.todense(), k=1)) # 
+
+    def pickleLoad(self,name):
+        file_to_read = open(name, 'rb')
+        return pickle.load(file_to_read)
     
-    def pixel_dist_school(self, graph):
+    def pixel_dist_school(self, graph, old = False):
         off_diagonal = self.createSubGraphWithout(graph, True, False)
         grade_grade = self.createSubGraphWithoutGraph(graph, False, True)
         class_class = self.createSubGraphWithoutGraph(graph,True, False)
 
+        if old:
+            old_graph = self.pickleLoad('graph1_whole_pixel.pkl')
+            old_off_diagonal = self.pickleLoad('graph1_off_diag.pkl')
+            old_grade = self.pickleLoad('graph1_grade_pixel.pkl')
+            old_class = self.pickleLoad('graph1_class_pixel.pkl')
+
+
         figure, axis = plt.subplots(2, 2, figsize=(8,8))
 
-        self.pixelDist(graph, True, False, axis[0,0])
+        self.pixelDist(graph, False, True, axis[0,0])
+        self.pixelDist(old_graph, False, True,axis[0,0],old=True)
         axis[0,0].set_title('Whole network')
-        self.pixelDist(off_diagonal,True, False, axis[1,0])
+        self.pixelDist(off_diagonal,False, True, axis[1,0])
+        self.pixelDist(old_off_diagonal, False, True,axis[1,0],old=True)
         axis[1,0].set_title('Off-diagonal')
-        self.pixelDist(grade_grade,True, False, axis[0,1])
+        self.pixelDist(grade_grade,False, True, axis[0,1])
+        self.pixelDist(old_grade, False, True,axis[0,1],old=True)
         axis[0,1].set_title('grade-grade')
-        self.pixelDist(class_class,True, False, axis[1,1])
+        self.pixelDist(class_class,False, True, axis[1,1])
+        self.pixelDist(old_class, False, True,axis[1,1],old=True)
         axis[1,1].set_title('class-class')
+
+        handles, labels = axis[1,1].get_legend_handles_labels()
+        figure.legend(handles, labels, loc='upper center')
 
         plt.savefig('pixelDistSimulated.png', bbox_inches='tight', dpi=150)
 
