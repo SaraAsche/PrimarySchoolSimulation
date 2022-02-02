@@ -1,15 +1,16 @@
 import itertools
 import random
 import decimal
-
-
 import math
-import numpy as np
+import pickle
 
+import numpy as np
+from scipy.optimize import least_squares
 
 from enums import Age_group
 from enums import Grade
 from layers import Grades, Klasse, Lunchbreak, Recess
+
 
 decimal.getcontext().prec = 12
 
@@ -29,7 +30,8 @@ class Person:
         self.lunch_group = self.set_lunch_group()
         self.interactions = {}
 
-        self.const_bias = 20 * (math.log10(1 / random.random()))
+        # self.const_bias = 20 * (math.log10(1 / random.random()))
+        self.const_bias = 30 * (math.log10(1 / random.random()))
         # self.const_bias = 5 - 0.06*random.random()
         self.bias_vector = {}
         self.p_vector = {}
@@ -94,27 +96,62 @@ class Person:
         for i in range(len(students)):
             self.bias_vector[students[i]] = self.const_bias
 
-    # Hello
-    def generate_p_vector(self, students):
+    def generate_p_vector(self, students, X):
+        rand = False
+        if len(X):
+            rand = True
+            ## Off-diagonal excluding lunch
+            a1 = X[0]
+            b1 = X[1]
+
+            ## Off-diagonal with lunch
+            a2 = X[2]
+            b2 = X[3]
+
+            ## Grade-Grade
+            a3 = X[4]
+            b3 = X[5]
+
+            ## Class-Class
+            a4 = X[6]
+            b4 = X[7]
+        else:
+            ## Off-diagonal excluding lunch
+            a2 = 110
+            b2 = 0.8
+
+            ## Off-diagonal with lunch
+            a3 = 4
+            b3 = 0.5
+
+            ## Grade-Grade
+            a4 = 25000
+            b4 = 0.1
+
+            ## Class-Class
+            a1 = 1
+            b1 = 0.5
+
         for i in range(len(students)):
 
-            p = 1 * (1 / pow(random.random(), 1) - 1)
+            p = a1 * (1 / pow(0.1 if not rand else random.random(), b1)) - 1  # 0.5
 
             if self.lunch_group == students[i].lunch_group:
-                p += 2 * (1 / pow(random.random(), 1) - 1)
-                # random.randint(0,15)
+                p += a2 * (1 / pow(0.1 if not rand else random.random(), b2) - 1)
             if self.grade == students[i].grade:
-                p += 4 * (1 / pow(random.random(), 1) - 1)
-                # random.randint(0,10) #20
+
+                p += a3 * (1 / pow(0.1 if not rand else random.random(), b3) - 1)
+
             if self.class_group == students[i].class_group and self.grade == students[i].grade:
-                p += ((1250)) * (1 / pow(random.random(), 1) - 1)
-                # random.randint(0,70)
+
+                p += (a4) * (1 / pow(0.1 if not rand else random.random(), b4) - 1)
 
             self.p_vector[students[i]] = p * self.bias_vector[students[i]] * students[i].bias_vector[self]
 
     def renormalize(self):
-        self.bias = self.const_bias + 180 * (math.log10(1 / random.random()))
-        # self.bias = self.const_bias + 10 #- 0.06*random.random()
+
+        self.bias = self.const_bias + 150 * (math.log10(1 / random.random()))
+
         normTarget = self.bias
 
         oldMean = np.mean(list(self.bias_vector.values()))
@@ -132,13 +169,6 @@ class Person:
 
     def __repr__(self) -> str:
         return str(self.id) + " ID"
-
-    # def __cmp__(self, x, y):
-    #     if x[0].getID() > y[0].getID():
-    #         return 1
-    #     elif x[0].getID() < y[0].getID():
-    #         return -1
-    #     return 0
 
     def __lt__(self, other):
         return self.id < other.id
