@@ -97,7 +97,7 @@ class Person:
             self.bias_vector[students[i]] = self.const_bias
 
     def generate_p_vector(self, students, X):
-        rand = False
+        rand = True
         if len(X):
             rand = True
             ## Off-diagonal excluding lunch
@@ -109,44 +109,51 @@ class Person:
             b2 = X[3]
 
             ## Grade-Grade
-            a3 = X[4]
-            b3 = X[5]
+            a3 = 40  # X[4]
+            b3 = 0.1  # X[5]
 
             ## Class-Class
-            a4 = X[6]
-            b4 = X[7]
+            a4 = 200  # X[6]
+            b4 = 0.1  # X[7]
         else:
             ## Off-diagonal excluding lunch
-            a2 = 110
-            b2 = 0.8
-
-            ## Off-diagonal with lunch
-            a3 = 4
-            b3 = 0.5
+            a1 = 4  # 3.5
+            b1 = 0.06
+            ##  Off-diagonal with lunch
+            a2 = 0.1
+            b2 = 0.75
 
             ## Grade-Grade
-            a4 = 25000
-            b4 = 0.1
+            a3 = 5.4
+            b3 = 0.8
 
             ## Class-Class
-            a1 = 1
-            b1 = 0.5
+            a4 = 10
+            b4 = 100000
 
         for i in range(len(students)):
 
-            p = a1 * (1 / pow(0.1 if not rand else random.random(), b1)) - 1  # 0.5
-
+            # p = a1 * (1 / pow(0.001 if not rand else random.random(), b1) - 1.5)  # - 1  # 0.5
+            p = a1 * np.random.power(b1)
             if self.lunch_group == students[i].lunch_group:
-                p += a2 * (1 / pow(0.1 if not rand else random.random(), b2) - 1)
+                # p += a2 * (1 / pow(0.001 if not rand else random.random(), b2) - 1)
+                p += a2 * np.random.power(b2)
             if self.grade == students[i].grade:
-
-                p += a3 * (1 / pow(0.1 if not rand else random.random(), b3) - 1)
+                # p += a3 * (1 / pow(0.001 if not rand else random.random(), b3) - 1)
+                p += a3 * np.random.power(b3)
 
             if self.class_group == students[i].class_group and self.grade == students[i].grade:
+                p += a4 * np.random.power(b4)
 
-                p += (a4) * (1 / pow(0.1 if not rand else random.random(), b4) - 1)
+                # p += (a4) * (1 / pow(0.001 if not rand else random.random(), b4) - 1)
+
+            if p == 0:
+                print("-----NULL----")
 
             self.p_vector[students[i]] = p * self.bias_vector[students[i]] * students[i].bias_vector[self]
+
+    def get_min_p_vector(self):
+        return min(self.p_vector, key=self.p_vector.get)
 
     def renormalize(self):
 

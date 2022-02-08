@@ -1,11 +1,13 @@
 # from copyreg import pickle
 import random
 import math
+from black import diff
 import numpy as np
 import networkx as nx
 import pickle
 import sys
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, dual_annealing, leastsq
+from scipy.optimize import minimize
 from analysis import Analysis
 
 sys.setrecursionlimit(10000)
@@ -16,7 +18,7 @@ class Network:
     def __init__(self, num_students, num_grades, num_classes, class_threshhold=20, parameterList=[]):
         self.parameterList = parameterList
         self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_threshhold)
-        self.d = (1) * pow(10, -4.3)  # 5.1
+        self.d = (1) * pow(10, -2)  # 4.3
         self.graph = self.generate_network()
         self.daily_list = []
 
@@ -88,8 +90,9 @@ class Network:
                 # print(int(np.random.poisson(stud.p_vector[pers]*self.d)))
                 weight = 1
 
-                tentative_weight = int(np.random.poisson(stud.p_vector[pers] * self.d))
-                if tentative_weight < 400:
+                tentative_weight = int(np.random.poisson(stud.p_vector[pers] * self.d))  # random.poisson
+
+                if tentative_weight < 200:
                     weight = tentative_weight
                 if weight:
                     interaction = stud.get_interaction(pers)
@@ -106,27 +109,7 @@ class Network:
             hourly_list.append(self.generate_network())
 
         dayGraph = nx.empty_graph(hourly_list[0])
-        # dayGraph.add_edges_from(hourly_list[0].edges(data=True)+hourly_list[1].edges(data=True))
 
-        # edges = []
-        # for i in range(len(self.students)):
-        #     first_id = self.students[i]
-        #     for j in range(i+1, len(self.students)):
-        #         second_id = self.students[j]
-        #         count = 0
-        #         for graph in hourly_list:
-        #             data = graph.get_edge_data(first_id, second_id)
-        #             if data is not None:
-        #                 count += data['count']
-
-        #         edges.append((first_id, second_id, {'count': count}))
-
-        # edges = []
-        # for stud in self.students:
-        #     for stud2, interaction in stud.interactions.items():
-        #         edges.append((stud, stud2, {'count': interaction.count}))
-
-        # dayGraph.add_edges_from(edges)
         dayGraph = hourly_list[-1]
         k = 0.5
 
@@ -147,7 +130,7 @@ class Network:
     def generateXdays(self, numDays):
         for i in range(numDays):
             self.daily_list.append(self.generate_a_day())
-            # print(students[0].biasVector)
+
             print("-----Day" + str(i) + "------")
             print("max: " + str(max(list(self.students[0].bias_vector.values()))))
             print("mean: " + str(np.mean(list(self.students[0].bias_vector.values()))))
@@ -163,16 +146,15 @@ class Network:
 
     def parameterEstimation(self):
 
-        X0 = [1, 0.5, 110, 0.8, 4, 0.5, 25000, 0.1]
+        # X0 = [20, 1, 40, 1, 60, 1, 80, 1]
+        # X0 = [4.0115483, 0.05900369, 0.10502307, 0.74691569]
+        X0 = [10, 10, 10, 10]
+        # bounds = ([0 for i in range(4)], [np.inf for i in range(4)])
+        bounds = [(1e-15, 10000), (1e-15, 10000), (1e-15, 10000), (1e-15, 10000)]
 
-        bounds = (
-            [0 for i in range(8)],
-            [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf],
-        )
-
-        experimentalDataDict = self.pickleLoad("graph1_whole_pixel.pkl")
-        exp_class_class = self.pickleLoad("graph1_class_pixel.pkl")
-        exp_grade_grade = self.pickleLoad("graph1_grade_pixel.pkl")
+        # experimentalDataDict = self.pickleLoad("graph1_whole_pixel.pkl")
+        # exp_class_class = self.pickleLoad("graph1_class_pixel.pkl")
+        # exp_grade_grade = self.pickleLoad("graph1_grade_pixel.pkl")
         exp_offDiag = self.pickleLoad("graph1_off_diag.pkl")
 
         def createSubGraphWithoutGraph(graph, diagonal, gradeInteraction):
@@ -257,47 +239,49 @@ class Network:
 
         def objectiveFunc(X):
             ## Off-diagonal excluding lunch
-            a1 = X[0]
-            b1 = X[1]
+            # a1 = X[0]
+            # b1 = X[1]
 
             ## Off-diagonal with lunch
-            a2 = X[2]
-            b2 = X[3]
+            # a2 = X[2]
+            # b2 = X[3]
 
             ## Grade-Grade
-            a3 = X[4]
-            b3 = X[5]
+            # a3 = X[4]
+            # b3 = X[5]
 
             ## Class-Class
-            a4 = X[6]
-            b4 = X[7]
+            # a4 = X[6]
+            # b4 = X[7]
 
             # graph = self.generate_a_day(param=True)
             # graph = self.daily_list[-1]
             graph = Network(225, 5, 2, parameterList=X).generate_a_day()
 
             off_diagonal = createSubGraphWithout(graph, True, False)
-            grade_grade = createSubGraphWithoutGraph(graph, False, True)
-            class_class = createSubGraphWithoutGraph(graph, True, False)
+            # grade_grade = createSubGraphWithoutGraph(graph, False, True)
+            # class_class = createSubGraphWithoutGraph(graph, True, False)
 
-            exp, sim = toArray(graph, experimentalDataDict)
-            sim_diag, exp_diag = toArray(off_diagonal, exp_offDiag)
-            sim_grade, exp_grade = toArray(grade_grade, exp_grade_grade)
-            sim_class, exp_class = toArray(class_class, exp_class_class)
+            # exp, sim = toArray(graph, experimentalDataDict)
+            exp_diag, sim_diag = toArray(off_diagonal, exp_offDiag)
+            # sim_grade, exp_grade = toArray(grade_grade, exp_grade_grade)
+            # sim_class, exp_class = toArray(class_class, exp_class_class)
 
-            print("med sær ting" + str(exp[:, 1][:85]))
-            print("uten sær ting" + str(exp[:, 1][85]))
+            # diff_whole = exp[:, 1][:20] - sim[:, 1][:20]  # 85
 
-            diff_whole = exp[:, 1][:85] - sim[:, 1][:85]  # Hva betyr dette???
-            diff_diag = exp_diag[:, 1][25] - sim_diag[:, 1][25]
-            diff_grade = exp_grade[:, 1][20] - sim_grade[:, 1][20]
-            diff_class = exp_class[:, 1][50] - sim_class[:, 1][50]
+            diff_diag = exp_diag[:, 1] - sim_diag[:, 1]  # 25
+            # diff_grade = exp_grade[:, 1][:20] - sim_grade[:, 1][:20]  # 20
+            # diff_class = exp_class[:, 1][:20] - sim_class[:, 1][:20]  # 50
+            print(diff_diag)
 
-            res = diff_whole + diff_diag + diff_grade + diff_class
-            print(res)
-            return res
+            return diff_diag
+            # res = (np.abs(diff_diag)).sum()  # diff_whole + diff_diag + diff_grade + diff_class
+            # print(res)
+            # return res
 
-        result = least_squares(objectiveFunc, X0, method="trf", bounds=bounds, ftol=1e-10, xtol=1e-16)  # loss="cauchy"
+        result = least_squares(
+            objectiveFunc, X0, method="trf", loss="cauchy", bounds=bounds, ftol=1e-10, xtol=1e-15
+        )  # loss="cauchy"
         print(result)
 
 

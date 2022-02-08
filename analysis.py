@@ -15,26 +15,7 @@ class Analysis:
 
     def createSubGraphWithout(self, graph, grade, klasse):
 
-        # grades = nx.get_node_attributes(graph, 'klasse')
-
         G = nx.Graph()
-
-        # nodes = set()
-        # edges = []
-        # for node, klasseAttr in grades.items():
-        #     print(node)
-        #     print(klasseAttr)
-        #     for n in graph.neighbors(node):
-        #         if grade and (not klasse):
-        #             if grades[n][0] != grades[node][0]:
-        #                 G.add_edge(node, n, weight=graph[node][n]['count'])
-        #                 G.add_node(n, klasse=graph.nodes[n]['klasse'])
-        #         elif not grade:
-        #             if grades[n] != grades[node]:
-        #                 G.add_edge(node, n, weight=graph[node][n]['count'])
-        #                 G.add_node(n, klasse=graph.nodes[n]['klasse'])
-        # self.heatmap(G)
-        # return G
 
         for node in graph:
             for n in graph.neighbors(node):
@@ -47,9 +28,7 @@ class Analysis:
         # self.heatmap(G)
         return G
 
-    def createSubGraphWithoutGraph(
-        self, graph, diagonal, gradeInteraction
-    ):  # objektene er ikke konservert med sine atributter
+    def createSubGraphWithoutGraph(self, graph, diagonal, gradeInteraction):
 
         G = nx.Graph()
 
@@ -70,7 +49,7 @@ class Analysis:
     def pixelDist(self, graph, logX, logY, axis=None, old=False):
         if not old:
             A = self.heatmap(graph, output=True)
-            # print(A[np.triu_indices(236, k = 1)])
+
             length = len(graph.nodes())
 
             weights = A[np.triu_indices(length, k=1)].tolist()[0]
@@ -82,8 +61,6 @@ class Analysis:
 
         if old:
             d = graph
-
-        # print(float(sum(sorteddata))/float(len(sorteddata)))
 
         if axis:
             if old:
@@ -118,8 +95,6 @@ class Analysis:
                 plt.xscale("linear")
                 plt.xlabel("Interactions")
             plt.show()
-
-        # print(np.triu(A.todense(), k=1)) #
 
     def pickleLoad(self, name):
         file_to_read = open(name, "rb")

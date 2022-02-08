@@ -18,16 +18,7 @@ def main():
             225,
             5,
             2,
-            parameterList=[
-                1.00000003e00,
-                5.00000065e-01,
-                1.10000000e02,
-                8.00000007e-01,
-                4.00000004e00,
-                4.99999944e-01,
-                2.49999998e04,
-                9.99999633e-02,
-            ],
+            # parameterList=[1.00000026e00, 4.99999984e-01,1.10000005e02,7.99999986e-01,3.99999977e00,5.00000014e-01,2.50000008e04,9.99996649e-02]
         )
         # network.generateXdays(8)
 
@@ -35,7 +26,8 @@ def main():
     # analysis.heatmap(network.generate_a_day())
     # analysis.histDistributionLog(network.generateXdays(8))
     # G = analysis.createSubGraphWithoutGraph(network.generateXdays(8), False, True)
-    G = network.generateXdays(20)
+    G = network.generateXdays(10)
+
     # G = network.generate_a_day()
     analysis.pixel_dist_school(G, old=True)
     analysis.heatmap(G)
