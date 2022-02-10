@@ -87,13 +87,15 @@ class Network:
             stud = self.students[i]
             for j in range(i + 1, len(self.students)):
                 pers = self.students[j]
-                # print(int(np.random.poisson(stud.p_vector[pers]*self.d)))
-                weight = 1
+                # print(int(np.random.poisson(stud.p_vector[pers]*self.d))
 
-                tentative_weight = int(np.random.poisson(stud.p_vector[pers] * self.d))  # random.poisson
+                weight = 0
+
+                tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)  # random.poisson
 
                 if tentative_weight < 200:
                     weight = tentative_weight
+
                 if weight:
                     interaction = stud.get_interaction(pers)
                     interaction.count += weight
@@ -103,6 +105,8 @@ class Network:
     def generate_a_day(self, hourDay=8, param=False):
         for i in range(len(self.students)):
             self.students[i].renormalize()
+
+        self.students[0].generate_p_vector(self.students, [])
 
         hourly_list = []
         for i in range(hourDay):
@@ -149,8 +153,8 @@ class Network:
         # X0 = [20, 1, 40, 1, 60, 1, 80, 1]
         # X0 = [4.0115483, 0.05900369, 0.10502307, 0.74691569]
         X0 = [10, 10, 10, 10]
-        # bounds = ([0 for i in range(4)], [np.inf for i in range(4)])
-        bounds = [(1e-15, 10000), (1e-15, 10000), (1e-15, 10000), (1e-15, 10000)]
+        bounds = ([0 for i in range(4)], [np.inf for i in range(4)])
+        # bounds = [(1e-15, 10000), (1e-15, 10000), (1e-15, 10000), (1e-15, 10000)]
 
         # experimentalDataDict = self.pickleLoad("graph1_whole_pixel.pkl")
         # exp_class_class = self.pickleLoad("graph1_class_pixel.pkl")
@@ -272,6 +276,7 @@ class Network:
             diff_diag = exp_diag[:, 1] - sim_diag[:, 1]  # 25
             # diff_grade = exp_grade[:, 1][:20] - sim_grade[:, 1][:20]  # 20
             # diff_class = exp_class[:, 1][:20] - sim_class[:, 1][:20]  # 50
+            diff_diag
             print(diff_diag)
 
             return diff_diag

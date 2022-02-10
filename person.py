@@ -12,7 +12,7 @@ from enums import Grade
 from layers import Grades, Klasse, Lunchbreak, Recess
 
 
-decimal.getcontext().prec = 12
+# decimal.getcontext().prec = 12
 
 
 class Person:
@@ -30,9 +30,8 @@ class Person:
         self.lunch_group = self.set_lunch_group()
         self.interactions = {}
 
-        # self.const_bias = 20 * (math.log10(1 / random.random()))
         self.const_bias = 30 * (math.log10(1 / random.random()))
-        # self.const_bias = 5 - 0.06*random.random()
+
         self.bias_vector = {}
         self.p_vector = {}
 
@@ -117,38 +116,40 @@ class Person:
             b4 = 0.1  # X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 = 4  # 3.5
-            b1 = 0.06
+            a1 = 0.2  # 1.5
+            b1 = 3.5  # 1.25
             ##  Off-diagonal with lunch
-            a2 = 0.1
-            b2 = 0.75
+            a2 = 0.01  # 0.001
+            b2 = 0.01  # 0.07
 
             ## Grade-Grade
-            a3 = 5.4
-            b3 = 0.8
+            a3 = 3  # 100
+            b3 = 2  # 0.3
 
             ## Class-Class
-            a4 = 10
-            b4 = 100000
+            a4 = 6  # 10000
+            b4 = 3  # 1
 
         for i in range(len(students)):
+            same_lunch = self.lunch_group == students[i].lunch_group
+            same_grade = self.grade == students[i].grade
+            same_class = self.class_group == students[i].class_group and self.grade == students[i].grade
 
-            # p = a1 * (1 / pow(0.001 if not rand else random.random(), b1) - 1.5)  # - 1  # 0.5
             p = a1 * np.random.power(b1)
-            if self.lunch_group == students[i].lunch_group:
-                # p += a2 * (1 / pow(0.001 if not rand else random.random(), b2) - 1)
+
+            ### Lunch: Off-diagonal boosted with lunchgroups
+            if same_lunch:
                 p += a2 * np.random.power(b2)
-            if self.grade == students[i].grade:
-                # p += a3 * (1 / pow(0.001 if not rand else random.random(), b3) - 1)
+
+            ### Grade-grade interaction layer
+            if same_grade:
                 p += a3 * np.random.power(b3)
 
-            if self.class_group == students[i].class_group and self.grade == students[i].grade:
+            ### Class-class interaction layer. Assume no bias/low bias for class-class interactions. No free-time activity
+            if same_class:
                 p += a4 * np.random.power(b4)
-
-                # p += (a4) * (1 / pow(0.001 if not rand else random.random(), b4) - 1)
-
-            if p == 0:
-                print("-----NULL----")
+                self.p_vector[students[i]] = p
+                continue
 
             self.p_vector[students[i]] = p * self.bias_vector[students[i]] * students[i].bias_vector[self]
 

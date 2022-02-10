@@ -1,5 +1,5 @@
 from cProfile import label
-import pickletools
+
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -204,7 +204,7 @@ class Analysis:
         return cHist
 
     # Generates comulative distribution. For the project logX=False, logY=True for semilog
-    def histDistributionLog(self, graph, logX=False, logY=True, axis=None):
+    def histDistributionLog(self, graph, logX=False, logY=True, axis=None, old=False):
 
         degs = {}
         for n in graph.nodes():
@@ -222,10 +222,15 @@ class Analysis:
 
         d = self.toCumulative(sorteddata)
 
+        old1 = self.pickleLoad("Degreedistribution_Day1.pkl")
+        old2 = self.pickleLoad("Degreedistribution_Day2.pkl")
+
         if axis:
             axis.plot(d.keys(), d.values())
         else:
-            plt.plot(d.keys(), d.values())
+            plt.plot(d.keys(), d.values(), label="Simulated")
+            plt.plot(old1.keys(), old1.values(), label="Empiric day 1")
+            plt.plot(old2.keys(), old2.values(), label="Empiric day 2")
 
             if logY:
                 plt.yscale("log")
