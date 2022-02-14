@@ -1,23 +1,79 @@
-# from copyreg import pickle
+"""Network class: Generates interactions between Person objects
+
+Implements Networkx to create networks of interactions between Person objects. 
+
+Typical usage example:
+
+  network = Network(225, 5, 2) 
+  network.generateXdays(10)
+
+Author: Sara Johanne Asche
+Date: 14.02.2022
+"""
+
 import random
-import math
-from black import diff
 import numpy as np
 import networkx as nx
 import pickle
 import sys
-from scipy.optimize import least_squares, dual_annealing, leastsq
-from scipy.optimize import minimize
-from sklearn.ensemble import GradientBoostingClassifier
 from analysis import Analysis
 import matplotlib.pyplot as plt
 
-sys.setrecursionlimit(10000)
 from person import Person, Interaction
 
 
 class Network:
+    """A class to generate network from Interaction objects between Person objects.
+
+    Longer class information...
+
+    Attributes
+    ----------
+    parameterList : list
+        List of parameters used in Person class to set the p_vector.
+    students : list
+        A list that contains all the Person objects that attend a certain school
+    d : float
+        A number that helps scale the weights
+    graph : NetworkX
+        A networkX object that describes interactions in the network
+    dailyList : list
+        A list of daily NetworkX objects.
+
+    Methods
+    -------
+    generate_students(self, num_students, num_grades, num_classes, class_treshold=20)
+        Returns a list of num_students Person objects that have been divided into num_grades
+        and num_classes with the given class_threshold in mind.
+    generate_network(self)
+        Returns a network for the given students in the NetworkX object where the Interaction
+        objects are added.
+    generate_interactions_for_network(self)
+        Returns Interaction objects that occur for the entire school in one hour
+    generate_a_day(self, hourDay=8)
+        Returns a NetworkX object where generate_network has been called hourDay times.
+        The compiled interactions for hourDay hours is added to a NetworkX object.
+    generateXdays(self, numDays)
+        Returns the final NetworkX object out of numDays days.
+    """
+
     def __init__(self, num_students, num_grades, num_classes, class_treshold=20, parameterList=[]):
+        """Inits Network object with num_students, num_grades and num_classes parameters
+
+        Parameters
+        ----------
+        num_students: int
+            Denotes the number of students for a given school
+        num_grades: int
+            Denotes the number of grades for a school.
+        num_classes: int
+            Denotes the number of classes per grade per school.
+        class_threshold: int
+            Denotes the threshold for how many students can be in one class. Default is set to 20
+        parameterList: list
+            List containing parameters used to generate p_vector in the Person class.
+        """
+
         self.parameterList = parameterList
         self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_treshold)
         self.d = (1) * pow(10, -2)  # 4.3
@@ -25,28 +81,45 @@ class Network:
         self.daily_list = []
 
     def generate_students(self, num_students, num_grades, num_classes, class_treshold=20):
+        """Generates a list containing Person objects that attend a certain school
+
+        Uses the number of students in a school (given by num_students) to generate num_grade grades
+        divided into num_class classes. For each Person object that is generated and added to the
+        students list, available_grade and available_classes are used to initialise the Person objects.
+
+        Parameters
+        ----------
+        num_students: int
+            Denotes the number of students for a given school
+        num_grades: int
+            Denotes the number of grades for a school.
+        num_classes: int
+            Denotes the number of classes per grade per school.
+        class_threshold: int
+            Denotes the threshold for how many students can be in one class. Default is set to 20
+        """
+
         available_grades = [i for i in range(1, num_grades + 1)]
         available_classes = [chr(i) for i in range(97, 97 + num_classes)]
 
         students = []
 
-        for grade in available_grades:  # Loop igjennom antall grades
+        for grade in available_grades:  # Loop through all grades
             i = 0
-            for pers in range(1, num_students // num_grades + 1):  # Loop igjennom antall personer pr grade
-                students.append(Person(grade, available_classes[i]))  # Legg til person i students
-                if (
-                    pers % (num_students // num_grades // num_classes) == 0
-                ):  # Dersom vi er kommet oss til ny klasse innenfor grade, må vi oppdatere i
-                    i += 1
+            for pers in range(1, num_students // num_grades + 1):  # Loop through all Persons per grade
+                students.append(Person(grade, available_classes[i]))  # Add Person to Students
+                if pers % (num_students // num_grades // num_classes) == 0:
+                    i += 1  # If we have reached a new class within a grade, i is updated.
 
                     if i >= len(available_classes) and num_students // num_grades - pers >= class_treshold:
-                        # Dersom det ikke går å ha  like mange i hver klasse, og vi har igjen class_treshold antall studenter, lager vi en ny klasse
+                        # If it is not possible to have the same amount og people in each class, and we have class_threshold students left, we make a new class
                         available_classes.append(chr(ord(available_classes[-1]) + 1))
                     elif i >= len(
                         available_classes
-                    ):  # Hvis vi ikke har fler enn class_threshold studenter igjen legger vi de i en random klasse av de vi allerede har
+                    ):  # If we have less than class_threshold students left, they are added in a random class
                         break
 
+        ### Sorted many times to ensure the ID is the same as the other ones in the grade a specific individual is in.
         grade_ind = 0
         while len(students) != num_students:
             if grade_ind >= len(available_grades):
@@ -56,18 +129,57 @@ class Network:
 
         students = sorted(students, key=lambda x: x.get_class_and_grade())
 
-        for i in range(len(students)):
+        for i in range(len(students)):  # Generate bias_vector
             students[i].id = i
             students[i].generate_bias_vector(students)
 
         students = sorted(students)
 
-        for i in range(len(students)):
+        for i in range(len(students)):  # Generate p_vector
             students[i].generate_p_vector(students, self.parameterList)
 
         return students
 
+    def generate_interactions_for_network(self):
+        """Generates and returns Interaction objects between students for one hour
+
+        Loops through the students list twice so that Interaction objects have
+        a change of being created between all individuals in the school. The
+        poisson distribution uses the p_vector between two individuals as well
+        as the d variable to increase the weight of the interactions.
+        Yields the interactions to generate_network().
+
+        """
+
+        for i in range(len(self.students)):
+            stud = self.students[i]
+            for j in range(i + 1, len(self.students)):
+                pers = self.students[j]
+
+                weight = 0
+
+                tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)
+
+                if (
+                    tentative_weight < 180
+                ):  # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
+                    weight = tentative_weight
+
+                if weight:
+                    interaction = stud.get_interaction(pers)
+                    interaction.count += weight
+
+                    yield interaction
+
     def generate_network(self):
+        """Generates a hourly network
+
+        Uses the Person objects in the students list as nodes and adds all interactions
+        gathered from generate_interactions_for_network() as edges with their weight
+        being set equal to the Interaction object's attribute count.
+
+        """
+
         graph = nx.Graph()
 
         for student in self.students:
@@ -83,39 +195,31 @@ class Network:
 
         return graph
 
-    def generate_interactions_for_network(self):
+    def generate_a_day(self, hourDay=8):
+        # TODO: Add together the hourly_list.  What is the point of running it multiple times if you only keep the last one?
+        """Generates a NetworkX object for a day with hourDay hours
 
-        for i in range(len(self.students)):
-            stud = self.students[i]
-            for j in range(i + 1, len(self.students)):
-                pers = self.students[j]
-                # print(int(np.random.poisson(stud.p_vector[pers]*self.d))
+        Uses renormalise and generates a new p_vector at the start
+        of the day.
 
-                weight = 0
-
-                tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)  # random.poisson
-
-                if (
-                    tentative_weight < 180
-                ):  # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
-                    weight = tentative_weight
-
-                if weight:
-                    interaction = stud.get_interaction(pers)
-                    interaction.count += weight
-
-                    yield interaction
-
-    def generate_a_day(self, hourDay=8, param=False):
+        Parameters
+        ----------
+        hourDay : int
+            Describes how many hours there is in a given schoolday
+        """
+        ## Renormalise bias_vector at the beginning of the day
         for i in range(len(self.students)):
             self.students[i].renormalize()
 
+        ## Generate new p-vector with the updated bias_vector
         self.students[0].generate_p_vector(self.students, [])
 
+        ## Empty list to append the hour by hour networks
         hourly_list = []
         for i in range(hourDay):
             hourly_list.append(self.generate_network())
 
+        ## Empty graph based on the nodes in the nettwork. Where interactions will be added
         dayGraph = nx.empty_graph(hourly_list[0])
 
         dayGraph = hourly_list[-1]
@@ -128,23 +232,33 @@ class Network:
                 if i == j:
                     continue
                 if self.students[j] in dayGraph[stud1]:
-                    stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]][
-                        "count"
-                    ]  # evt  += dayGraph[i][j]['count']*stortNokTall
-                    stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)
+                    stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
+                    stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
 
-        return dayGraph
+        return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
 
     def generateXdays(self, numDays):
+        """Generates numDays number of days and returns the NetworkX graph from the final day
+
+        Parameters
+        ----------
+        numDays : int
+            Number of days that should be generated
+        """
+
         for i in range(numDays):
             self.daily_list.append(self.generate_a_day())
 
-            print("-----Day" + str(i) + "------")
-            print("max: " + str(max(list(self.students[0].bias_vector.values()))))
-            print("mean: " + str(np.mean(list(self.students[0].bias_vector.values()))))
-            print("bias: " + str((self.students[0].bias)))
+            print("-----Day " + str(i) + "------")
+            print(
+                "max: " + str(max(list(self.students[0].bias_vector.values())))
+            )  # Prints out the highest bias_vector of student 0
+            print(
+                "mean: " + str(np.mean(list(self.students[0].bias_vector.values())))
+            )  # prints out the mean of bias_vector of student 0
+            print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
 
-        dayNumberX = self.daily_list[-1]
+        dayNumberX = self.daily_list[-1]  # Returns the final day
 
         return dayNumberX
 

@@ -1,21 +1,112 @@
+"""Person and Interaction classes
+
+Describes the Person and Interaction classes and their functionality. Is
+meant to be used called from main.py, network.py or analysis.py.  
+
+  Typical usage example:
+
+  person = Person(5, 'A')
+  person2 = Person(3, 'B')
+  interaction = Interaction(person, person2)
+
+Author: Sara Johanne Asche
+Date: 14.02.2022
+"""
+
 import itertools
 import random
-import decimal
 import math
-import pickle
 
 import numpy as np
-from scipy.optimize import least_squares
 
 from enums import Age_group
-from enums import Grade
-from layers import Grades, Klasse, Lunchbreak, Recess
 
 
 class Person:
+    """A class to collect the individuals and their attributes in the model
+
+    Longer class information...
+
+    Attributes
+    ----------
+    id : int
+        A unique number attached to the person object ranging from 0 to the max capacity at each school.
+    sex : str
+        Denotes the sex of the person object. Can be "F" for female or "M" for male
+    state: str
+        Disease spread model attribute.
+    vaccinated: bool
+        True if person object has been given a vaccine the last 6 months. False otherwise
+    grade : int
+        Number denoting the grade of the person object. Is limited by grades present at the school.
+    age: int
+        Number denoting the person's age
+    age_group: Age_group enum
+        Contains an enum describing the age_group of the individual.
+    class_group: str
+        Describes the exact class a Person object is registrered in. Could for instance be "A" or "B"
+    lunch_group: bool
+        True if the person object is in a grade lower than 4. Otherwise it is False. Can be changed based on schools and which grades interact most with each other.
+    interactions: dictionary of Interaction objects
+        Keeps a dictionary of each Interaction objects that occur between one Person object and another. The key is the Person object interacted with whilst the values are the Interaction object between the two Person objects.
+    const_bias: float
+        Each person object is initiated with a float value that denotes their bias for interacting with any other person object
+    bias_vector: dictionary
+        Dictionary that keeps track of the bias one Person object has to interact with another Person object
+    p_vector: dictionary
+        Dictionary that keeps track of the possibility that one Person object has to interact with another Person object
+
+    Methods
+    -------
+    get_valid_age(self, grade, is_teacher=False)
+        Returns the age of an individual that is in grade grade, 50% likely that they have had their bithday before the school starts, 50% they have had their birthday after. If object is teacher, another method is used.
+    set_lunch_group(self)
+        Sets the lunch_group attribute to a boolean depending on which grade the Person object is in.
+    set_age_group(self)
+        Sets the age_group attribute to an Age_group enum value depending on the age of the Person object.
+    add_interaction(self, interaction)
+        Attaches an Interaction object to the Person object's interaction dictionary attribute.
+    get_interaction(self, p)
+        Returns the Interaction object of an interaction between Person object (self) and Person object (p).
+    get_gender(self)
+        Returns a string value representing a Person object's sex that is either "F" or "M" with a 50/50 percentage.
+    get_vaccinated_status(self)
+        Returns True if an individual has gotten a vaccine dose less than 6 months from now.
+    has_interacted_with(self, p)
+        Returns True if Person object (p) is in Person object (self)'s interaction dictionary
+    getID(self)
+        Returns a Person object's ID
+    getGrade(self):
+        Returns a Person object's Grade (i.e 5 or 1)
+    getClass(self):
+        Returns a Person Object's Class (i.e "A" or "B")
+    get_class_and_grade(self):
+        Returns a string consisting of the grade plus the class (i.e "5A" or "1B")
+    getLunchgroup(self):
+        Returns the lunch_group attribute of a Person object
+    generate_bias_vector(self, students)
+        Generate bias_vector by placing the current const_bias as the value for each Person objects interacting
+    generate_p_vector(self, students, X)
+        Generates a p_vector dictionary where keys are all possible Person objects Person (self) can interact with and the key is probability p that they will interact. Uses the similarity between two Person objects to generate a probability p.
+    get_min_p_vector(self)
+        Returns the lowest p value in a Person (self)'s p_vector dictionary.
+    renormalize(self)
+        Updates the bias_vector of a Person object (self) where the const_bias is affected by an additional random bias and then normalised to avoid a strictly growing bias.
+    """
+
     newid = itertools.count()
 
     def __init__(self, grade, class_group):
+        """Inits Person object with grade and class parameters
+
+        Parameters
+        ----------
+        grade: int
+            The grade of the Person
+        class_group: str
+            the class of the Person
+        """
+
         self.id = next(Person.newid)
         self.sex = self.get_gender()
         self.state = "R"
@@ -33,24 +124,54 @@ class Person:
         self.p_vector = {}
 
     def get_valid_age(self, grade, is_teacher=False):
+        # TODO: Add teacher functionality
+        """Generates and returns the age of the Person
+
+        Uses grade to generate an appropriate age. Takes
+        into account that students of the same grade can be
+        +-1 year appart depending on when they are born.
+        If the argument is_teacher isn't passed in, the default
+        is_teacher = False is used.
+
+        Parameters
+        ----------
+        grade : int
+            The grade the Person object is in
+        is_teacher : Bool
+            True if the Object is teacher, False if it is not.
+        """
+
         return random.choice([grade + 4, grade + 5])
 
-    def calc_probability_of_interacting(self, person):
-        return random.random()
-
     def set_lunch_group(self):
+        """Generates an appropriate bool value for lunch_group according to grade"""
+
         if self.grade < 4:
             return 1
         else:
             return 0
 
     def set_age_group(self):
+        """Returns an age_group based on the Person objects' age"""
+
         for group in Age_group:
             if self.age in group.value:
                 return group
         return None
 
     def add_interaction(self, interaction):
+        """Adds an Interaction object to a Person's interactions dictionary
+
+        Checks which of the p1 or p2 Person objects is self and denotes the
+        other one other. Adds an entry to Person (self)'s dictionary with
+        other as key and the Interaction object as value.
+
+        Parameters
+        ----------
+        interaction: Interaction
+            Interaction object that has two individuals saved
+        """
+
         p1 = interaction.p1
         p2 = interaction.p2
 
@@ -58,19 +179,17 @@ class Person:
 
         self.interactions[other] = interaction
 
-    def get_interaction(self, p):
+    def get_interaction(self, p):  # Returns interaction object between self and p
         return self.interactions.get(p, Interaction(self, p, 0))
-
-    def interacted(self, p):
-        return True
 
     def get_gender(self):
         return "F" if random.random() > 0.5 else "M"
 
     def get_vaccinated_status(self):
+        # TODO: returns true if individual has gotten a dose less than 6 months from now
         return 1 if random.random() > 0.2 else 0
 
-    def has_interacted_with(self, p):
+    def has_interacted_with(self, p):  # Returns True if two individuals have interacted. False otherwise.
         return p in self.interactions
 
     def getID(self):
@@ -89,10 +208,35 @@ class Person:
         return self.lunch_group
 
     def generate_bias_vector(self, students):
+        """Generates a bias_vector based on the Persons (selfs) const_bias
+
+        Loops over a list of students attending the school and sets the Person objects (self)
+        bias_vector to be its own const_bias for interacting with all other students.
+        bias_vector has keys denoting all other Person objects and const_bias as value
+
+
+        Parameters
+        ----------
+        students : list
+            A list that contains all the Person objects that attend a certain school
+        """
         for i in range(len(students)):
             self.bias_vector[students[i]] = self.const_bias
 
     def generate_p_vector(self, students, X):
+        """Generates a p-vector dictionary for a Person object with respect to all other students
+
+        If no X is given, the length of X is 0 and this function returns a p-vector with the given
+        parameters: a1 = , a2 = a3 = a4 =, b1 = b2 = b3 = , b4 = . If an X is given, the parameters
+        listed in it will be used.
+
+        Parameters
+        ----------
+        students : list
+            A list that contains all the Person objects that attend a certain school
+        X : list
+            A list containing parameters for a1,a2,a3,a4 and b1,b2,b3,b4.
+        """
         rand = True
         if len(X):
             ## Off-diagonal excluding lunch
@@ -104,12 +248,12 @@ class Person:
             b2 = X[3]
 
             ## Grade-Grade
-            a3 = 40  # X[4]
-            b3 = 0.1  # X[5]
+            a3 = X[4]
+            b3 = X[5]
 
             ## Class-Class
-            a4 = 200  # X[6]
-            b4 = 0.1  # X[7]
+            a4 = X[6]
+            b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
             a1 = 0.4  # 1.5
@@ -158,7 +302,15 @@ class Person:
     def get_min_p_vector(self):
         return min(self.p_vector, key=self.p_vector.get)
 
-    def renormalize(self):
+    def renormalize(self):  ### Ask about why we only times it with correction.
+        """Renormalises the bias_vector of a Person object
+
+        At the end of each day the bias_vector is updated so that students form connections differently
+        from day to day. This is done by adding a new value, bias, to the const bias, shifting it.
+        The bias_vector is then multiplied by a correction value that is self.bias/(the mean of the
+        bias_vector) to form a new value for each interaction.
+
+        """
 
         self.bias = self.const_bias + 150 * (math.log10(1 / random.random()))
 
@@ -188,7 +340,42 @@ class Person:
 
 
 class Interaction:
+    """A class that saves interactions between two Person objects
+
+    Attributes
+    ----------
+    p1: Person
+        Person object that is a part of the interaction
+    p2: Person
+        Another Person object that is a part of the interaction
+    count: int
+        A count that keeps track of how many times two individuals have interacted
+
+    Methods
+    -------
+    getp1(self)
+        Returns the p1 Person object
+    getp2(self)
+        Returns the p2 Person object
+    getcount(self)
+        Returns the count variable for the Interaction object
+    add_to_count(self, count=1)
+        Increases the count variable with count (set to default to 1)
+    """
+
     def __init__(self, p1, p2, count=1):
+        """Inits Interaction object two Person objects (p1 and p2) and a count.
+
+        Parameters
+        ----------
+        p1 : Person
+            Person object that interacts with p2
+        p2 : Person
+            Person object that interacts with p1
+        count : int
+            The number of times p1 and p2 has interacted. Default = 1
+        """
+
         self.p1 = p1
         self.p2 = p2
         self.count = count
