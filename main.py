@@ -29,9 +29,12 @@ def main():
     G = network.generateXdays(10)
 
     # G = network.generate_a_day()
-    analysis.pixel_dist_school(G, old=True)
-    analysis.heatmap(G)
-    analysis.histDistributionLog(G)
+
+    analysis.pixel_dist_school(G, old=True, both=True)
+    # analysis.heatmap(G)
+    # analysis.histDistributionLog(G)
+    analysis.plotDegreeDistSubGraphs(both=True, experimental=True, exp=G)
+
     # analysis.displayNetwork(G)
     # analysis.runAnalysis(network.generateXdays(10))
 

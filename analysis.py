@@ -46,7 +46,7 @@ class Analysis:
         # self.heatmap(G)
         return G
 
-    def pixelDist(self, graph, logX, logY, axis=None, old=False):
+    def pixelDist(self, graph, logX, logY, axis=None, old=False, label=None):
         if not old:
             A = self.heatmap(graph, output=True)
 
@@ -64,7 +64,7 @@ class Analysis:
 
         if axis:
             if old:
-                axis.plot(d.keys(), d.values(), label="Experimental")
+                axis.plot(d.keys(), d.values(), label=label)
             else:
                 axis.plot(d.keys(), d.values(), label="Simulated")
 
@@ -100,33 +100,55 @@ class Analysis:
         file_to_read = open(name, "rb")
         return pickle.load(file_to_read)
 
-    def pixel_dist_school(self, graph, old=False):
+    def pixel_dist_school(self, graph, old=False, both=False):
         off_diagonal = self.createSubGraphWithout(graph, True, False)
         grade_grade = self.createSubGraphWithoutGraph(graph, False, True)
         class_class = self.createSubGraphWithoutGraph(graph, True, False)
 
         if old:
             old_graph = self.pickleLoad("graph1_whole_pixel.pkl")
-            old_off_diagonal = self.pickleLoad("graph1_off_diag.pkl")
+            old_off_diagonal = self.pickleLoad("graph1_off_diag_pixel.pkl")
             old_grade = self.pickleLoad("graph1_grade_pixel.pkl")
             old_class = self.pickleLoad("graph1_class_pixel.pkl")
 
+        if both:
+            old_graph2 = self.pickleLoad("graph2_whole_pixel.pkl")
+            old_off_diagonal2 = self.pickleLoad("graph2_off_diag_pixel.pkl")
+            old_grade2 = self.pickleLoad("graph2_grade_pixel.pkl")
+            old_class2 = self.pickleLoad("graph2_class_pixel.pkl")
+
         figure, axis = plt.subplots(2, 2, figsize=(8, 8))
+        figure.tight_layout(pad=3)
 
         logx = True
         logy = True
 
         self.pixelDist(graph, logx, logy, axis[0, 0])
-        self.pixelDist(old_graph, logx, logy, axis[0, 0], old=True)
+        if old:
+            self.pixelDist(old_graph, logx, logy, axis[0, 0], old=True, label="Day 1")
+        if both:
+            self.pixelDist(old_graph2, logx, logy, axis[0, 0], old=True, label="Day 2")
         axis[0, 0].set_title("Whole network")
+
         self.pixelDist(off_diagonal, logx, logy, axis[1, 0])
-        self.pixelDist(old_off_diagonal, logx, logy, axis[1, 0], old=True)
+        if old:
+            self.pixelDist(old_off_diagonal, logx, logy, axis[1, 0], old=True, label="Day 1")
+        if both:
+            self.pixelDist(old_off_diagonal2, logx, logy, axis[1, 0], old=True, label="Day 2")
         axis[1, 0].set_title("Off-diagonal")
+
         self.pixelDist(grade_grade, logx, logy, axis[0, 1])
-        self.pixelDist(old_grade, logx, logy, axis[0, 1], old=True)
+        if old:
+            self.pixelDist(old_grade, logx, logy, axis[0, 1], old=True, label="Day 1")
+        if both:
+            self.pixelDist(old_grade2, logx, logy, axis[0, 1], old=True, label="Day 2")
         axis[0, 1].set_title("grade-grade")
+
         self.pixelDist(class_class, logx, logy, axis[1, 1])
-        self.pixelDist(old_class, logx, logy, axis[1, 1], old=True)
+        if old:
+            self.pixelDist(old_class, logx, logy, axis[1, 1], old=True, label="Day 1")
+        if both:
+            self.pixelDist(old_class2, logx, logy, axis[1, 1], old=True, label="Day 2")
         axis[1, 1].set_title("class-class")
 
         handles, labels = axis[1, 1].get_legend_handles_labels()
@@ -204,7 +226,7 @@ class Analysis:
         return cHist
 
     # Generates comulative distribution. For the project logX=False, logY=True for semilog
-    def histDistributionLog(self, graph, logX=False, logY=True, axis=None, old=False):
+    def histDistributionLog(self, graph, logX=False, logY=True, axis=None, old=False, label=None):
 
         degs = {}
         for n in graph.nodes():
@@ -226,7 +248,10 @@ class Analysis:
         old2 = self.pickleLoad("Degreedistribution_Day2.pkl")
 
         if axis:
-            axis.plot(d.keys(), d.values())
+            if label:
+                axis.plot(d.keys(), d.values(), label=label)
+            else:
+                axis.plot(d.keys(), d.values())
         else:
             plt.plot(d.keys(), d.values(), label="Simulated")
             plt.plot(old1.keys(), old1.values(), label="Empiric day 1")
@@ -247,6 +272,63 @@ class Analysis:
                 plt.xlabel("Degree")
 
             plt.show()
+
+    def histPlot(self, d, label, logX=False, logY=True, axis=None):
+        if axis:
+            axis.plot(d.keys(), d.values(), label=label)
+
+    def plotDegreeDistSubGraphs(self, both=False, experimental=False, exp=None):
+        graph1 = self.pickleLoad("DegreeDictwhole1.pkl")
+        off_diag1 = self.pickleLoad("DegreeDictOffDiag1.pkl")
+        grade1 = self.pickleLoad("DegreeDictgrade1.pkl")
+        class1 = self.pickleLoad("DegreeDictclass1.pkl")
+
+        if both:
+            graph2 = self.pickleLoad("DegreeDictwhole2.pkl")
+            off_diag2 = self.pickleLoad("DegreeDictOffDiag2.pkl")
+            grade2 = self.pickleLoad("DegreeDictgrade2.pkl")
+            class2 = self.pickleLoad("DegreeDictclass2.pkl")
+
+        if experimental:
+            graph = exp
+            off_diagE = self.createSubGraphWithout(graph, True, False)
+            gradeE = self.createSubGraphWithoutGraph(graph, False, True)
+            classE = self.createSubGraphWithoutGraph(graph, True, False)
+
+        figure, axis = plt.subplots(2, 2, figsize=(10, 8))
+        figure.tight_layout(pad=4)
+        self.histPlot(graph1, logX=False, logY=True, axis=axis[0, 0], label="Day 1")
+        if both:
+            self.histPlot(graph2, logX=False, logY=True, axis=axis[0, 0], label="Day 2")
+        if experimental:
+            self.histDistributionLog(graph, False, True, axis=axis[0, 0], label="Simulated")
+        axis[0, 0].set_title("Whole graph")
+
+        self.histPlot(off_diag1, logX=False, logY=True, axis=axis[1, 0], label="Day 1")
+        if both:
+            self.histPlot(off_diag2, logX=False, logY=True, axis=axis[1, 0], label="Day 2")
+        if experimental:
+            self.histDistributionLog(off_diagE, logX=False, logY=True, axis=axis[1, 0], label="Simulated")
+        axis[1, 0].set_title("Off diagonal")
+
+        self.histPlot(grade1, logX=False, logY=True, axis=axis[0, 1], label="Day 1")
+        if both:
+            self.histPlot(grade2, logX=False, logY=True, axis=axis[0, 1], label="Day 2")
+        if experimental:
+            self.histDistributionLog(gradeE, logX=False, logY=True, axis=axis[0, 1], label="Simulated")
+        axis[0, 1].set_title("Grade")
+
+        self.histPlot(class1, logX=False, logY=True, axis=axis[1, 1], label="Day 1")
+        if both:
+            self.histPlot(class2, logX=False, logY=True, axis=axis[1, 1], label="Day 2")
+        if experimental:
+            self.histDistributionLog(classE, logX=False, logY=True, axis=axis[1, 1], label="Simulated")
+        axis[1, 1].set_title("Class")
+
+        handles, labels = axis[1, 1].get_legend_handles_labels()
+        figure.legend(handles, labels, loc="center")  # loc="lower center"
+
+        plt.show()
 
     def runAnalysis(self, graph):
         figure, axis = plt.subplots(2, 2)
