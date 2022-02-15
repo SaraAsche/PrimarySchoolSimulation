@@ -256,19 +256,19 @@ class Person:
             b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 = 0.4  # 1.5
-            b1 = 0.5  # 0.1
+            a1 = 0.1  # 1.5
+            b1 = 0.05  # 0.1
             ##  Off-diagonal with lunch
-            a2 = 0.3  # 0.001
-            b2 = 0.5  # 0.07
+            a2 = 0.1  # 0.001
+            b2 = 0.001  # 0.07
 
             ## Grade-Grade
-            a3 = 3.5  # 100
-            b3 = 0.8  # 0.3
+            a3 = 0.1  # 100
+            b3 = 0.1  # 0.3
 
             ## Class-Class
-            a4 = 25  # 10000
-            b4 = 16  # 1
+            a4 = 1.1  # 10000
+            b4 = 0.5  # 1
 
         for i in range(len(students)):
             same_lunch = self.lunch_group == students[i].lunch_group

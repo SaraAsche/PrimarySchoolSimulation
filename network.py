@@ -16,6 +16,8 @@ import numpy as np
 import networkx as nx
 import pickle
 import sys
+
+from sklearn import neighbors
 from analysis import Analysis
 import matplotlib.pyplot as plt
 
@@ -129,13 +131,15 @@ class Network:
 
         students = sorted(students, key=lambda x: x.get_class_and_grade())
 
-        for i in range(len(students)):  # Generate bias_vector
+        ## Generate bias_vector
+        for i in range(len(students)):
             students[i].id = i
             students[i].generate_bias_vector(students)
 
         students = sorted(students)
 
-        for i in range(len(students)):  # Generate p_vector
+        ## Generate p_vector
+        for i in range(len(students)):
             students[i].generate_p_vector(students, self.parameterList)
 
         return students
@@ -160,9 +164,8 @@ class Network:
 
                 tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)
 
-                if (
-                    tentative_weight < 180
-                ):  # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
+                if tentative_weight < 180:
+                    # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
                     weight = tentative_weight
 
                 if weight:
@@ -222,7 +225,13 @@ class Network:
         ## Empty graph based on the nodes in the nettwork. Where interactions will be added
         dayGraph = nx.empty_graph(hourly_list[0])
 
-        dayGraph = hourly_list[-1]
+        for graph in hourly_list:
+            for node, neighbour, attrs in graph.edges.data():
+                if not dayGraph.has_edge(node, neighbour):
+                    dayGraph.add_edge(node, neighbour, count=attrs["count"])
+                else:
+                    dayGraph[node][neighbour]["count"] += attrs["count"]
+
         k = 0.5
 
         for i in range(len(self.students)):
@@ -258,7 +267,24 @@ class Network:
             )  # prints out the mean of bias_vector of student 0
             print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
 
-        dayNumberX = self.daily_list[-1]  # Returns the final day
+        dayGraph = nx.empty_graph(self.daily_list[0])
+
+        for graph in self.daily_list:
+            for node, neighbour, attrs in graph.edges.data():
+                if not dayGraph.has_edge(node, neighbour):
+                    dayGraph.add_edge(node, neighbour, count=attrs["count"])
+                else:
+                    dayGraph[node][neighbour]["count"] += attrs["count"]
+        normList = []
+        for node, neighbour, attrs in graph.edges.data():
+            normList.append(attrs["count"])
+
+        i = 0
+        for node, neighbour, attrs in graph.edges.data():
+            attrs["count"] = attrs["count"] / normList[i]
+            i += 1
+
+        dayNumberX = dayGraph  # self.daily_list[-1]  # Returns the final day
 
         return dayNumberX
 

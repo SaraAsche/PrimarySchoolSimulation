@@ -25,7 +25,7 @@ def main():
     analysis.pixel_dist_school(G, old=True, both=True)
     analysis.heatmap(G)
 
-    analysis.plotDegreeDistSubGraphs(both=True, experimental=True, exp=G)
+    analysis.plotDegreeDistSubGraphs(both=True, experimental=True, sim=G)
 
     # analysis.displayNetwork(G)
     # analysis.runAnalysis(network.generateXdays(10))
