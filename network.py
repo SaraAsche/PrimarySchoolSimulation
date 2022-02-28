@@ -254,7 +254,6 @@ class Network:
         return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
 
     def generate_iterations(self, number) -> nx.Graph:
-        # TODO: change naming -> this is a more robust network
         """Generates number number of days and returns the nx.Graph from the final day
 
         Parameters
@@ -277,19 +276,20 @@ class Network:
 
         #!!dayGraph = nx.empty_graph(self.daily_list[0])
         dayGraph = self.daily_list[0]
-
+        d = {}
         for graph in self.daily_list:
             for node, neighbour, attrs in graph.edges.data():
                 if not dayGraph.has_edge(node, neighbour):
+                    #dayGraph.add_edge(node, neighbour, count=attrs["count"])
                     continue
-                    # dayGraph.add_edge(node, neighbour, count=attrs["count"])
                 else:
                     dayGraph[node][neighbour]["count"] += attrs["count"]
+                    d[(node, neighbour)] = d.get((node, neighbour), 0) + 1
 
         for node, neighbour, attrs in graph.edges.data():
             attrs["count"] = (
-                attrs["count"] / number
-            )  # Må finne en måte å dele på antall ganger denne spesifikke edgen har blitt plusset på
+                attrs["count"] / d.get((node, neighbour), 1)
+            )  #TODO Må finne en måte å dele på antall ganger denne spesifikke edgen har blitt plusset på
 
         dayNumberX = dayGraph  # self.daily_list[-1]  # Returns the final day
 

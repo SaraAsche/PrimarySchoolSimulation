@@ -29,14 +29,14 @@ from sklearn.ensemble import GradientBoostingClassifier
 class Analysis:
     """A class to analyse Network objects
 
-    Longer class information...
+    Longer class information.
 
     Attributes
     ----------
     network : nx.Graph
         Network object containing a nx.GraphX graph
 
-    Method
+    Methods
     ------
     create_sub_graph_off_diagonal(self, graph, grade, class_interaction)
         Returns a subgraph of the original graph where grade and/or class
