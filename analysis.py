@@ -540,9 +540,9 @@ class Analysis:
                 axis.set_xlabel("Degree")
             if logY:
                 axis.set_yscale("log")
-                axis.set_ylabel("log Degree")
+                axis.set_ylabel("log Frequency")
             else:
-                axis.set_ylabel("Degree")
+                axis.set_ylabel("Frequency")
 
     def degree_distribution_layers(self, both=False, experimental=False, sim=None) -> None:
         """Plots the degree distribution of both experimental and simulated graphs for the whole graph
@@ -709,42 +709,42 @@ class Analysis:
         for node in G.nodes():
             print(node)
             if node.get_grade() == 1:
-                color_map.append('rosybrown')
+                color_map.append("rosybrown")
             elif node.get_grade() == 2:
-                color_map.append('sienna')
+                color_map.append("sienna")
             elif node.get_grade() == 3:
-                color_map.append('tan')
+                color_map.append("tan")
             elif node.get_grade() == 4:
-                color_map.append('darkgoldenrod')
+                color_map.append("darkgoldenrod")
             elif node.get_grade() == 5:
-                color_map.append('olivedrab')
+                color_map.append("olivedrab")
             else:
-                color_map.append('slategrey')
+                color_map.append("slategrey")
 
         print(color_map)
 
-        degree_sequence = sorted([d for n, d in G.degree(weight ='weight')], reverse=False)
+        degree_sequence = sorted([d for n, d in G.degree(weight="weight")], reverse=False)
 
         fig = plt.figure("Degree of a random graph", figsize=(8, 8))
         # Create a gridspec for adding subplots of different sizes
         axgrid = fig.add_gridspec(5, 4)
 
         ax0 = fig.add_subplot(axgrid[0:3, :])
-    
+
         Gcc = G
         pos = nx.spring_layout(Gcc, seed=10396953)
-        nx.draw_networkx_nodes(Gcc, pos, ax=ax0, node_size=20,node_color=color_map)
+        nx.draw_networkx_nodes(Gcc, pos, ax=ax0, node_size=20, node_color=color_map)
         nx.draw_networkx_edges(Gcc, pos, ax=ax0, alpha=0.4)
         ax0.set_title("Day 1 network")
         ax0.set_axis_off()
 
         ax1 = fig.add_subplot(axgrid[3:, 2:])
-        
+
         degs = {}
         for n in G.nodes():
             deg = G.degree(n, weight="weight")
             degs[n] = deg
-    
+
         items = sorted(degs.items())
 
         data = []
@@ -763,11 +763,11 @@ class Analysis:
 
         ax2 = fig.add_subplot(axgrid[3:, :2])
 
-        ax2.set_title('Histogram of degree distribution')
+        ax2.set_title("Histogram of degree distribution")
         ax2.hist(data, bins=20, color="seagreen", ec="black")  # col = 'skyblue for day2, mediumseagreen for day1
         ax2.set_xlabel("Degree")
         ax2.set_ylabel("Frequency")
 
         fig.tight_layout()
-        plt.savefig('./fig_master/full_analysis.png',transparent=True, dpi=500)
+        plt.savefig("./fig_master/full_analysis.png", transparent=True, dpi=500)
         plt.show()

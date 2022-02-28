@@ -259,11 +259,11 @@ class Person:
             b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 = 10.5  # 1.5
-            b1 = 0.04  # 0.1
+            a1 = 3  # 1.5
+            b1 = 0.5  # 0.1
             ##  Off-diagonal with lunch
-            a2 = 0.001  # 0.001
-            b2 = 0.07  # 0.07
+            a2 = 0.1  # 0.001
+            b2 = 0.1  # 0.07
 
             ## Grade-Grade
             a3 = 15  # 100
@@ -301,6 +301,7 @@ class Person:
             self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
 
     def get_min_p_vector(self) -> float:
+        """Returns minimum value of a given p-vector"""
         return min(self.p_vector, key=self.p_vector.get)
 
     def renormalize(self) -> None:  ### Ask about why we only times it with correction.
