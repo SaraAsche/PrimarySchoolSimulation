@@ -18,13 +18,7 @@ def main():
 
     G = network.generate_iterations(10)
 
-    analysis.outlierDist(G)
-
-    analysis.pixel_dist_school(G, old=True, both=True)
-
-    analysis.heatmap(G)
-
-    analysis.degree_distribution_layers(both=True, experimental=True, sim=G)
+    analysis.runAnalysis2(G)
 
 
 main()

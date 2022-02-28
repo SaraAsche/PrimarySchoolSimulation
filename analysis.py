@@ -702,3 +702,72 @@ class Analysis:
                 figure.delaxes(ax)  ## delete if nothing is plotted in the axes obj
 
         plt.show()
+
+    def runAnalysis2(self, G):
+        color_map = []
+
+        for node in G.nodes():
+            print(node)
+            if node.get_grade() == 1:
+                color_map.append('rosybrown')
+            elif node.get_grade() == 2:
+                color_map.append('sienna')
+            elif node.get_grade() == 3:
+                color_map.append('tan')
+            elif node.get_grade() == 4:
+                color_map.append('darkgoldenrod')
+            elif node.get_grade() == 5:
+                color_map.append('olivedrab')
+            else:
+                color_map.append('slategrey')
+
+        print(color_map)
+
+        degree_sequence = sorted([d for n, d in G.degree(weight ='weight')], reverse=False)
+
+        fig = plt.figure("Degree of a random graph", figsize=(8, 8))
+        # Create a gridspec for adding subplots of different sizes
+        axgrid = fig.add_gridspec(5, 4)
+
+        ax0 = fig.add_subplot(axgrid[0:3, :])
+    
+        Gcc = G
+        pos = nx.spring_layout(Gcc, seed=10396953)
+        nx.draw_networkx_nodes(Gcc, pos, ax=ax0, node_size=20,node_color=color_map)
+        nx.draw_networkx_edges(Gcc, pos, ax=ax0, alpha=0.4)
+        ax0.set_title("Day 1 network")
+        ax0.set_axis_off()
+
+        ax1 = fig.add_subplot(axgrid[3:, 2:])
+        
+        degs = {}
+        for n in G.nodes():
+            deg = G.degree(n, weight="weight")
+            degs[n] = deg
+    
+        items = sorted(degs.items())
+
+        data = []
+        for line in items:
+            data.append(line[1])
+
+        sorteddata = np.sort(data)
+        print(sorteddata)
+        d = self.to_cumulative(sorteddata)
+
+        ax1.plot(d.keys(), d.values(), color="seagreen")
+
+        ax1.set_title("Cumulative degree distribution P(X > x)")
+        ax1.set_ylabel("Frequency")
+        ax1.set_xlabel("Degree")
+
+        ax2 = fig.add_subplot(axgrid[3:, :2])
+
+        ax2.set_title('Histogram of degree distribution')
+        ax2.hist(data, bins=20, color="seagreen", ec="black")  # col = 'skyblue for day2, mediumseagreen for day1
+        ax2.set_xlabel("Degree")
+        ax2.set_ylabel("Frequency")
+
+        fig.tight_layout()
+        plt.savefig('./fig_master/full_analysis.png',transparent=True, dpi=500)
+        plt.show()
