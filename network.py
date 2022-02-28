@@ -5,10 +5,11 @@ Implements Networkx to create networks of interactions between Person objects.
 Typical usage example:
 
   network = Network(225, 5, 2) 
-  network.generateXdays(10)
+  network.generate_iterations(10)
 
 Author: Sara Johanne Asche
 Date: 14.02.2022
+File: network.py
 """
 
 import random
@@ -31,16 +32,16 @@ class Network:
 
     Attributes
     ----------
-    parameterList : list
+    parameter_list : list
         List of parameters used in Person class to set the p_vector.
     students : list
         A list that contains all the Person objects that attend a certain school
     d : float
         A number that helps scale the weights
-    graph : NetworkX
-        A networkX object that describes interactions in the network
-    dailyList : list
-        A list of daily NetworkX objects.
+    graph : nx.Graph
+        A nx.Graph object that describes interactions in the network
+    daily_list : list
+        A list of daily nx.Graph objects.
 
     Methods
     -------
@@ -48,18 +49,18 @@ class Network:
         Returns a list of num_students Person objects that have been divided into num_grades
         and num_classes with the given class_threshold in mind.
     generate_network(self)
-        Returns a network for the given students in the NetworkX object where the Interaction
+        Returns a network for the given students in the nx.Graph object where the Interaction
         objects are added.
     generate_interactions_for_network(self)
         Returns Interaction objects that occur for the entire school in one hour
     generate_a_day(self, hourDay=8)
-        Returns a NetworkX object where generate_network has been called hourDay times.
-        The compiled interactions for hourDay hours is added to a NetworkX object.
-    generateXdays(self, numDays)
-        Returns the final NetworkX object out of numDays days.
+        Returns a nx.Graph object where generate_network has been called hourDay times.
+        The compiled interactions for hourDay hours is added to a nx.Graph object.
+    generate_iterations(self, number)
+        Returns the final nx.Graph object out of number days.
     """
 
-    def __init__(self, num_students, num_grades, num_classes, class_treshold=20, parameterList=[]):
+    def __init__(self, num_students, num_grades, num_classes, class_treshold=20, parameter_list=[]):
         """Inits Network object with num_students, num_grades and num_classes parameters
 
         Parameters
@@ -72,17 +73,17 @@ class Network:
             Denotes the number of classes per grade per school.
         class_threshold: int
             Denotes the threshold for how many students can be in one class. Default is set to 20
-        parameterList: list
+        parameter_list: list
             List containing parameters used to generate p_vector in the Person class.
         """
 
-        self.parameterList = parameterList
+        self.parameter_list = parameter_list
         self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_treshold)
         self.d = (1) * pow(10, -2)  # 4.3
         self.graph = self.generate_network()
         self.daily_list = []
 
-    def generate_students(self, num_students, num_grades, num_classes, class_treshold=20):
+    def generate_students(self, num_students, num_grades, num_classes, class_treshold=20) -> list:
         """Generates a list containing Person objects that attend a certain school
 
         Uses the number of students in a school (given by num_students) to generate num_grade grades
@@ -140,11 +141,11 @@ class Network:
 
         ## Generate p_vector
         for i in range(len(students)):
-            students[i].generate_p_vector(students, self.parameterList)
+            students[i].generate_p_vector(students, self.parameter_list)
 
         return students
 
-    def generate_interactions_for_network(self):
+    def generate_interactions_for_network(self) -> Interaction:
         """Generates and returns Interaction objects between students for one hour
 
         Loops through the students list twice so that Interaction objects have
@@ -164,7 +165,14 @@ class Network:
 
                 tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)
 
-                if tentative_weight < 180:
+                if stud.get_grade() == pers.get_grade():
+                    if tentative_weight < 80:
+                        weight = tentative_weight
+                if stud.get_class_and_grade() == pers.get_class_and_grade():
+                    if tentative_weight < 100:
+                        weight = tentative_weight
+
+                if tentative_weight < 50:  # 180
                     # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
                     weight = tentative_weight
 
@@ -174,7 +182,7 @@ class Network:
 
                     yield interaction
 
-    def generate_network(self):
+    def generate_network(self) -> nx.Graph:
         """Generates a hourly network
 
         Uses the Person objects in the students list as nodes and adds all interactions
@@ -190,17 +198,16 @@ class Network:
 
         for interaction in self.generate_interactions_for_network():
 
-            p1 = interaction.getp1()
-            p2 = interaction.getp2()
-            weight = interaction.getcount()
+            p1 = interaction.get_p1()
+            p2 = interaction.get_p2()
+            weight = interaction.get_count()
 
             graph.add_edge(p1, p2, count=weight)
 
         return graph
 
-    def generate_a_day(self, hourDay=8):
-        # TODO: Add together the hourly_list.  What is the point of running it multiple times if you only keep the last one?
-        """Generates a NetworkX object for a day with hourDay hours
+    def generate_a_day(self, hourDay=8) -> nx.Graph:
+        """Generates a nx.Graph object for a day with hourDay hours
 
         Uses renormalise and generates a new p_vector at the start
         of the day.
@@ -242,20 +249,21 @@ class Network:
                     continue
                 if self.students[j] in dayGraph[stud1]:
                     stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
-                    stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
+                    # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
 
         return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
 
-    def generateXdays(self, numDays):
-        """Generates numDays number of days and returns the NetworkX graph from the final day
+    def generate_iterations(self, number) -> nx.Graph:
+        # TODO: change naming -> this is a more robust network
+        """Generates number number of days and returns the nx.Graph from the final day
 
         Parameters
         ----------
-        numDays : int
+        number : int
             Number of days that should be generated
         """
 
-        for i in range(numDays):
+        for i in range(number):
             self.daily_list.append(self.generate_a_day())
 
             print("-----Day " + str(i) + "------")
@@ -267,41 +275,40 @@ class Network:
             )  # prints out the mean of bias_vector of student 0
             print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
 
-        dayGraph = nx.empty_graph(self.daily_list[0])
+        #!!dayGraph = nx.empty_graph(self.daily_list[0])
+        dayGraph = self.daily_list[0]
 
         for graph in self.daily_list:
             for node, neighbour, attrs in graph.edges.data():
                 if not dayGraph.has_edge(node, neighbour):
-                    dayGraph.add_edge(node, neighbour, count=attrs["count"])
+                    continue
+                    # dayGraph.add_edge(node, neighbour, count=attrs["count"])
                 else:
                     dayGraph[node][neighbour]["count"] += attrs["count"]
-        normList = []
-        for node, neighbour, attrs in graph.edges.data():
-            normList.append(attrs["count"])
 
-        i = 0
         for node, neighbour, attrs in graph.edges.data():
-            attrs["count"] = attrs["count"] / normList[i]
-            i += 1
+            attrs["count"] = (
+                attrs["count"] / number
+            )  # Må finne en måte å dele på antall ganger denne spesifikke edgen har blitt plusset på
 
         dayNumberX = dayGraph  # self.daily_list[-1]  # Returns the final day
 
         return dayNumberX
 
-    def pickleLoad(self, name):
+    def pickle_load(self, name):
         file_to_read = open(name, "rb")
         return pickle.load(file_to_read)
 
     ### Estimation
     def parameterEstimation(self):
-        def createSubGraphWithoutGraph(graph, diagonal, gradeInteraction):
+        def create_sub_graph_grade_class(graph, diagonal, gradeInteraction):
             G = nx.Graph()
 
             for node in graph.nodes():
-                klasseAttr = node.getClass()
+                klasseAttr = node.get_class()
                 for n in graph.nodes():
                     if diagonal:
-                        if n.getClass() == klasseAttr and node.getGrade() == n.getGrade():
+                        if n.get_class() == klasseAttr and node.get_grade() == n.get_grade():
                             if n in graph.neighbors(node):
                                 G.add_edge(node, n, count=graph.get_edge_data(node, n)["count"])
                                 G.add_node(n)
@@ -311,7 +318,7 @@ class Network:
                                 G.add_node(n)
                                 G.add_node(node)
                     if gradeInteraction:
-                        if n.getGrade() == node.getGrade() and klasseAttr != n.getClass():
+                        if n.get_grade() == node.get_grade() and klasseAttr != n.get_class():
                             if n in graph.neighbors(node):
                                 G.add_edge(node, n, count=graph.get_edge_data(node, n)["count"])
                                 G.add_node(n)
@@ -327,13 +334,13 @@ class Network:
 
             return G
 
-        def createSubGraphWithout(graph, grade, klasse):
+        def create_sub_graph_off_diagonal(graph, grade, klasse):
             G = nx.Graph()
             # print("this is the subgraph before anything: " + str(graph))
             for node in graph.nodes():
                 for n in graph.nodes():
                     if grade and not klasse:
-                        if node.getGrade() != n.getGrade():
+                        if node.get_grade() != n.get_grade():
                             if n in graph.neighbors(node):
                                 G.add_edge(node, n, count=graph.get_edge_data(node, n)["count"])
                                 G.add_node(n)
@@ -359,11 +366,11 @@ class Network:
 
             return G
 
-        def load_all_pixeldist_non_cumulative():
-            exp_whole = self.pickleLoad("graph1_whole_pixel_not_Cumulative.pkl")
-            exp_diag = self.pickleLoad("graph1_off_diag_not_Cumulative.pkl")
-            exp_class = self.pickleLoad("graph1_class_pixel_not_Cumulative.pkl")
-            exp_grade = self.pickleLoad("graph1_grade_pixel_not_Cumulative.pkl")
+        def load_all_pixel_dist_non_cumulative():
+            exp_whole = self.pickle_load("graph1_whole_pixel_not_Cumulative.pkl")
+            exp_diag = self.pickle_load("graph1_off_diag_not_Cumulative.pkl")
+            exp_class = self.pickle_load("graph1_class_pixel_not_Cumulative.pkl")
+            exp_grade = self.pickle_load("graph1_grade_pixel_not_Cumulative.pkl")
 
             return exp_whole, exp_diag, exp_class, exp_grade
 
@@ -379,7 +386,7 @@ class Network:
             return pixel_dict
 
         def setup():
-            exp_whole, exp_diag, exp_class, exp_grade = load_all_pixeldist_non_cumulative()
+            exp_whole, exp_diag, exp_class, exp_grade = load_all_pixel_dist_non_cumulative()
             exp_whole_dict = rank_interaction(exp_whole)
             exp_diag_dict = rank_interaction(exp_diag)
             exp_class_dict = rank_interaction(exp_class)
@@ -403,11 +410,11 @@ class Network:
             def power_of_2(x):
                 return np.power(x, 2)
 
-            graph = Network(236, 5, 2, class_treshold=23, parameterList=X).generate_a_day()
+            graph = Network(236, 5, 2, class_treshold=23, parameter_list=X).generate_a_day()
 
-            off_diagonal = createSubGraphWithout(graph, True, False)
-            # grade_grade = createSubGraphWithoutGraph(graph, False, True)
-            # class_class = createSubGraphWithoutGraph(graph, True, False)
+            off_diagonal = create_sub_graph_off_diagonal(graph, True, False)
+            # grade_grade = create_sub_graph_grade_class(graph, False, True)
+            # class_class = create_sub_graph_grade_class(graph, True, False)
 
             # print(f"OFf diag: {off_diagonal}, grade_grade: {grade_grade}, class_class: {class_class}")
 
@@ -444,5 +451,5 @@ class Network:
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
-    # G = network.generateXdays(8)
+    # G = network.generate_iterations(8)
     network.parameterEstimation()
