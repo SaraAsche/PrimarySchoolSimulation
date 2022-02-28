@@ -259,8 +259,9 @@ class Person:
             b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 = 3  # 1.5
-            b1 = 0.6  # 0.1
+            a1 =4.75  # 1.5
+            b1 = 0.5  # 0.1
+
             ##  Off-diagonal with lunch
             a2 = 0.1  # 0.001
             b2 = 0.1  # 0.07
@@ -320,13 +321,13 @@ class Person:
 
         oldMean = np.mean(list(self.bias_vector.values()))
 
-        correction = normTarget / oldMean
+        correction = oldMean / normTarget
         newVector = {}
 
         for i in self.bias_vector:
             newVector[i] = self.bias_vector[i] * correction
 
-        self.bias_vector = newVector
+        self.bias_vector = newVector.copy()
 
     def __str__(self):
         return (

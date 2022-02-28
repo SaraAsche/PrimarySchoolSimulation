@@ -269,7 +269,7 @@ class Analysis:
         figure.tight_layout(pad=3)
 
         ## Setting up wether or not the x and y axis are log10 scale
-        logx = False
+        logx = True
         logy = True
 
         ## Adding the whole graph pixel distribution to the [0,0] position of the graph
@@ -623,7 +623,7 @@ class Analysis:
         ## Adding a combined label according to the labels specified when plotting
         handles, labels = axis[1, 1].get_legend_handles_labels()
         figure.legend(handles, labels, loc="center")  # loc="lower center"
-
+        plt.savefig("./fig_master/degree_dist.png", transparent=True, dpi=500)
         plt.show()
 
     def outlierDist(self, graph) -> None:
