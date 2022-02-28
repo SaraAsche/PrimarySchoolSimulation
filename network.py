@@ -287,9 +287,10 @@ class Network:
                     d[(node, neighbour)] = d.get((node, neighbour), 0) + 1
 
         for node, neighbour, attrs in graph.edges.data():
-            attrs["count"] = (
-                attrs["count"] / d.get((node, neighbour), 1)
-            )  #TODO Må finne en måte å dele på antall ganger denne spesifikke edgen har blitt plusset på
+            if attrs['count']>2000:
+                dayGraph.remove_edge(node, neighbour)
+            else:
+                attrs["count"] = (attrs["count"] / d.get((node, neighbour), 1))  
 
         dayNumberX = dayGraph  # self.daily_list[-1]  # Returns the final day
 

@@ -308,7 +308,8 @@ class Analysis:
         handles, labels = axis[1, 1].get_legend_handles_labels()
         figure.legend(handles, labels, loc="upper center")
 
-        plt.savefig("pixelDistSimulated.png", bbox_inches="tight", dpi=150)
+        
+        plt.savefig("./fig_master/pixelDist_simulated.png", transparent=True, dpi=500)
 
         plt.show()
 
@@ -375,7 +376,7 @@ class Analysis:
         if axis:
             sns.heatmap(A_M, robust=False, ax=axis)
         else:
-            sns.heatmap(A_M, robust=False)
+            sns.heatmap(A_M, robust=True)
             plt.show()
 
     # Generates histogram of degree distribution
@@ -769,5 +770,5 @@ class Analysis:
         ax2.set_ylabel("Frequency")
 
         fig.tight_layout()
-        #plt.savefig("./fig_master/full_analysis.png", transparent=True, dpi=500)
+        plt.savefig("./fig_master/full_analysis_simulated.png", transparent=True, dpi=500)
         plt.show()

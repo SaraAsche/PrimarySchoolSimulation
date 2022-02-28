@@ -260,7 +260,7 @@ class Person:
         else:
             ## Off-diagonal excluding lunch
             a1 = 3  # 1.5
-            b1 = 0.8  # 0.1
+            b1 = 0.6  # 0.1
             ##  Off-diagonal with lunch
             a2 = 0.1  # 0.001
             b2 = 0.1  # 0.07
