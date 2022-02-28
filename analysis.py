@@ -742,7 +742,7 @@ class Analysis:
 
         degs = {}
         for n in G.nodes():
-            deg = G.degree(n, weight="weight")
+            deg = G.degree(n, weight="count")
             degs[n] = deg
 
         items = sorted(degs.items())
@@ -769,5 +769,5 @@ class Analysis:
         ax2.set_ylabel("Frequency")
 
         fig.tight_layout()
-        plt.savefig("./fig_master/full_analysis.png", transparent=True, dpi=500)
+        #plt.savefig("./fig_master/full_analysis.png", transparent=True, dpi=500)
         plt.show()
