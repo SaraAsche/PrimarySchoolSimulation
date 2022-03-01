@@ -266,12 +266,12 @@ class Person:
             b2 = 0.01  # 0.07
 
             ## Grade-Grade
-            a3 = 1  # 100
-            b3 = 2  # 0.3
+            a3 = 20  # 100
+            b3 = 0.5  # 0.3
 
             ## Class-Class
-            a4 = 1  # 10000
-            b4 = 1  # 1
+            a4 = 35  # 10000
+            b4 = 2  # 1
 
         for i in range(len(students)):
             same_lunch = self.lunch_group == students[i].lunch_group
@@ -296,8 +296,8 @@ class Person:
             if same_class:
 
                 p += a4 * np.random.power(b4)
-                self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
-                students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
+                # self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
+                # students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
 
             self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
 
