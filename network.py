@@ -22,7 +22,8 @@ from sklearn import neighbors
 from analysis import Analysis
 import matplotlib.pyplot as plt
 
-from person import Person, Interaction
+from person import Person
+from interaction import Interaction
 
 
 class Network:
@@ -40,7 +41,7 @@ class Network:
         A number that helps scale the weights
     graph : nx.Graph
         A nx.Graph object that describes interactions in the network
-    daily_list : list
+    iteration_list : list
         A list of daily nx.Graph objects.
 
     Methods
@@ -81,7 +82,7 @@ class Network:
         self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_treshold)
         self.d = (1) * pow(10, -2)  # 4.3
         self.graph = self.generate_network()
-        self.daily_list = []
+        self.iteration_list = []
 
     def generate_students(self, num_students, num_grades, num_classes, class_treshold=20) -> list:
         """Generates a list containing Person objects that attend a certain school
@@ -103,7 +104,7 @@ class Network:
         """
 
         available_grades = [i for i in range(1, num_grades + 1)]
-        available_classes = [chr(i) for i in range(97, 97 + num_classes)]
+        available_classes = [chr(i) for i in range(97, 97 + num_classes)]  # A,B,C etc is generated
 
         students = []
 
@@ -115,14 +116,12 @@ class Network:
                     i += 1  # If we have reached a new class within a grade, i is updated.
 
                     if i >= len(available_classes) and num_students // num_grades - pers >= class_treshold:
-                        # If it is not possible to have the same amount og people in each class, and we have class_threshold students left, we make a new class
+                        ## If it is not possible to have the same amount of people in each class, and we have class_threshold students left, we make a new class
                         available_classes.append(chr(ord(available_classes[-1]) + 1))
-                    elif i >= len(
-                        available_classes
-                    ):  # If we have less than class_threshold students left, they are added in a random class
+                    elif i >= len(available_classes):
                         break
 
-        ### Sorted many times to ensure the ID is the same as the other ones in the grade a specific individual is in.
+        ## Assign studets to random class if the number of students does not divide evenly
         grade_ind = 0
         while len(students) != num_students:
             if grade_ind >= len(available_grades):
@@ -130,6 +129,7 @@ class Network:
             students.append(Person(available_grades[grade_ind], random.choice(available_classes)))
             grade_ind += 1
 
+        ### Sorted to ensure the ID is the same as the other ones in the grade a specific individual is in.
         students = sorted(students, key=lambda x: x.get_class_and_grade())
 
         ## Generate bias_vector
@@ -137,7 +137,7 @@ class Network:
             students[i].id = i
             students[i].generate_bias_vector(students)
 
-        students = sorted(students)
+        # students = sorted(students)
 
         ## Generate p_vector
         for i in range(len(students)):
@@ -165,15 +165,18 @@ class Network:
 
                 tentative_weight = np.random.poisson(stud.p_vector[pers] * self.d)
 
-                if stud.get_grade() == pers.get_grade():
-                    if tentative_weight < 80:
-                        weight = tentative_weight
+                ## It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
+
                 if stud.get_class_and_grade() == pers.get_class_and_grade():
                     if tentative_weight < 100:
                         weight = tentative_weight
 
-                if tentative_weight < 50:  # 180
-                    # It is only possible to interact 180 times an hour (if each interaction is maxumum 20 seconds long 60*60/20)
+                elif stud.get_grade() == pers.get_grade():
+
+                    if tentative_weight < 80:
+                        weight = tentative_weight
+
+                elif tentative_weight < 60:
                     weight = tentative_weight
 
                 if weight:
@@ -217,12 +220,6 @@ class Network:
         hourDay : int
             Describes how many hours there is in a given schoolday
         """
-        ## Renormalise bias_vector at the beginning of the day
-        for i in range(len(self.students)):
-            self.students[i].renormalize()
-
-        ## Generate new p-vector with the updated bias_vector
-        self.students[0].generate_p_vector(self.students, [])
 
         ## Empty list to append the hour by hour networks
         hourly_list = []
@@ -250,11 +247,18 @@ class Network:
                 if self.students[j] in dayGraph[stud1]:
                     stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
                     # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
+        ## Renormalise bias_vector at the beginning of the day
+        for i in range(len(self.students)):
+            self.students[i].renormalize()
+
+        ## Generate new p-vector with the updated bias_vector
+        for i in range(len(self.students)):
+            self.students[i].generate_p_vector(self.students, [])
 
         return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
 
     def generate_iterations(self, number) -> nx.Graph:
-        """Generates number number of days and returns the nx.Graph from the final day
+        """Generates iterations of a day and returns the nx.Graph from the final day
 
         Parameters
         ----------
@@ -263,9 +267,9 @@ class Network:
         """
 
         for i in range(number):
-            self.daily_list.append(self.generate_a_day())
+            self.iteration_list.append(self.generate_a_day())
 
-            print("-----Day " + str(i) + "------")
+            print("-----Iteration " + str(i) + "------")
             print(
                 "max: " + str(max(list(self.students[0].bias_vector.values())))
             )  # Prints out the highest bias_vector of student 0
@@ -274,30 +278,31 @@ class Network:
             )  # prints out the mean of bias_vector of student 0
             print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
 
-        #!!dayGraph = nx.empty_graph(self.daily_list[0])
-        dayGraph = self.daily_list[0]
+        ## Interactions between students is based on the first network
+        dayGraph = self.iteration_list[0]
         d = {}
-        for graph in self.daily_list:
+
+        ## Adding the counts from other iterations to normalize weights
+        for graph in self.iteration_list[1:]:
             for node, neighbour, attrs in graph.edges.data():
                 if not dayGraph.has_edge(node, neighbour):
-                    #dayGraph.add_edge(node, neighbour, count=attrs["count"])
+                    # dayGraph.add_edge(node, neighbour, count=attrs["count"])
                     continue
                 else:
                     dayGraph[node][neighbour]["count"] += attrs["count"]
                     d[(node, neighbour)] = d.get((node, neighbour), 0) + 1
 
         for node, neighbour, attrs in graph.edges.data():
-            if attrs['count']>2000:
-                dayGraph.remove_edge(node, neighbour)
-            else:
-                attrs["count"] = (attrs["count"] / d.get((node, neighbour), 1))  
+            # if attrs["count"] > 2000:
+            #    dayGraph.remove_edge(node, neighbour)
+            # else:
 
-        dayNumberX = dayGraph  # self.daily_list[-1]  # Returns the final day
+            attrs["count"] = attrs["count"] / d.get((node, neighbour), 1)
 
-        return dayNumberX
+        return dayGraph  # Returns the day graph based on X iterations
 
-    def pickle_load(self, name):
-        file_to_read = open(name, "rb")
+    def pickle_load(self, name, pixel=True):
+        file_to_read = open("./pickles/" + ("pixel/" if pixel else "degree/") + name, "rb")
         return pickle.load(file_to_read)
 
     ### Estimation
@@ -364,7 +369,6 @@ class Network:
                         G.add_edge(node, n, count=0)
                         G.add_node(n)
                         G.add_node(node)
-
             return G
 
         def load_all_pixel_dist_non_cumulative():
@@ -376,15 +380,15 @@ class Network:
             return exp_whole, exp_diag, exp_class, exp_grade
 
         def rank_interaction(pixel):
-            pixel[::-1].sort()
-            pixel_list = pixel.tolist()
+            pixel.sort()
+            # pixel_list = pixel.tolist()
 
-            pixel_dict = {}
+            # pixel_dict = {}
 
-            for i in range(len(pixel_list) - 1):
-                pixel_dict[i] = pixel_list[i]
-            pixel_dict = np.array(list(pixel_dict.values()))
-            return pixel_dict
+            # for i in range(len(pixel_list)):
+            #     pixel_dict[i] = pixel_list[i]
+            # pixel_dict = np.array(list(pixel_dict.values()))
+            return pixel
 
         def setup():
             exp_whole, exp_diag, exp_class, exp_grade = load_all_pixel_dist_non_cumulative()
@@ -411,7 +415,7 @@ class Network:
             def power_of_2(x):
                 return np.power(x, 2)
 
-            graph = Network(236, 5, 2, class_treshold=23, parameter_list=X).generate_a_day()
+            graph = Network(236, 5, 2, class_treshold=23, parameter_list=X).generate_iterations(10)
 
             off_diagonal = create_sub_graph_off_diagonal(graph, True, False)
             # grade_grade = create_sub_graph_grade_class(graph, False, True)

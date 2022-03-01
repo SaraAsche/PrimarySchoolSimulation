@@ -227,8 +227,8 @@ class Analysis:
 
             plt.show()
 
-    def pickle_load(self, name) -> dict:
-        file_to_read = open(name, "rb")
+    def pickle_load(self, name, pixel=True) -> dict:
+        file_to_read = open("./pickles" + ("/pixel/" if pixel else "/degree/") + name, "rb")
         return pickle.load(file_to_read)
 
     def pixel_dist_school(self, graph, old=False, both=False) -> None:
@@ -252,6 +252,7 @@ class Analysis:
         class_class = self.create_sub_graph_grade_class(graph, True, False)
 
         ## Generating off-diagonal, grade-grade and class-class for day 1 experimental network
+        pixel = "./pickle/pixel_dist/"
         if old:
             old_graph = self.pickle_load("graph1_whole_pixel.pkl")
             old_off_diagonal = self.pickle_load("graph1_off_diag_pixel.pkl")
@@ -309,7 +310,6 @@ class Analysis:
         handles, labels = axis[1, 1].get_legend_handles_labels()
         figure.legend(handles, labels, loc="upper center")
 
-        
         plt.savefig("./fig_master/pixelDist_simulated.png", transparent=True, dpi=500)
 
         plt.show()
@@ -486,8 +486,8 @@ class Analysis:
 
         ##Load in degreedistributions from experimental data
         if old:
-            old1 = self.pickle_load("Degreedistribution_Day1.pkl")
-            old2 = self.pickle_load("Degreedistribution_Day2.pkl")
+            old1 = self.pickle_load("Degreedistribution_Day1.pkl", pixel=False)
+            old2 = self.pickle_load("Degreedistribution_Day2.pkl", pixel=False)
 
         ##If subplot is created label can be added
         if axis:
@@ -563,17 +563,17 @@ class Analysis:
         """
 
         ## Load day 1 dictionaries
-        graph1 = self.pickle_load("DegreeDictwhole1.pkl")
-        off_diag1 = self.pickle_load("DegreeDictOffDiag1.pkl")
-        grade1 = self.pickle_load("DegreeDictgrade1.pkl")
-        class1 = self.pickle_load("DegreeDictclass1.pkl")
+        graph1 = self.pickle_load("DegreeDictwhole1.pkl", pixel=False)
+        off_diag1 = self.pickle_load("DegreeDictOffDiag1.pkl", pixel=False)
+        grade1 = self.pickle_load("DegreeDictgrade1.pkl", pixel=False)
+        class1 = self.pickle_load("DegreeDictclass1.pkl", pixel=False)
 
         ## Load day 2 dictionaries
         if both:
-            graph2 = self.pickle_load("DegreeDictwhole2.pkl")
-            off_diag2 = self.pickle_load("DegreeDictOffDiag2.pkl")
-            grade2 = self.pickle_load("DegreeDictgrade2.pkl")
-            class2 = self.pickle_load("DegreeDictclass2.pkl")
+            graph2 = self.pickle_load("DegreeDictwhole2.pkl", pixel=False)
+            off_diag2 = self.pickle_load("DegreeDictOffDiag2.pkl", pixel=False)
+            grade2 = self.pickle_load("DegreeDictgrade2.pkl", pixel=False)
+            class2 = self.pickle_load("DegreeDictclass2.pkl", pixel=False)
 
         ## load experimental graphs
         if experimental:
@@ -723,8 +723,6 @@ class Analysis:
             else:
                 color_map.append("slategrey")
 
-        print(color_map)
-
         degree_sequence = sorted([d for n, d in G.degree(weight="weight")], reverse=False)
 
         fig = plt.figure("Degree of a random graph", figsize=(8, 8))
@@ -754,7 +752,7 @@ class Analysis:
             data.append(line[1])
 
         sorteddata = np.sort(data)
-        print(sorteddata)
+
         d = self.to_cumulative(sorteddata)
 
         ax1.plot(d.keys(), d.values(), color="seagreen")
@@ -773,3 +771,18 @@ class Analysis:
         fig.tight_layout()
         plt.savefig("./fig_master/full_analysis_simulated.png", transparent=True, dpi=500)
         plt.show()
+
+    def getClasses(self, G):  # -> [{1a}, {1b}, {2a}, {2b}, {3a}, {3b}, {4a}, {4b}, {5a}, {5b}]
+        d = {}
+        for node in G.nodes():
+            if node.get_class_and_grade() not in d:
+                d[node.get_class_and_grade()] = {node}
+            else:
+                d[node.get_class_and_grade()].add(node)
+
+        return [classSet[1] for classSet in sorted(list(d.items()), key=lambda x: x[0])]
+
+    def modularity(self, G):
+        communities = self.getClasses(G)
+        M = community.modularity(G, communities, "weight")
+        print(M)

@@ -1,14 +1,13 @@
-"""Person and Interaction classes
+"""Person class
 
-Describes the Person and Interaction classes and their functionality. A person
-object is either a student or a teacher.  Is meant to be used called from main.py,
+Describes the Person classes and their functionality. A person
+object is either a student or a teacher.  Is meant to be called from main.py,
 network.py or analysis.py.  
 
   Typical usage example:
 
   person = Person(5, 'A')
   person2 = Person(3, 'B')
-  interaction = Interaction(person, person2)
 
 Author: Sara Johanne Asche
 Date: 14.02.2022
@@ -20,9 +19,9 @@ import random
 import math
 
 import numpy as np
-from scipy.stats import weibull_min
 
 from enums import Age_group
+from interaction import Interaction
 
 
 class Person:
@@ -61,12 +60,12 @@ class Person:
 
     Methods
     -------
-    set_valid_age(self, grade, is_teacher=False)
+    generate_valid_age(self, grade, is_teacher=False)
         Returns the age of an individual that is in grade grade, 50% likely that they have had their bithday before the school starts, 50% they have had their birthday after. If object is teacher, another method is used.
-    set_lunch_group(self)
-        Sets the lunch_group attribute to a boolean depending on which grade the Person object is in.
-    set_age_group(self)
-        Sets the age_group attribute to an Age_group enum value depending on the age of the Person object.
+    generate_lunch_group(self)
+        Generates the lunch_group attribute to a boolean depending on which grade the Person object is in.
+    generate_age_group(self)
+        Generates the age_group attribute to an Age_group enum value depending on the age of the Person object.
     add_interaction(self, interaction)
         Attaches an Interaction object to the Person object's interaction dictionary attribute.
     get_interaction(self, p)
@@ -110,23 +109,23 @@ class Person:
             the class of the Person
         """
 
-        self.id = next(Person.newid)
+        self.id = None  # next(Person.newid)
         self.sex = self.get_gender()
         self.state = "R"
         self.vaccinated = self.get_vaccinated_status()
         self.grade = grade
-        self.age = self.set_valid_age(grade)
-        self.age_group = self.set_age_group()
+        self.age = self.generate_valid_age(grade)
+        self.age_group = self.generate_age_group()
         self.class_group = str(class_group)
-        self.lunch_group = self.set_lunch_group()
+        self.lunch_group = self.generate_lunch_group()
         self.interactions = {}
 
-        self.const_bias = 10 * (math.log10(1 / random.random()))
+        self.const_bias = 20 * (math.log10(1 / random.random()))
 
         self.bias_vector = {}
         self.p_vector = {}
 
-    def set_valid_age(self, grade, is_teacher=False) -> int:
+    def generate_valid_age(self, grade, is_teacher=False) -> int:
         # TODO: Add teacher functionality
         """Generates and returns the age of the Person
 
@@ -146,7 +145,7 @@ class Person:
 
         return random.choice([grade + 4, grade + 5])
 
-    def set_lunch_group(self) -> bool:
+    def generate_lunch_group(self) -> bool:
         """Generates an appropriate bool value for lunch_group according to grade"""
 
         if self.grade < 4:
@@ -154,7 +153,7 @@ class Person:
         else:
             return 0
 
-    def set_age_group(self) -> Age_group:
+    def generate_age_group(self) -> Age_group:
         """Returns an age_group based on the Person objects' age"""
 
         for group in Age_group:
@@ -162,7 +161,7 @@ class Person:
                 return group
         return None
 
-    def add_interaction(self, interaction):
+    def add_interaction(self, interaction: Interaction):
         """Adds an Interaction object to a Person's interactions dictionary
 
         Checks which of the p1 or p2 Person objects is self and denotes the
@@ -182,10 +181,10 @@ class Person:
 
         self.interactions[other] = interaction
 
-    def get_interaction(self, p):  # Returns interaction object between self and p
+    def get_interaction(self, p) -> Interaction:  # Returns interaction object between self and p
         return self.interactions.get(p, Interaction(self, p, 0))
 
-    def get_gender(self) -> str:
+    def get_gender(self) -> str:  # Returns gender of Person
         return "F" if random.random() > 0.5 else "M"
 
     def get_vaccinated_status(self) -> bool:
@@ -240,7 +239,7 @@ class Person:
         X : list
             A list containing parameters for a1,a2,a3,a4 and b1,b2,b3,b4.
         """
-        rand = True
+
         if len(X):
             ## Off-diagonal excluding lunch
             a1 = X[0]
@@ -259,16 +258,16 @@ class Person:
             b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 =4.801  # 1.5
-            b1 = 2.001  # 0.1
+            a1 = 15  # 1.5
+            b1 = 0.09  # 0.1
 
             ##  Off-diagonal with lunch
-            a2 = 4.801  # 0.001
-            b2 = 2.001  # 0.07
+            a2 = 1  # 0.001
+            b2 = 0.01  # 0.07
 
             ## Grade-Grade
             a3 = 1  # 100
-            b3 = 1  # 0.3
+            b3 = 2  # 0.3
 
             ## Class-Class
             a4 = 1  # 10000
@@ -279,6 +278,7 @@ class Person:
             same_grade = self.grade == students[i].grade
             same_class = self.class_group == students[i].class_group and self.grade == students[i].grade
 
+            ## Default level of interaction between students
             p = a1 * np.random.power(
                 b1
             )  # weibull_min.rvs(b1, scale=10)  # np.random.weibull(b1)  # np.random.power(b1)
@@ -296,8 +296,8 @@ class Person:
             if same_class:
 
                 p += a4 * np.random.power(b4)
-                self.bias_vector[students[i]] = 20 * (math.log10(1 / random.random()))
-                students[i].bias_vector[self] = 20 * (math.log10(1 / random.random()))
+                self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
+                students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
 
             self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
 
@@ -309,13 +309,13 @@ class Person:
         """Renormalises the bias_vector of a Person object
 
         At the end of each day the bias_vector is updated so that students form connections differently
-        from day to day. This is done by adding a new value, bias, to the const bias, shifting it.
-        The bias_vector is then multiplied by a correction value that is self.bias/(the mean of the
-        bias_vector) to form a new value for each interaction.
+        from one day to the next. This is done by adding the new value, bias, to the const bias, and shifting it.
+        The bias_vector is then multiplied by a correction value that is the old bias divided by the new bias vector
+        to form a new value for each interaction.
 
         """
 
-        self.bias = self.const_bias + 170 * (math.log10(1 / random.random()))
+        self.bias = self.const_bias + 160 * (math.log10(1 / random.random()))
 
         normTarget = self.bias
 
@@ -342,74 +342,3 @@ class Person:
 
     def __gt__(self, other):
         return self.id > other.id
-
-
-class Interaction:
-    """A class that saves interactions between two Person objects
-
-    Attributes
-    ----------
-    p1 : Person
-        Person object that is a part of the interaction
-    p2 : Person
-        Another Person object that is a part of the interaction
-    count : int
-        A count that keeps track of how many times two individuals have interacted
-
-    Methods
-    -------
-    get_p1(self)
-        Returns the p1 Person object
-    get_p2(self)
-        Returns the p2 Person object
-    get_count(self)
-        Returns the count variable for the Interaction object
-    add_to_count(self, count=1)
-        Increases the count variable with count (set to default to 1)
-    """
-
-    def __init__(self, p1, p2, count=1):
-        """Inits Interaction object two Person objects (p1 and p2) and a count.
-
-        Parameters
-        ----------
-        p1 : Person
-            Person object that interacts with p2
-        p2 : Person
-            Person object that interacts with p1
-        count : int
-            The number of times p1 and p2 has interacted. Default = 1
-        """
-
-        self.p1 = p1
-        self.p2 = p2
-        self.count = count
-        self.p1.add_interaction(self)
-        self.p2.add_interaction(self)
-
-    def get_p1(self) -> Person:
-        return self.p1
-
-    def get_p2(self) -> Person:
-        return self.p2
-
-    def get_count(self) -> int:
-        return self.count
-
-    def add_to_count(self, count=1) -> None:
-        self.count += count
-
-    def __repr__(self):
-        return f"{self.p1.id} has interacted {self.count} times with {self.p2.id}"
-
-
-if __name__ == "__main__":
-    p1 = Person(1, "B")
-    p2 = Person(1, "B")
-
-    print(p1.id)
-    print(p2.id)
-
-    l = [p2, p1]
-    print(l)
-    print(sorted(l))
