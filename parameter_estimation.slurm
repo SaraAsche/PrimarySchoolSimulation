@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
-#SBATCH --account="saraja"
+#SBATCH --account=saraja
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
