@@ -269,14 +269,10 @@ class Network:
         for i in range(number):
             self.iteration_list.append(self.generate_a_day())
 
-            print("-----Iteration " + str(i) + "------")
-            print(
-                "max: " + str(max(list(self.students[0].bias_vector.values())))
-            )  # Prints out the highest bias_vector of student 0
-            print(
-                "mean: " + str(np.mean(list(self.students[0].bias_vector.values())))
-            )  # prints out the mean of bias_vector of student 0
-            print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
+            # print("-----Iteration " + str(i) + "------")
+            # print("max: " + str(max(list(self.students[0].bias_vector.values()))))  # Prints out the highest bias_vector of student 0
+            # print("mean: " + str(np.mean(list(self.students[0].bias_vector.values()))))  # prints out the mean of bias_vector of student 0
+            # print("bias: " + str((self.students[0].bias)))  # prints out the bias attribute of student 0
 
         ## Interactions between students is based on the first network
         dayGraph = self.iteration_list[0]
@@ -379,23 +375,12 @@ class Network:
 
             return exp_whole, exp_diag, exp_class, exp_grade
 
-        def rank_interaction(pixel):
-            pixel.sort()
-            # pixel_list = pixel.tolist()
-
-            # pixel_dict = {}
-
-            # for i in range(len(pixel_list)):
-            #     pixel_dict[i] = pixel_list[i]
-            # pixel_dict = np.array(list(pixel_dict.values()))
-            return pixel
-
         def setup():
             exp_whole, exp_diag, exp_class, exp_grade = load_all_pixel_dist_non_cumulative()
-            exp_whole_dict = rank_interaction(exp_whole)
-            exp_diag_dict = rank_interaction(exp_diag)
-            exp_class_dict = rank_interaction(exp_class)
-            exp_grade_dict = rank_interaction(exp_grade)
+            exp_whole_dict = np.sort(np.array(exp_whole))
+            exp_diag_dict = np.sort(np.array(exp_diag))
+            exp_class_dict = np.sort(np.array(exp_class))
+            exp_grade_dict = np.sort(np.array(exp_grade))
 
             return exp_whole_dict, exp_diag_dict, exp_class_dict, exp_grade_dict
 
@@ -405,9 +390,9 @@ class Network:
 
             weights = Sim_Adj[np.triu_indices(length, k=1)].tolist()[0]
 
-            simData = np.array(sorted(weights))
+            simData = np.sort(np.array(sorted(weights)))
 
-            return rank_interaction(simData)
+            return simData
 
         exp_whole, exp_diag, exp_class, exp_grade = setup()
 
@@ -428,25 +413,57 @@ class Network:
             # grade_dict = toSorted(grade_grade)
             # class_dict = toSorted(class_class)
 
-            raise_2 = np.vectorize(power_of_2)
+            # raise_2 = np.vectorize(power_of_2)
 
-            output = raise_2(exp_diag - diag_dict)
+            output = power_of_2(exp_diag - diag_dict)
             # raise_2(exp_whole - whole_dict)+ raise_2(exp_diag - diag_dict)+ raise_2(exp_grade - grade_dict)+ raise_2(exp_class - class_dict))
-            output = output.sum()
-            return output
+            # output = output.sum()
+            return output.sum()
 
         def loop_parameters(low, top, step):
             i = 0
             dict_results = {}
             res = 0
-            for _ in range(20):
-                parameter = [3, 0.1, 9, 0.01, 1, 1, 1, 1]
-                res += parameters(parameter)
+            # for _ in range(20):
+            #     parameter = [3, 0.1, 9, 0.01, 1, 1, 1, 1]
+            #     res += parameters(parameter)
 
-            print(i)
-            i += 1
-            dict_results[i] = [(res / 20), parameter]
-            print("res: " + str(res) + " parametere: " + str(parameter))
+            i = 0.001
+            while i < 0.2:
+                j = 0.001
+                while j < 0.2:
+                    k = 0.001
+                    while k < 0.2:
+                        l = 0.001
+                        while l < 0.2:
+                            parameter = [i, j, k, l, 1, 1, 1, 1]
+                            res = parameters(parameter)
+                            dict_results[tuple(parameter)] = res
+                            l += 0.4
+                        k += 0.4
+                    j += 0.4
+                i += 0.4
+
+            try:
+                with open("results.csv", "w") as f:
+                    f.write("i,j,k,l,res\n")
+                    for key, value in dict_results.items():
+                        f.write(f"{key[0]},{key[1]},{key[2]},{key[3]},{value}\n")
+            except:
+                print("Error")
+
+            try:
+                pickle.dump(dict_results, open("results.pkl", "wb"))
+            except:
+                print("Another error")
+
+            print(min(dict_results, key=dict_results.get))
+            print(min(dict_results.values()))
+
+            # print(i)
+            # i += 1
+            # dict_results[i] = [(res / 20), parameter]
+            # print("res: " + str(res) + " parametere: " + str(parameter))
             # print(min(dict_results.values()[0]))
             # print(min(dict_results.values()[1]))
 
