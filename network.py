@@ -429,13 +429,13 @@ class Network:
             #     res += parameters(parameter)
 
             i = 0.001
-            while i < 0.2:
+            while i < 0.5:
                 j = 0.001
-                while j < 0.2:
+                while j < 0.5:
                     k = 0.001
-                    while k < 0.2:
+                    while k < 0.5:
                         l = 0.001
-                        while l < 0.2:
+                        while l < 0.5:
                             parameter = [i, j, k, l, 1, 1, 1, 1]
                             res = parameters(parameter)
                             dict_results[tuple(parameter)] = res
