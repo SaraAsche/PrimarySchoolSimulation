@@ -4,7 +4,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=12
-#SBATCH --mem=12000
+#SBATCH --mem=38000
 #SBATCH --job-name="parameter_estimation_off_diagonal"
 #SBATCH --output=test-srun.out
 #SBATCH --mail-user="saraj.asche@gmail.com"
