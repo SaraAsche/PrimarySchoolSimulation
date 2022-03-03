@@ -2,7 +2,7 @@
 #SBATCH --partition=CPUQ
 #SBATCH --account=nv-ibt
 #SBATCH --time=24:00:00
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH -c16
 #SBATCH --mem=16000
 #SBATCH --job-name="parameter_estimation_off_diagonal"
