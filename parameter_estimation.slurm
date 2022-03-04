@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH -c32
 #SBATCH --mem=16000
-#SBATCH --job-name="parameter_estimation_off_diagonal"
+#SBATCH --job-name="par_est"
 #SBATCH --output=test-srun.out
 #SBATCH --mail-user="saraj.asche@gmail.com"
 #SBATCH --mail-type=ALL

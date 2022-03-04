@@ -428,21 +428,21 @@ class Network:
             #     parameter = [3, 0.1, 9, 0.01, 1, 1, 1, 1]
             #     res += parameters(parameter)
 
-            i = 0.001
-            while i < 0.5:
-                j = 0.001
-                while j < 0.5:
-                    k = 0.001
-                    while k < 0.5:
-                        l = 0.001
-                        while l < 0.5:
+            i = 0.01
+            while i < 10:
+                j = 0.01
+                while j < 10:
+                    k = 0.01
+                    while k < 10:
+                        l = 0.01
+                        while l < 10:
                             parameter = [i, j, k, l, 1, 1, 1, 1]
                             res = parameters(parameter)
                             dict_results[tuple(parameter)] = res
-                            l += 0.4
-                        k += 0.4
-                    j += 0.4
-                i += 0.4
+                            l += 0.1
+                        k += 0.1
+                    j += 0.1
+                i += 0.1
 
             try:
                 with open("results.csv", "w") as f:
