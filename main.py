@@ -16,16 +16,19 @@ def main():
 
     analysis = Analysis(network)
 
-    G = network.generate_iterations(10)
+    # G = network.generate_iterations(10)
+    G = network.generate_a_day()
 
-    analysis.pixel_dist_school(G, old=True, both=True)
+    analysis.replica_degree(G, network)
+    # analysis.replica_pixel(G, network)
+    # analysis.pixel_dist_school(G, old=True, both=True)
     # analysis.degree_distribution_layers(sim=G, experimental=True, both=True)
     # analysis.heatmap(G)
     # analysis.runAnalysis2(G)
 
     # analysis.outlierDist(G)
 
-    analysis.modularity(G)
+    # analysis.modularity(G)
 
 
 main()

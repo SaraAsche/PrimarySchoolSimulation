@@ -146,7 +146,7 @@ class Analysis:
                         G.add_node(n)
         return G
 
-    def pixel_dist(self, graph, logX, logY, axis=None, old=False, label=None) -> None:
+    def pixel_dist(self, graph, logX, logY, axis=None, old=False, label=None, wait=False, replica=False) -> None:
         """Plots the distribution of all interactions that has occured between two individuals.
 
         Parameters
@@ -209,7 +209,10 @@ class Analysis:
 
         else:
             ## A single plot can be plotted by matplotlib, no axis necessary
-            plt.plot(d.keys(), d.values())
+            if replica:
+                plt.plot(d.keys(), d.values(), "--", label=label, alpha=0.4)
+            else:
+                plt.plot(d.keys(), d.values())
 
             ## The x-axis and y-axis are scaled according to the logX and logY variables.
             if logY:
@@ -225,7 +228,8 @@ class Analysis:
                 plt.xscale("linear")
                 plt.xlabel("Interactions")
 
-            plt.show()
+            if not wait:
+                plt.show()
 
     def pickle_load(self, name, pixel=True) -> dict:
         file_to_read = open("./pickles" + ("/pixel/" if pixel else "/degree/") + name, "rb")
@@ -439,7 +443,7 @@ class Analysis:
         return cHist
 
     def cumulative_distribution_log(
-        self, graph, logX=False, logY=True, axis=None, old=False, label=None, cap=0
+        self, graph, logX=False, logY=True, axis=None, old=False, label=None, cap=0, wait=False, replica=False
     ) -> None:
         """Plots the cumulative degree P(X>=x), where x is the frequency distribution of a given graph.
 
@@ -498,7 +502,10 @@ class Analysis:
 
         ## Else creates normal matplotlib object for a single plot
         else:
-            plt.plot(d.keys(), d.values(), label="Simulated")
+            if replica:
+                plt.plot(d.keys(), d.values(), "--", label=label, alpha=0.4)
+            else:
+                plt.plot(d.keys(), d.values(), label="Simulated")
             if old:
                 plt.plot(old1.keys(), old1.values(), label="Empiric day 1")
                 plt.plot(old2.keys(), old2.values(), label="Empiric day 2")
@@ -516,8 +523,8 @@ class Analysis:
             else:
                 plt.xscale("linear")
                 plt.xlabel("Degree")
-
-            plt.show()
+            if not wait:
+                plt.show()
 
     def hist_plot(self, d, label, logX=False, logY=True, axis=None) -> None:
         """Plots a dictionary d with a label on a given matplotlib axis
@@ -545,6 +552,18 @@ class Analysis:
                 axis.set_ylabel("log Frequency")
             else:
                 axis.set_ylabel("Frequency")
+        else:
+            plt.plot(d.keys(), d.values(), label=label)
+            if logX:
+                plt.xscale("log")
+                plt.xlabel("log Degree")
+            else:
+                plt.xlabel("Degree")
+            if logY:
+                plt.yscale("log")
+                plt.ylabel("log Frequency")
+            else:
+                plt.ylabel("Frequency")
 
     def degree_distribution_layers(self, both=False, experimental=False, sim=None) -> None:
         """Plots the degree distribution of both experimental and simulated graphs for the whole graph
@@ -786,3 +805,27 @@ class Analysis:
         communities = self.getClasses(G)
         M = community.modularity(G, communities, "weight")
         print(M)
+
+    def replica_degree(self, G, network):
+        graph1 = self.pickle_load("DegreeDictwhole1.pkl", pixel=False)
+        graph2 = self.pickle_load("DegreeDictwhole2.pkl", pixel=False)
+        self.hist_plot(graph1, label="Empiric day 1")
+        self.hist_plot(graph2, label="Empiric day 2")
+        self.cumulative_distribution_log(G, wait=True, label="0", replica=True)
+        for i in range(0, 10):
+            graph = network.generate_a_day()
+            self.cumulative_distribution_log(graph, wait=True, label=str(i + 1), replica=True)
+            print(graph)
+        plt.legend()
+        plt.show()
+
+    def replica_pixel(self, G, network):
+        old_graph = self.pickle_load("graph1_whole_pixel.pkl")
+        self.pixel_dist(old_graph, logX=True, logY=True, label="Day 1", wait=True, old=True)
+        old_graph = self.pickle_load("graph2_whole_pixel.pkl")
+        self.pixel_dist(old_graph, logX=True, logY=True, label="Day 2", wait=True, old=True)
+
+        for i in range(0, 10):
+            self.pixel_dist(network.generate_a_day(), wait=True, logX=True, logY=True, replica=True)
+        plt.legend()
+        plt.show()

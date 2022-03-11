@@ -245,11 +245,13 @@ class Network:
                 if i == j:
                     continue
                 if self.students[j] in dayGraph[stud1]:
-                    stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
+                    # stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
                     # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
+                    pass
         ## Renormalise bias_vector at the beginning of the day
         for i in range(len(self.students)):
-            self.students[i].renormalize()
+            # self.students[i].renormalize()
+            continue
 
         ## Generate new p-vector with the updated bias_vector
         for i in range(len(self.students)):

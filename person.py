@@ -258,20 +258,20 @@ class Person:
             b4 = X[7]
         else:
             ## Off-diagonal excluding lunch
-            a1 = 15  # 1.5
-            b1 = 0.09  # 0.1
+            a1 = 2  # 1.5
+            b1 = 0.04  # 0.1
 
             ##  Off-diagonal with lunch
-            a2 = 1  # 0.001
+            a2 = 0.01  # 0.001
             b2 = 0.01  # 0.07
 
             ## Grade-Grade
-            a3 = 20  # 100
-            b3 = 0.5  # 0.3
+            a3 = 2  # 100
+            b3 = 0.4  # 0.3
 
             ## Class-Class
-            a4 = 35  # 10000
-            b4 = 2  # 1
+            a4 = 5  # 10000
+            b4 = 1  # 1
 
         for i in range(len(students)):
             same_lunch = self.lunch_group == students[i].lunch_group
@@ -299,7 +299,8 @@ class Person:
                 # self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
                 # students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
 
-            self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
+            # self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
+            self.p_vector[students[i]] = p * self.bias_vector[students[i]] * students[i].bias_vector[self]
 
     def get_min_p_vector(self) -> float:
         """Returns minimum value of a given p-vector"""
@@ -321,7 +322,7 @@ class Person:
 
         oldMean = np.mean(list(self.bias_vector.values()))
 
-        correction = oldMean / normTarget
+        correction = normTarget / oldMean
         newVector = {}
 
         for i in self.bias_vector:
