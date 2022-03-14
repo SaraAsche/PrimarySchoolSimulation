@@ -382,6 +382,7 @@ class Analysis:
             sns.heatmap(A_M, robust=False, ax=axis)
         else:
             sns.heatmap(A_M, robust=True)
+            plt.savefig("./fig_master/heatmap.png", transparent=True, dpi=500)
             plt.show()
 
     # Generates histogram of degree distribution
