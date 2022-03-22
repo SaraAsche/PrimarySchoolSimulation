@@ -21,7 +21,9 @@ import math
 import numpy as np
 
 from enums import Age_group
+from helpers import Helpers
 from interaction import Interaction
+from enums import Disease_states
 
 
 class Person:
@@ -111,7 +113,7 @@ class Person:
 
         self.id = None  # next(Person.newid)
         self.sex = self.get_gender()
-        self.state = "R"
+
         self.vaccinated = self.get_vaccinated_status()
         self.grade = grade
         self.age = self.generate_valid_age(grade)
@@ -119,11 +121,23 @@ class Person:
         self.class_group = str(class_group)
         self.lunch_group = self.generate_lunch_group()
         self.interactions = {}
-
         self.const_bias = 20 * (math.log10(1 / random.random()))
+        self.bias_grade = 17 * (math.log10(1 / random.random()))
+        self.bias_class = np.random.normal(loc=100, scale=5)  # 17 * (math.log10(1 / random.random()))  #
 
         self.bias_vector = {}
+
         self.p_vector = {}
+
+        self.state = self.disease_state_start()
+        self.states = dict([(e, 0) for e in Disease_states])  # [self.state]
+
+    def get_state(self) -> str:
+        return self.state
+
+    def set_state(self, state) -> None:
+        self.state = state
+        self.states[state] += 1
 
     def generate_valid_age(self, grade, is_teacher=False) -> int:
         # TODO: Add teacher functionality
@@ -144,6 +158,12 @@ class Person:
         """
 
         return random.choice([grade + 4, grade + 5])
+
+    def disease_state_start(self) -> str:
+        return Disease_states.S
+
+    def set_diasease_state(self, state) -> None:
+        self.state = state
 
     def generate_lunch_group(self) -> bool:
         """Generates an appropriate bool value for lunch_group according to grade"""
@@ -279,28 +299,29 @@ class Person:
             same_class = self.class_group == students[i].class_group and self.grade == students[i].grade
 
             ## Default level of interaction between students
-            p = a1 * np.random.power(
-                b1
+            p = (
+                a1 * np.random.power(b1) * self.bias_vector[students[i]] * students[i].bias_vector[self]
             )  # weibull_min.rvs(b1, scale=10)  # np.random.weibull(b1)  # np.random.power(b1)
 
             ### Lunch: Off-diagonal boosted with lunchgroups
             if same_lunch:
-                p += a2 * np.random.power(b2)
+                p += a2 * np.random.power(b2) * self.bias_vector[students[i]] * students[i].bias_vector[self]
                 # p += np.random.normal(5)
 
             ### Grade-grade interaction layer
             if same_grade:
-                p += a3 * np.random.power(b3)
+                p += a3 * np.random.power(b3) * self.bias_grade * students[i].bias_grade
 
             ### Class-class interaction layer. Assume no bias/low bias for class-class interactions. No free-time activity
             if same_class:
-
-                p += a4 * np.random.power(b4)
+                # p += max(0, 0.00002 * np.random.normal(loc=10, scale=200) * self.bias_class * students[i].bias_class)
+                # p += a4 * np.random.power(b4) * self.bias_class * students[i].bias_class
+                p += np.random.gamma(0.2, 11.5) * min(self.bias_class, students[i].bias_class)
                 # self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
                 # students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
 
             # self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
-            self.p_vector[students[i]] = p * self.bias_vector[students[i]] * students[i].bias_vector[self]
+            self.p_vector[students[i]] = p
 
     def get_min_p_vector(self) -> float:
         """Returns minimum value of a given p-vector"""
@@ -329,6 +350,17 @@ class Person:
             newVector[i] = self.bias_vector[i] * correction
 
         self.bias_vector = newVector.copy()
+
+    def add_day_in_state(self):
+        self.states[self.state] += 1
+        if self.state == Disease_states.E and self.states[self.state] == 5:
+            self.set_state(Helpers.get_infection_root())
+        elif self.state == Disease_states.IP and self.states[self.state] == 5:
+            self.set_state(Disease_states.IS)
+        elif self.state == Disease_states.IAS and self.states[self.state] == 8:
+            self.set_state(Disease_states.R)
+        elif self.state == Disease_states.IS and self.states[self.state] == 5:
+            self.set_state(Disease_states.R)
 
     def __str__(self):
         return (

@@ -29,7 +29,8 @@ from interaction import Interaction
 class Network:
     """A class to generate network from Interaction objects between Person objects.
 
-    Longer class information...
+    A network object uses interaction objects between person objects to create a
+    nx.Graph objects of all the interactions.
 
     Attributes
     ----------
@@ -83,6 +84,12 @@ class Network:
         self.d = (1) * pow(10, -2)  # 4.3
         self.graph = self.generate_network()
         self.iteration_list = []
+
+    def get_graph(self) -> nx:
+        return self.graph
+
+    def get_students(self) -> list:
+        return self.students
 
     def generate_students(self, num_students, num_grades, num_classes, class_treshold=20) -> list:
         """Generates a list containing Person objects that attend a certain school
@@ -209,7 +216,7 @@ class Network:
 
         return graph
 
-    def generate_a_day(self, hourDay=8) -> nx.Graph:
+    def generate_a_day(self, hourDay=8, disease=False) -> nx.Graph:
         """Generates a nx.Graph object for a day with hourDay hours
 
         Uses renormalise and generates a new p_vector at the start
@@ -238,24 +245,28 @@ class Network:
 
         k = 0.5
 
-        for i in range(len(self.students)):
-            stud1 = self.students[i]
-            for j in range(len(self.students)):
-                stud2 = self.students[j]
-                if i == j:
-                    continue
-                if self.students[j] in dayGraph[stud1]:
-                    # stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
-                    # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
-                    pass
-        ## Renormalise bias_vector at the beginning of the day
-        for i in range(len(self.students)):
-            # self.students[i].renormalize()
-            continue
+        # for i in range(len(self.students)):
+        #     stud1 = self.students[i]
+        #     for j in range(len(self.students)):
+        #         stud2 = self.students[j]
+        #         if i == j:
+        #             continue
+        #         if self.students[j] in dayGraph[stud1]:
+        #             # stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
+        #             # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
+        #             pass
+        # ## Renormalise bias_vector at the beginning of the day
+        # for i in range(len(self.students)):
+        #     # self.students[i].renormalize()
+        #     continue
 
         ## Generate new p-vector with the updated bias_vector
         for i in range(len(self.students)):
             self.students[i].generate_p_vector(self.students, [])
+            if disease:
+                self.students[i].add_day_in_state()
+
+        self.graph = dayGraph
 
         return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
 

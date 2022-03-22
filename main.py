@@ -2,6 +2,7 @@ import sys
 
 from network import Network
 from analysis import Analysis
+from disease_transmission import Disease_transmission
 
 
 def main():
@@ -23,7 +24,9 @@ def main():
     # analysis.replica_pixel(G, network)
     # analysis.pixel_dist_school(G, old=True, both=True)
     # analysis.degree_distribution_layers(sim=G, experimental=True, both=True)
-    analysis.heatmap(G)
+    disease_transmission = Disease_transmission(network)
+    disease_transmission.run_transmission(14)
+    # analysis.heatmap(G)
     # analysis.runAnalysis2(G)
 
     # analysis.outlierDist(G)
