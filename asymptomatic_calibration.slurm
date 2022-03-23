@@ -5,7 +5,6 @@
 #SBATCH --nodes=1
 #SBATCH -c16
 #SBATCH --mem=16000
-#SBATCH --ntasks-per-node=16
 #SBATCH --job-name="asympt"
 #SBATCH --output=test-srun.out
 #SBATCH --mail-user="saraj.asche@gmail.com"
