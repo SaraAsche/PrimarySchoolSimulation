@@ -18,11 +18,13 @@ File: analysis.py
 import networkx as nx
 from networkx.algorithms import community
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 
 from scipy import stats
+
 from sklearn import neighbors
 from sklearn.ensemble import GradientBoostingClassifier
 
@@ -830,3 +832,11 @@ class Analysis:
             self.pixel_dist(network.generate_a_day(), wait=True, logX=True, logY=True, replica=True)
         plt.legend()
         plt.show()
+
+    def heatmap_asymptomatic_calibration(self):
+        pkl = open("./pickles/asymptomatic_calibration.pickle", "rb")
+        asymptotic_dict = pickle.load(pkl)
+        df = pd.DataFrame.from_dict(asymptotic_dict, orient="index")
+        sns.heatmap(df)
+        plt.show()
+        return df
