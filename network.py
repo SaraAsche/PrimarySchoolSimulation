@@ -263,12 +263,14 @@ class Network:
         ## Generate new p-vector with the updated bias_vector
         for i in range(len(self.students)):
             self.students[i].generate_p_vector(self.students, [])
-            if disease:
-                self.students[i].add_day_in_state()
 
         self.graph = dayGraph
 
         return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
+
+    def reset_student_disease_states(self):
+        for stud in self.students:
+            stud.state = stud.disease_state_start()
 
     def generate_iterations(self, number) -> nx.Graph:
         """Generates iterations of a day and returns the nx.Graph from the final day

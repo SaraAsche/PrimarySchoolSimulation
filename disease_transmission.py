@@ -28,6 +28,8 @@ from helpers import Helpers
 from pprint import pprint
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
+import pickle as pickle
 
 
 class Disease_transmission:
@@ -45,7 +47,7 @@ class Disease_transmission:
     .....
     """
 
-    def __init__(self, network):
+    def __init__(self, network, Ias=0.4):
         """Inits Disease_transmission object with a Network object
 
         Parameters
@@ -72,8 +74,10 @@ class Disease_transmission:
         self.patient_zero = None
         # self.graph = network.get_graph()
         day_number = 0
-        self.infectious_rates = {Disease_states.IAS: 0.4, Disease_states.IP: 0.6, Disease_states.IS: 0.8}
-        self.init()
+        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.2, Disease_states.IS: 0.4}
+        self.Ias = Ias
+        self.Ip = 1 - self.Ias
+        # self.init()
 
     def init(self):
         """Initialises the Disease_transmission object with generating a day, patient zero and a layout
@@ -83,8 +87,14 @@ class Disease_transmission:
 
         """
         self.day_one = self.network.generate_a_day(disease=True)
+        for stud in self.students:
+            stud.add_day_in_state(self.Ias, self.Ip)
         self.generate_patient_zero()
         self.positions = nx.spring_layout(self.day_one, seed=10396953)
+
+    def update_ias_ip(self, Ias):
+        self.Ias = Ias
+        self.Ip = 1 - self.Ias
 
     def get_day(self) -> int:
         return self.day_number
@@ -106,7 +116,7 @@ class Disease_transmission:
         """
         for _ in range(num):
             patient_zero = random.choice(self.students)
-            patient_zero.set_state(Helpers.get_infection_root())
+            patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
 
     def set_patient_zero(self, person) -> None:
         """Sets a specific Person object to be patient zero"""
@@ -134,7 +144,7 @@ class Disease_transmission:
                 exposed.append(student)
         return exposed
 
-    def infection_spread(self):
+    def infection_spread(self) -> None:
         """Simulate disease transmission for one day
 
         Using the graph initialised for disease_transmission, the students that are
@@ -150,7 +160,7 @@ class Disease_transmission:
                     if infected:
                         n.set_state(Disease_states.E)
 
-    def run_transmission(self, days):
+    def run_transmission(self, days, plot=True, Ias=0.4) -> None:
         """Simulate and draw the disease transmission for multiple days
 
         Generates a plot for transmission of each day in days. A new network
@@ -161,21 +171,45 @@ class Disease_transmission:
         days int:
             The number of days the transmission should be simulated
         """
-        self.plot()
+
+        self.update_ias_ip(Ias)
+
+        self.init()
+
+        d = dict([(e, 0) for e in Disease_states])
+        for stud in self.students:
+            d[stud.state] += 1
+        days_dic = {}
+        days_dic[0] = d
+        # print(f"-------------Day {0}-------------")
+        # pprint(d)
+        if plot:
+            self.plot()
         for i in range(days):
             day = self.network.generate_a_day(disease=True)
             self.infection_spread()
             d = dict([(e, 0) for e in Disease_states])
             for stud in self.students:
+                self.students[i].add_day_in_state(self.Ias, self.Ip)
                 d[stud.state] += 1
-            print(f"-------------Day {i+2}-------------")
-            pprint(d)
-            if i == days - 1:
-                self.plot(block=True)
-            else:
-                self.plot()
 
-    def plot(self, interval=1, block=False):
+            # print(f"-------------Day {i+1}-------------")
+            # pprint(d)
+            days_dic[i + 1] = d
+            if plot:
+                if i == days - 1:
+                    self.plot(block=True)
+                else:
+                    self.plot()
+        # print(f"-----------IAS: {self.Ias}, IP: {self.Ip}-----------")
+        return self.diff(days_dic)
+
+    def diff(self, state_dict):
+        for entry in state_dict:
+            state_dict.update({entry: 236 - state_dict[entry][Disease_states.S]})
+        return state_dict
+
+    def plot(self, interval=1, block=False) -> None:
         """Plots the Disease_states of each node at a given day
 
         Uses colors to represent the different Disease_states.
@@ -224,10 +258,30 @@ class Disease_transmission:
         else:
             plt.pause(interval)
 
+    def asymptomatic_calibration(self):
+        Ias_dict = {}
+        for Is in range(0, 101, 10):
+            Ias = (100 - Is) / 100
+            Is = Is / 100
+
+            day_list = np.zeros(15)  # 15
+            for replica in range(0, 20):  # 20
+                for key, val in self.run_transmission(14, plot=False, Ias=Ias).items():  # 14
+                    day_list[key] += val
+                day_list = day_list / 20
+            Ias_dict[Ias] = day_list.tolist()
+            self.network.reset_student_disease_states()
+        print(Ias_dict)
+        with open("asymptomatic_calibration.pickle", "wb") as handle:
+            pickle.dump(Ias_dict, handle)
+
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
     disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission(14)
+    # disease_transmission.run_transmission(14)
+
+    disease_transmission.asymptomatic_calibration()
+
     # disease_transmission.generate_patient_zero()
     # print(disease_transmission.get_all_states())
