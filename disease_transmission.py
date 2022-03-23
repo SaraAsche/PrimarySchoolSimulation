@@ -268,7 +268,7 @@ class Disease_transmission:
             for replica in range(0, 20):  # 20
                 for key, val in self.run_transmission(14, plot=False, Ias=Ias).items():  # 14
                     day_list[key] += val
-                day_list = day_list / 20
+            day_list = day_list / 20
             Ias_dict[Ias] = day_list.tolist()
             self.network.reset_student_disease_states()
         print(Ias_dict)
