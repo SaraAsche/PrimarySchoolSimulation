@@ -20,7 +20,8 @@ def main():
     # G = network.generate_iterations(10)
     G = network.generate_a_day()
 
-    print(analysis.heatmap_asymptomatic_calibration())
+    print(network.students[0].p_vector)
+
     # analysis.replica_degree(G, network)
     # analysis.replica_pixel(G, network)
     # analysis.pixel_dist_school(G, old=True, both=True)

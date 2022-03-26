@@ -54,7 +54,11 @@ class Person:
     interactions : dictionary of Interaction objects
         Keeps a dictionary of each Interaction objects that occur between one Person object and another. The key is the Person object interacted with whilst the values are the Interaction object between the two Person objects.
     const_bias : float
-        Each person object is initiated with a float value that denotes their bias for interacting with any other person object
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person object.
+    bias_grade : float
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person objects of the same grades.
+    bias_class : float
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person objects of the same class.
     bias_vector : dictionary
         Dictionary that keeps track of the bias one Person object has to interact with another Person object
     p_vector : dictionary
@@ -131,6 +135,9 @@ class Person:
 
         self.state = self.disease_state_start()
         self.states = dict([(e, 0) for e in Disease_states])  # [self.state]
+
+    def get_interactions(self) -> Interaction:
+        return self.interactions
 
     def get_state(self) -> str:
         return self.state
