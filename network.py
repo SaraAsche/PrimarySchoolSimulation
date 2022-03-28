@@ -1,6 +1,7 @@
-"""Network class: Generates interactions between Person objects
+"""Network class: Generates Interaction object between two Person objects
 
-Implements Networkx to create networks of interactions between Person objects. 
+Implements Networkx to create networks consisting of weighted edges defined by 
+Interaction objects. Nodes are Person objects with their associated attributes.  
 
 Typical usage example:
 
@@ -140,9 +141,9 @@ class Network:
         students = sorted(students, key=lambda x: x.get_class_and_grade())
 
         ## Generate bias_vector
-        for i in range(len(students)):
-            students[i].id = i
-            students[i].generate_bias_vector(students)
+        # for i in range(len(students)):
+        #    students[i].id = i
+        #    students[i].generate_bias_vector(students)
 
         # students = sorted(students)
 
