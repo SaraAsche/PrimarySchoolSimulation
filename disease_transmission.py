@@ -268,9 +268,12 @@ class Disease_transmission:
             for replica in range(0, 20):  # 20
                 for key, val in self.run_transmission(14, plot=False, Ias=Ias).items():  # 14
                     day_list[key] += val
-                day_list = day_list / 20
+
+                print(day_list)
+                self.network.reset_student_disease_states()
+            day_list = day_list / 20
             Ias_dict[Ias] = day_list.tolist()
-            self.network.reset_student_disease_states()
+
         print(Ias_dict)
         with open("asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
@@ -279,7 +282,8 @@ class Disease_transmission:
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
     disease_transmission = Disease_transmission(network)
-    # disease_transmission.run_transmission(14)
+
+    # print(disease_transmission.run_transmission(14))
 
     disease_transmission.asymptomatic_calibration()
 

@@ -20,12 +20,14 @@ def main():
     # G = network.generate_iterations(10)
     G = network.generate_a_day()
 
+    print(network.students[0].p_vector)
+
     # analysis.replica_degree(G, network)
     # analysis.replica_pixel(G, network)
     # analysis.pixel_dist_school(G, old=True, both=True)
     # analysis.degree_distribution_layers(sim=G, experimental=True, both=True)
-    disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission(14)
+    # disease_transmission = Disease_transmission(network)
+    # disease_transmission.run_transmission(14)
     # analysis.heatmap(G)
     # analysis.runAnalysis2(G)
 

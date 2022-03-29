@@ -53,10 +53,12 @@ class Person:
         True if the person object is in a grade lower than 4. Otherwise it is False. Can be changed based on schools and which grades interact most with each other.
     interactions : dictionary of Interaction objects
         Keeps a dictionary of each Interaction objects that occur between one Person object and another. The key is the Person object interacted with whilst the values are the Interaction object between the two Person objects.
-    const_bias : float
-        Each person object is initiated with a float value that denotes their bias for interacting with any other person object
-    bias_vector : dictionary
-        Dictionary that keeps track of the bias one Person object has to interact with another Person object
+    base_bias : float
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person object.
+    bias_grade : float
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person objects of the same grades.
+    bias_class : float
+        Each Person object is initiated with a float value that denotes their bias for interacting with any other Person objects of the same class.
     p_vector : dictionary
         Dictionary that keeps track of the possibility that one Person object has to interact with another Person object
 
@@ -88,14 +90,14 @@ class Person:
         Returns a string consisting of the grade plus the class (i.e "5A" or "1B")
     get_lunch_group(self):
         Returns the lunch_group attribute of a Person object
-    generate_bias_vector(self, students)
-        Generate bias_vector by placing the current const_bias as the value for each Person objects interacting
+    generate_bias(self):
+        Generates the different bias attributes (base, grade and class)
     generate_p_vector(self, students, X)
         Generates a p_vector dictionary where keys are all possible Person objects Person (self) can interact with and the key is probability p that they will interact. Uses the similarity between two Person objects to generate a probability p.
     get_min_p_vector(self)
         Returns the lowest p value in a Person (self)'s p_vector dictionary.
     renormalize(self)
-        Updates the bias_vector of a Person object (self) where the const_bias is affected by an additional random bias and then normalised to avoid a strictly growing bias.
+        Updates the bias_vector of a Person object (self) where the base_bias is affected by an additional random bias and then normalised to avoid a strictly growing bias.
     """
 
     newid = itertools.count()
@@ -121,11 +123,8 @@ class Person:
         self.class_group = str(class_group)
         self.lunch_group = self.generate_lunch_group()
         self.interactions = {}
-        self.const_bias = 20 * (math.log10(1 / random.random()))
-        self.bias_grade = 17 * (math.log10(1 / random.random()))
-        self.bias_class = np.random.normal(loc=100, scale=5)  # 17 * (math.log10(1 / random.random()))  #
 
-        self.bias_vector = {}
+        self.generate_bias()
 
         self.p_vector = {}
 
@@ -181,6 +180,12 @@ class Person:
                 return group
         return None
 
+    def generate_bias(self):
+        # TODO: add documentation
+        self.base_bias = 20 * (math.log10(1 / random.random()))
+        self.bias_grade = 17 * (math.log10(1 / random.random()))
+        self.bias_class = np.random.normal(loc=100, scale=5)
+
     def add_interaction(self, interaction: Interaction):
         """Adds an Interaction object to a Person's interactions dictionary
 
@@ -229,23 +234,22 @@ class Person:
     def get_lunch_group(self) -> bool:
         return self.lunch_group
 
-    def generate_bias_vector(self, students) -> dict:
-        """Generates a bias_vector based on the Persons (selfs) const_bias
+    # def generate_bias_vector(self, students) -> dict:
+    #    """Generates a bias_vector based on the Persons (selfs) base_bias
 
-        Loops over a list of students attending the school and sets the Person objects (self)
-        bias_vector to be its own const_bias for interacting with all other students.
-        bias_vector has keys denoting all other Person objects and const_bias as value
+    #    Loops over a list of students attending the school and sets the Person objects (self)
+    #    bias_vector to be its own base_bias for interacting with all other students.
+    #    bias_vector has keys denoting all other Person objects and base_bias as value
 
+    #    Parameters
+    #    ----------
+    #    students : list
+    #        A list that contains all the Person objects that attend a certain school
+    #    """
+    #    for i in range(len(students)):
+    #        self.bias_vector[students[i]] = self.base_bias
 
-        Parameters
-        ----------
-        students : list
-            A list that contains all the Person objects that attend a certain school
-        """
-        for i in range(len(students)):
-            self.bias_vector[students[i]] = self.const_bias
-
-    def generate_p_vector(self, students, X) -> dict:
+    def generate_p_vector(self, students, X) -> None:
         """Generates a p-vector dictionary for a Person object with respect to all other students
 
         If no X is given, the length of X is 0 and this function returns a p-vector with the given
@@ -300,12 +304,12 @@ class Person:
 
             ## Default level of interaction between students
             p = (
-                a1 * np.random.power(b1) * self.bias_vector[students[i]] * students[i].bias_vector[self]
+                a1 * np.random.power(b1) * self.base_bias * students[i].base_bias
             )  # weibull_min.rvs(b1, scale=10)  # np.random.weibull(b1)  # np.random.power(b1)
 
             ### Lunch: Off-diagonal boosted with lunchgroups
             if same_lunch:
-                p += a2 * np.random.power(b2) * self.bias_vector[students[i]] * students[i].bias_vector[self]
+                p += a2 * np.random.power(b2) * self.base_bias * students[i].base_bias
                 # p += np.random.normal(5)
 
             ### Grade-grade interaction layer
@@ -337,7 +341,7 @@ class Person:
 
         """
 
-        self.bias = self.const_bias + 160 * (math.log10(1 / random.random()))
+        self.bias = self.base_bias + 160 * (math.log10(1 / random.random()))
 
         normTarget = self.bias
 
@@ -355,11 +359,11 @@ class Person:
         self.states[self.state] += 1
         if self.state == Disease_states.E and self.states[self.state] == 5:
             self.set_state(Helpers.get_infection_root(pA, pP))
-        elif self.state == Disease_states.IP and self.states[self.state] == 2:
+        elif self.state == Disease_states.IP and self.states[self.state] == 4:
             self.set_state(Disease_states.IS)
         elif self.state == Disease_states.IAS and self.states[self.state] == 8:
             self.set_state(Disease_states.R)
-        elif self.state == Disease_states.IS and self.states[self.state] == 2:
+        elif self.state == Disease_states.IS and self.states[self.state] == 4:
             self.set_state(Disease_states.R)
 
     def __str__(self):
