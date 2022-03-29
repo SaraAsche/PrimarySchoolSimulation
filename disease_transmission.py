@@ -279,12 +279,13 @@ class Disease_transmission:
             Ias_dict[Ias] = day_list.tolist()
 
         print(Ias_dict)
-        with open("asymptomatic_calibration3.pickle", "wb") as handle:
+        with open("asymptomatic_calibration4.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
+
     disease_transmission = Disease_transmission(network)
 
-    print(disease_transmission.run_transmission(14))
+    disease_transmission.asymptomatic_calibration()
