@@ -113,7 +113,7 @@ class Person:
             the class of the Person
         """
 
-        self.id = None  # next(Person.newid)
+        self.id = None
         self.sex = self.get_gender()
 
         self.vaccinated = self.get_vaccinated_status()
@@ -129,7 +129,7 @@ class Person:
         self.p_vector = {}
 
         self.state = self.disease_state_start()
-        self.states = dict([(e, 0) for e in Disease_states])  # [self.state]
+        self.states = dict([(e, 0) for e in Disease_states])
 
     def get_state(self) -> str:
         return self.state
@@ -234,21 +234,6 @@ class Person:
     def get_lunch_group(self) -> bool:
         return self.lunch_group
 
-    # def generate_bias_vector(self, students) -> dict:
-    #    """Generates a bias_vector based on the Persons (selfs) base_bias
-
-    #    Loops over a list of students attending the school and sets the Person objects (self)
-    #    bias_vector to be its own base_bias for interacting with all other students.
-    #    bias_vector has keys denoting all other Person objects and base_bias as value
-
-    #    Parameters
-    #    ----------
-    #    students : list
-    #        A list that contains all the Person objects that attend a certain school
-    #    """
-    #    for i in range(len(students)):
-    #        self.bias_vector[students[i]] = self.base_bias
-
     def generate_p_vector(self, students, X) -> None:
         """Generates a p-vector dictionary for a Person object with respect to all other students
 
@@ -294,8 +279,8 @@ class Person:
             b3 = 0.4  # 0.3
 
             ## Class-Class
-            a4 = 5  # 10000
-            b4 = 1  # 1
+            a4 = 0.2  # 10000
+            b4 = 11.5  # 1
 
         for i in range(len(students)):
             same_lunch = self.lunch_group == students[i].lunch_group
@@ -303,14 +288,11 @@ class Person:
             same_class = self.class_group == students[i].class_group and self.grade == students[i].grade
 
             ## Default level of interaction between students
-            p = (
-                a1 * np.random.power(b1) * self.base_bias * students[i].base_bias
-            )  # weibull_min.rvs(b1, scale=10)  # np.random.weibull(b1)  # np.random.power(b1)
+            p = a1 * np.random.power(b1) * self.base_bias * students[i].base_bias
 
             ### Lunch: Off-diagonal boosted with lunchgroups
             if same_lunch:
                 p += a2 * np.random.power(b2) * self.base_bias * students[i].base_bias
-                # p += np.random.normal(5)
 
             ### Grade-grade interaction layer
             if same_grade:
@@ -318,20 +300,16 @@ class Person:
 
             ### Class-class interaction layer. Assume no bias/low bias for class-class interactions. No free-time activity
             if same_class:
-                # p += max(0, 0.00002 * np.random.normal(loc=10, scale=200) * self.bias_class * students[i].bias_class)
-                # p += a4 * np.random.power(b4) * self.bias_class * students[i].bias_class
-                p += np.random.gamma(0.2, 11.5) * min(self.bias_class, students[i].bias_class)
-                # self.bias_vector[students[i]] = 10 * (math.log10(1 / random.random()))
-                # students[i].bias_vector[self] = 10 * (math.log10(1 / random.random()))
+                p += np.random.gamma(a4, b4) * min(self.bias_class, students[i].bias_class)
 
-            # self.p_vector[students[i]] = p * min(self.bias_vector[students[i]], students[i].bias_vector[self])
             self.p_vector[students[i]] = p
 
     def get_min_p_vector(self) -> float:
         """Returns minimum value of a given p-vector"""
         return min(self.p_vector, key=self.p_vector.get)
 
-    def renormalize(self) -> None:  ### Ask about why we only times it with correction.
+    def renormalize(self) -> None:
+        # TODO: remove renormalize
         """Renormalises the bias_vector of a Person object
 
         At the end of each day the bias_vector is updated so that students form connections differently
@@ -355,15 +333,15 @@ class Person:
 
         self.bias_vector = newVector.copy()
 
-    def add_day_in_state(self, pA=0.4, pP=0.6):
+    def add_day_in_state(self, pA=0.4, pP=0.6):  # FHI: pA = 0.4
         self.states[self.state] += 1
-        if self.state == Disease_states.E and self.states[self.state] == 4:
+        if self.state == Disease_states.E and self.states[self.state] == 2:
             self.set_state(Helpers.get_infection_root(pA, pP))
         elif self.state == Disease_states.IP and self.states[self.state] == 2:
             self.set_state(Disease_states.IS)
-        elif self.state == Disease_states.IAS and self.states[self.state] == 4:
+        elif self.state == Disease_states.IAS and self.states[self.state] == 3:
             self.set_state(Disease_states.R)
-        elif self.state == Disease_states.IS and self.states[self.state] == 2:
+        elif self.state == Disease_states.IS and self.states[self.state] == 3:
             self.set_state(Disease_states.R)
 
     def __str__(self):

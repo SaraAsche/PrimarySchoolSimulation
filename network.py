@@ -140,14 +140,6 @@ class Network:
         ### Sorted to ensure the ID is the same as the other ones in the grade a specific individual is in.
         students = sorted(students, key=lambda x: x.get_class_and_grade())
 
-        ## Generate bias_vector
-        # for i in range(len(students)):
-        #    students[i].id = i
-        #    students[i].generate_bias_vector(students)
-
-        # students = sorted(students)
-
-        ## Generate p_vector
         for i in range(len(students)):
             students[i].generate_p_vector(students, self.parameter_list)
 
@@ -217,7 +209,7 @@ class Network:
 
         return graph
 
-    def generate_a_day(self, hourDay=8, disease=False) -> nx.Graph:
+    def generate_a_day(self, hourDay=8) -> nx.Graph:
         """Generates a nx.Graph object for a day with hourDay hours
 
         Uses renormalise and generates a new p_vector at the start
@@ -244,36 +236,19 @@ class Network:
                 else:
                     dayGraph[node][neighbour]["count"] += attrs["count"]
 
-        k = 0.5
-
-        # for i in range(len(self.students)):
-        #     stud1 = self.students[i]
-        #     for j in range(len(self.students)):
-        #         stud2 = self.students[j]
-        #         if i == j:
-        #             continue
-        #         if self.students[j] in dayGraph[stud1]:
-        #             # stud1.bias_vector[stud2] += dayGraph[stud1][self.students[j]]["count"]  ## What does this do?
-        #             # stud1.bias_vector[stud2] -= k * (stud1.bias_vector[stud2] - stud1.bias)  ## What does this do?
-        #             pass
-        # ## Renormalise bias_vector at the beginning of the day
-        # for i in range(len(self.students)):
-        #     # self.students[i].renormalize()
-        #     continue
-
-        ## Generate new p-vector with the updated bias_vector
         for i in range(len(self.students)):
             self.students[i].generate_p_vector(self.students, [])
 
         self.graph = dayGraph
 
-        return dayGraph  ## Only returns the final hour. should it not create something based on all hours?
+        return dayGraph
 
     def reset_student_disease_states(self):
         for stud in self.students:
             stud.state = stud.disease_state_start()
 
     def generate_iterations(self, number) -> nx.Graph:
+        # TODO: Fix generate_iterations.  Maybe just return list with the network of the days simulated.
         """Generates iterations of a day and returns the nx.Graph from the final day
 
         Parameters
@@ -302,17 +277,12 @@ class Network:
         for graph in self.iteration_list[1:]:
             for node, neighbour, attrs in graph.edges.data():
                 if not dayGraph.has_edge(node, neighbour):
-                    # dayGraph.add_edge(node, neighbour, count=attrs["count"])
                     continue
                 else:
                     dayGraph[node][neighbour]["count"] += attrs["count"]
                     d[(node, neighbour)] = d.get((node, neighbour), 0) + 1
 
         for node, neighbour, attrs in graph.edges.data():
-            # if attrs["count"] > 2000:
-            #    dayGraph.remove_edge(node, neighbour)
-            # else:
-
             attrs["count"] = attrs["count"] / d.get((node, neighbour), 1)
 
         return dayGraph  # Returns the day graph based on X iterations
@@ -323,6 +293,7 @@ class Network:
 
     ### Estimation
     def parameterEstimation(self):
+        ## TODO: remove
         def create_sub_graph_grade_class(graph, diagonal, gradeInteraction):
             G = nx.Graph()
 
@@ -358,7 +329,7 @@ class Network:
 
         def create_sub_graph_off_diagonal(graph, grade, klasse):
             G = nx.Graph()
-            # print("this is the subgraph before anything: " + str(graph))
+
             for node in graph.nodes():
                 for n in graph.nodes():
                     if grade and not klasse:
@@ -396,15 +367,7 @@ class Network:
             return exp_whole, exp_diag, exp_class, exp_grade
 
         def rank_interaction(pixel):
-            pixel.sort()
-            # pixel_list = pixel.tolist()
-
-            # pixel_dict = {}
-
-            # for i in range(len(pixel_list)):
-            #     pixel_dict[i] = pixel_list[i]
-            # pixel_dict = np.array(list(pixel_dict.values()))
-            return pixel
+            return pixel.sort()
 
         def setup():
             exp_whole, exp_diag, exp_class, exp_grade = load_all_pixel_dist_non_cumulative()

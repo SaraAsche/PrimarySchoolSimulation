@@ -70,13 +70,15 @@ class Disease_transmission:
         """
 
         self.network = network
+        self.graph = network.get_graph()
         self.students = network.get_students()
         self.patient_zero = None
-        # self.graph = network.get_graph()
+
         day_number = 0
-        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.2, Disease_states.IS: 0.6}
+        self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 0}  # FHI
         self.Ias = Ias
         self.Ip = 1 - self.Ias
+        self.positions = nx.spring_layout(self.graph, seed=10396953)
         # self.init()
 
     def init(self):
@@ -86,11 +88,11 @@ class Disease_transmission:
         In addition, the positions for the disease spread graph are set using a networkX's spring_layout.
 
         """
+        return None
         self.day_one = self.network.generate_a_day(disease=True)
         for stud in self.students:
             stud.add_day_in_state(self.Ias, self.Ip)
         self.generate_patient_zero()
-        self.positions = nx.spring_layout(self.day_one, seed=10396953)
 
     def update_ias_ip(self, Ias):
         self.Ias = Ias
@@ -121,7 +123,7 @@ class Disease_transmission:
     def set_patient_zero(self, person) -> None:
         """Sets a specific Person object to be patient zero"""
         self.patient_zero = person
-        self.patient_zero.set_state("I")
+        self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
 
     def get_patient_zero(self) -> Person:
         return self.patient_zero
@@ -152,11 +154,11 @@ class Disease_transmission:
         are looped over and their neighbors have a given probability of getting exposed
 
         """
-        graph = self.network.get_graph()
         for stud in self.students:
+            # If the student has a state that is transmissible, its neighbours will have a probability of being exposed
             if stud.state in [Disease_states.IP, Disease_states.IAS, Disease_states.IS]:
-                for n in graph.neighbors(stud):
-                    infected = self.infectious_rates[stud.state] * graph.edges[(stud, n)]["count"] > 10
+                for n in self.graph.neighbors(stud):
+                    infected = self.infectious_rates[stud.state] * self.graph.edges[(stud, n)]["count"] > 15
                     if infected:
                         n.set_state(Disease_states.E)
 
@@ -172,39 +174,40 @@ class Disease_transmission:
             The number of days the transmission should be simulated
         """
 
-        self.update_ias_ip(Ias)
+        self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
-        self.init()
+        days_dic = {}  # Keeps track of how many individuals are in the given state at time key
 
-        d = dict([(e, 0) for e in Disease_states])
-        for stud in self.students:
-            d[stud.state] += 1
-        days_dic = {}
-        days_dic[0] = d
-        # print(f"-------------Day {0}-------------")
-        # pprint(d)
-        if plot:
-            self.plot()
-        for i in range(days):
-            day = self.network.generate_a_day(disease=True)
-            self.infection_spread()
-            d = dict([(e, 0) for e in Disease_states])
+        for i in range(days):  # Meaning: 0-day-1
+            d = dict([(e, 0) for e in Disease_states])  # Keeps track of how many individuals are in a given state
+            if i == 0:  # Day 0, no disease_transmission.
+                self.generate_patient_zero()  # Patient zero is introduced
+            else:
+                self.graph = self.network.generate_a_day()  # A new network is generated each day
+                self.infection_spread()  # Infection is run on the new network
+
             for stud in self.students:
-                self.students[i].add_day_in_state(self.Ias, self.Ip)
+                # Update state if conditions are fullfilled (x amount of days in state y)
+                stud.add_day_in_state(self.Ias, self.Ip)
+                # Update the amount of days an individual has been in state y
                 d[stud.state] += 1
 
-            # print(f"-------------Day {i+1}-------------")
-            # pprint(d)
-            days_dic[i + 1] = d
+            print(f"-------------Day {i}-------------")
+            pprint(d)
+
+            days_dic[i] = d
+            # Sets the key (represents day i) to have the value: dict over states and people in that state
             if plot:
-                if i == days - 1:
+                if i == days:
+                    # On the last day, the plot stays untill being dismissed
                     self.plot(block=True)
                 else:
                     self.plot()
-        # print(f"-----------IAS: {self.Ias}, IP: {self.Ip}-----------")
+
         return self.diff(days_dic)
 
     def diff(self, state_dict):
+        """Returns a dict of how many individuals that are not susceptible in the model for the days it is run"""
         for entry in state_dict:
             state_dict.update({entry: 236 - state_dict[entry][Disease_states.S]})
         return state_dict
@@ -224,6 +227,7 @@ class Disease_transmission:
         block bool:
             Keeps track of whether or not the plot is the last day defined
         """
+
         plt.clf()
         G = self.network.get_graph()
         sizes = [100 for _ in range(len(G.nodes))]
@@ -275,7 +279,7 @@ class Disease_transmission:
             Ias_dict[Ias] = day_list.tolist()
 
         print(Ias_dict)
-        with open("asymptomatic_calibration.pickle", "wb") as handle:
+        with open("asymptomatic_calibration3.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
 
@@ -283,9 +287,4 @@ if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
     disease_transmission = Disease_transmission(network)
 
-    # print(disease_transmission.run_transmission(14))
-
-    disease_transmission.asymptomatic_calibration()
-
-    # disease_transmission.generate_patient_zero()
-    # print(disease_transmission.get_all_states())
+    print(disease_transmission.run_transmission(14))
