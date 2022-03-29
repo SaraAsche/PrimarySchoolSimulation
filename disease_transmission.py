@@ -74,7 +74,7 @@ class Disease_transmission:
         self.patient_zero = None
         # self.graph = network.get_graph()
         day_number = 0
-        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.2, Disease_states.IS: 0.4}
+        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.2, Disease_states.IS: 0.6}
         self.Ias = Ias
         self.Ip = 1 - self.Ias
         # self.init()
