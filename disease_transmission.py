@@ -268,9 +268,9 @@ class Disease_transmission:
             Ias = (100 - Is) / 100
             Is = Is / 100
 
-            day_list = np.zeros(15)  # 15
+            day_list = np.zeros(35)  # 15
             for replica in range(0, 20):  # 20
-                for key, val in self.run_transmission(15, plot=False, Ias=Ias).items():  # 14
+                for key, val in self.run_transmission(35, plot=False, Ias=Ias).items():  # 14
                     day_list[key] += val
 
                 self.network.reset_student_disease_states()
