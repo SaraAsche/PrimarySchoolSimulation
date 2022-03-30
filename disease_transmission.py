@@ -79,9 +79,9 @@ class Disease_transmission:
         self.Ias = Ias
         self.Ip = 1 - self.Ias
         self.positions = nx.spring_layout(self.graph, seed=10396953)
-        # self.init()
 
     def init(self):
+        # TODO: Delete, is not in use anymore
         """Initialises the Disease_transmission object with generating a day, patient zero and a layout
 
         day_one is generated alongside the first individual at the school to get infected, patient_zero.
@@ -270,16 +270,15 @@ class Disease_transmission:
 
             day_list = np.zeros(15)  # 15
             for replica in range(0, 20):  # 20
-                for key, val in self.run_transmission(14, plot=False, Ias=Ias).items():  # 14
+                for key, val in self.run_transmission(15, plot=False, Ias=Ias).items():  # 14
                     day_list[key] += val
 
-                print(day_list)
                 self.network.reset_student_disease_states()
             day_list = day_list / 20
             Ias_dict[Ias] = day_list.tolist()
 
         print(Ias_dict)
-        with open("asymptomatic_calibration4.pickle", "wb") as handle:
+        with open("asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
 

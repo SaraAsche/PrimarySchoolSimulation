@@ -335,13 +335,13 @@ class Person:
 
     def add_day_in_state(self, pA=0.4, pP=0.6):  # FHI: pA = 0.4
         self.states[self.state] += 1
-        if self.state == Disease_states.E and self.states[self.state] == 2:
+        if self.state == Disease_states.E and self.states[self.state] == 3:
             self.set_state(Helpers.get_infection_root(pA, pP))
-        elif self.state == Disease_states.IP and self.states[self.state] == 2:
+        elif self.state == Disease_states.IP and self.states[self.state] == 3:
             self.set_state(Disease_states.IS)
-        elif self.state == Disease_states.IAS and self.states[self.state] == 3:
+        elif self.state == Disease_states.IAS and self.states[self.state] == 4:
             self.set_state(Disease_states.R)
-        elif self.state == Disease_states.IS and self.states[self.state] == 3:
+        elif self.state == Disease_states.IS and self.states[self.state] == 4:
             self.set_state(Disease_states.R)
 
     def __str__(self):

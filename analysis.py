@@ -834,8 +834,9 @@ class Analysis:
         plt.show()
 
     def heatmap_asymptomatic_calibration(self):
-        pkl = open("./pickles/asymptomatic_calibration3.pickle", "rb")
+        pkl = open("./pickles/asymptomatic_calibration4.pickle", "rb")
         asymptotic_dict = pickle.load(pkl)
+        print(asymptotic_dict)
         df = pd.DataFrame.from_dict(asymptotic_dict, orient="index")
         # df = df.pivot("%Asymptomatic", "Day")
         plt.figure(figsize=(10, 7))

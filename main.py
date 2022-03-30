@@ -18,7 +18,7 @@ def main():
     analysis = Analysis(network)
     analysis.heatmap_asymptomatic_calibration()
 
-    disease_transmission = Disease_transmission(network)
+    # disease_transmission = Disease_transmission(network)
 
 
 main()
