@@ -9,4 +9,4 @@ class Helpers:
 
     @staticmethod
     def get_infection_root(pA=0.2, pP=0.8):
-        return random.choices([Disease_states.IAS, Disease_states.IP], [pA, pP])[0]
+        return random.choices([Disease_states.IAS, Disease_states.IP], weights=[pA, pP])[0]

@@ -20,7 +20,7 @@ Date: 14.02.2022
 File: disease_transmission.py
 """
 
-from enums import Disease_states
+from enums import Disease_states, Traffic_light
 from network import Network
 from person import Person
 import random
@@ -47,7 +47,7 @@ class Disease_transmission:
     .....
     """
 
-    def __init__(self, network, Ias=0.4):
+    def __init__(self, network, stoplight=None, Ias=0.4):
         """Inits Disease_transmission object with a Network object
 
         Parameters
@@ -66,35 +66,24 @@ class Disease_transmission:
 
         Methods
         --------
-        init()
+        ..
         """
 
         self.network = network
         self.graph = network.get_graph()
         self.students = network.get_students()
-        self.patient_zero = None
+        self.day_no = 0
+        self.p_0 = 0.01
 
-        day_number = 0
-        self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 0}  # FHI
+        self.patient_zero = None
+        # self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 0.1}  # FHI
+        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.4, Disease_states.IS: 0.1}
         self.Ias = Ias
         self.Ip = 1 - self.Ias
         self.positions = nx.spring_layout(self.graph, seed=10396953)
+        self.stoplight = stoplight
 
-    def init(self):
-        # TODO: Delete, is not in use anymore
-        """Initialises the Disease_transmission object with generating a day, patient zero and a layout
-
-        day_one is generated alongside the first individual at the school to get infected, patient_zero.
-        In addition, the positions for the disease spread graph are set using a networkX's spring_layout.
-
-        """
-        return None
-        self.day_one = self.network.generate_a_day(disease=True)
-        for stud in self.students:
-            stud.add_day_in_state(self.Ias, self.Ip)
-        self.generate_patient_zero()
-
-    def update_ias_ip(self, Ias):
+    def update_ias_ip(self, Ias) -> None:
         self.Ias = Ias
         self.Ip = 1 - self.Ias
 
@@ -157,12 +146,19 @@ class Disease_transmission:
         for stud in self.students:
             # If the student has a state that is transmissible, its neighbours will have a probability of being exposed
             if stud.state in [Disease_states.IP, Disease_states.IAS, Disease_states.IS]:
-                for n in self.graph.neighbors(stud):
-                    infected = self.infectious_rates[stud.state] * self.graph.edges[(stud, n)]["count"] > 15
-                    if infected:
-                        n.set_state(Disease_states.E)
+                if not stud.get_tested():
+                    for n in self.graph.neighbors(stud):
+                        # infected = self.infectious_rates[stud.state] * self.graph.edges[(stud, n)]["count"] > 15
+                        p_inf = 1 - (1 - self.p_0) ** (
+                            self.graph.edges[(stud, n)]["count"] * self.infectious_rates[stud.state]
+                        )
+                        rand = random.random()
+                        infected = rand < p_inf
+                        print(f"p_inf: {p_inf}, random: {rand}, infected: {infected}")
+                        if infected:
+                            n.set_state(Disease_states.E)
 
-    def run_transmission(self, days, plot=True, Ias=0.4) -> None:
+    def run_transmission(self, days, plot=True, Ias=0.4, testing=False) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
         Generates a plot for transmission of each day in days. A new network
@@ -179,23 +175,35 @@ class Disease_transmission:
         days_dic = {}  # Keeps track of how many individuals are in the given state at time key
 
         for i in range(days):  # Meaning: 0-day-1
+            if testing:
+                self.weekly_testing()
             d = dict([(e, 0) for e in Disease_states])  # Keeps track of how many individuals are in a given state
             if i == 0:  # Day 0, no disease_transmission.
                 self.generate_patient_zero()  # Patient zero is introduced
+
             else:
-                self.graph = self.network.generate_a_day()  # A new network is generated each day
-                self.infection_spread()  # Infection is run on the new network
+                if self.stoplight == Traffic_light.G:
+                    self.graph = self.generate_green_stoplight(self.graph)
+                elif self.stoplight == Traffic_light.O:
+                    self.graph = self.generate_orange_stoplight(self.graph)
+                elif self.stoplight == Traffic_light.R:
+                    self.graph = self.generate_red_stoplight(self.graph)
+                else:
+                    self.graph = self.network.generate_a_day()  # A new network is generated each day
+                self.infection_spread()
 
             for stud in self.students:
                 # Update state if conditions are fullfilled (x amount of days in state y)
                 stud.add_day_in_state(self.Ias, self.Ip)
-                # Update the amount of days an individual has been in state y
+                # Update the amount of days an individual has been in state
                 d[stud.state] += 1
 
             print(f"-------------Day {i}-------------")
             pprint(d)
 
             days_dic[i] = d
+            self.day_no += 1
+
             # Sets the key (represents day i) to have the value: dict over states and people in that state
             if plot:
                 if i == days:
@@ -206,11 +214,67 @@ class Disease_transmission:
 
         return self.diff(days_dic)
 
-    def diff(self, state_dict):
-        """Returns a dict of how many individuals that are not susceptible in the model for the days it is run"""
-        for entry in state_dict:
-            state_dict.update({entry: 236 - state_dict[entry][Disease_states.S]})
-        return state_dict
+    def isolate(self, graph):
+        if self.stoplight in [Traffic_light.O, Traffic_light.R]:
+            for stud in self.students:
+                if stud.state == Disease_states.IS:
+                    self.network.remove_all_interactions(graph, stud)
+
+    def generate_green_stoplight(self, graph):
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_orange_stoplight(self, graph):
+        ## TODO: Associate cohorts with normal interaction, less elsewhere
+
+        self.generate_cohorts()
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_red_stoplight(self, graph):
+        ## TODO: almost exclusively cohort interactions
+        self.generate_cohorts()
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_cohorts(self) -> None:
+
+        grades = self.network.get_available_grades()
+        classes = self.network.get_available_classes()
+        grade_and_classes = [f"{i}{j}" for i in grades for j in classes]
+        cohorts = []
+
+        if self.stoplight == Traffic_light.O:
+            for i in range(0, len(grade_and_classes) - 1, 2):
+                cohorts.append(f"{grade_and_classes[i]}{grade_and_classes[i+1]}")
+                students = list(
+                    filter(
+                        lambda x: x.get_class_and_grade() == grade_and_classes[i]
+                        or x.get_class_and_grade() == grade_and_classes[i + 1],
+                        self.students,
+                    )
+                )
+                for stud in students:
+                    stud.set_cohort(cohorts[-1])
+
+        elif self.stoplight == Traffic_light.R:
+            for class_group in grade_and_classes:
+                students = list(filter(lambda x: x.get_class_and_grade() == class_group, self.students))
+                for i in range(0, (len(students) // 2) + 1):
+                    students[i].set_cohort(f"{class_group}1")
+                    students[-i - 1].set_cohort(f"{class_group}2")
+
+    def weekly_testing(self, recurr=7) -> None:
+        ## Testing vil plukke opp asymtpomatiske og symptomatiske og isolere til R
+        ## Må forbli isolerte til de er recovered.
+        if self.day_no % 7 == 0 and self.day_no != 0:
+            for stud in self.students:
+                if stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]:
+                    self.network.remove_all_interactions(self.graph, stud)
+                    stud.set_tested(True)
 
     def plot(self, interval=1, block=False) -> None:
         """Plots the Disease_states of each node at a given day
@@ -243,7 +307,6 @@ class Disease_transmission:
                 edge_color[i] = "blue"
             elif stud.state == Disease_states.R:
                 edge_color[i] = "lightgreen"
-
         maximum_count = max(list(map(lambda x: x[-1]["count"], G.edges(data=True))))
         for i, e in enumerate(G.edges(data=True)):
             weights[i] = (0, 0, 0, e[-1]["count"] / maximum_count)
@@ -262,7 +325,13 @@ class Disease_transmission:
         else:
             plt.pause(interval)
 
-    def asymptomatic_calibration(self):
+    def diff(self, state_dict) -> dict:
+        """Returns a dict of how many individuals that are not susceptible in the model for the days it is run"""
+        for entry in state_dict:
+            state_dict.update({entry: 236 - state_dict[entry][Disease_states.S]})
+        return state_dict
+
+    def asymptomatic_calibration(self) -> None:
         Ias_dict = {}
         for Is in range(0, 101, 10):
             Ias = (100 - Is) / 100
@@ -281,10 +350,17 @@ class Disease_transmission:
         with open("asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
+    def R_null(self):
+        # TODO: kjøre smitte i 30 dager, se hvor mange de som blir smittet i løpet av de 5 første dagene smitter videre. Kjøre gjennomsnitt.
+
+        return
+
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
+    disease_transmission.run_transmission(16)
+    # disease_transmission.generate_cohorts()
 
-    disease_transmission.asymptomatic_calibration()
+    # disease_transmission.asymptomatic_calibration()

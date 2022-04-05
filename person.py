@@ -113,10 +113,11 @@ class Person:
             the class of the Person
         """
 
-        self.id = None
+        self.id = next(Person.newid)
         self.sex = self.get_gender()
 
         self.vaccinated = self.get_vaccinated_status()
+        self.tested = False
         self.grade = grade
         self.age = self.generate_valid_age(grade)
         self.age_group = self.generate_age_group()
@@ -130,13 +131,20 @@ class Person:
 
         self.state = self.disease_state_start()
         self.states = dict([(e, 0) for e in Disease_states])
+        self.cohort = None
 
     def get_state(self) -> str:
         return self.state
 
     def set_state(self, state) -> None:
         self.state = state
-        self.states[state] += 1
+        # self.states[state] += 1
+
+    def set_tested(self, tested) -> None:
+        self.tested = tested
+
+    def get_tested(self) -> bool:
+        return self.tested
 
     def generate_valid_age(self, grade, is_teacher=False) -> int:
         # TODO: Add teacher functionality
@@ -157,6 +165,12 @@ class Person:
         """
 
         return random.choice([grade + 4, grade + 5])
+
+    def set_cohort(self, cohort) -> None:
+        self.cohort = cohort
+
+    def get_cohort(self) -> str:
+        return self.cohort
 
     def disease_state_start(self) -> str:
         return Disease_states.S
@@ -334,15 +348,20 @@ class Person:
         self.bias_vector = newVector.copy()
 
     def add_day_in_state(self, pA=0.4, pP=0.6):  # FHI: pA = 0.4
-        self.states[self.state] += 1
+
         if self.state == Disease_states.E and self.states[self.state] == 3:
-            self.set_state(Helpers.get_infection_root(pA, pP))
+            # print("Hello")
+            s = Helpers.get_infection_root(pA, pP)
+            self.set_state(s)
         elif self.state == Disease_states.IP and self.states[self.state] == 3:
             self.set_state(Disease_states.IS)
-        elif self.state == Disease_states.IAS and self.states[self.state] == 4:
+        elif self.state == Disease_states.IAS and self.states[self.state] == 6:  # 4
             self.set_state(Disease_states.R)
         elif self.state == Disease_states.IS and self.states[self.state] == 4:
             self.set_state(Disease_states.R)
+            self.tested = False
+        else:
+            self.states[self.state] += 1
 
     def __str__(self):
         return (

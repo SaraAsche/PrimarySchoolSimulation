@@ -17,3 +17,9 @@ class Disease_states(enum.Enum):
     R = "Recovered"
     H = "Hospitalized"
     D = "Death"
+
+
+class Traffic_light(enum.Enum):
+    G = "G"
+    O = "O"
+    R = "R"
