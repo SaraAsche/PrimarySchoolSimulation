@@ -132,6 +132,9 @@ class Person:
         self.state = self.disease_state_start()
         self.states = dict([(e, 0) for e in Disease_states])
         self.cohort = None
+        self.infected_on_day = None
+        self.recovered_on_day = None
+        self.infected_by = None
 
     def get_state(self) -> str:
         return self.state
@@ -357,11 +360,31 @@ class Person:
             self.set_state(Disease_states.IS)
         elif self.state == Disease_states.IAS and self.states[self.state] == 6:  # 4
             self.set_state(Disease_states.R)
+            self.set_day_recovered(self.infected_on_day + 9)
         elif self.state == Disease_states.IS and self.states[self.state] == 4:
             self.set_state(Disease_states.R)
+            self.set_day_recovered(self.infected_on_day + 10)
             self.tested = False
         else:
             self.states[self.state] += 1
+
+    def set_day_infected(self, day):
+        self.infected_on_day = day
+
+    def get_day_infected(self):
+        return self.infected_on_day
+
+    def set_day_recovered(self, day):
+        self.recovered_on_day = day
+
+    def get_day_recovered(self):
+        return self.recovered_on_day
+
+    def set_infected_by(self, pers):
+        self.infected_by = pers
+
+    def get_infected_by(self):
+        return self.infected_by
 
     def __str__(self):
         return (

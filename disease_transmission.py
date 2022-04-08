@@ -82,6 +82,7 @@ class Disease_transmission:
         self.Ip = 1 - self.Ias
         self.positions = nx.spring_layout(self.graph, seed=10396953)
         self.stoplight = stoplight
+        self.days = [self.graph]
 
     def update_ias_ip(self, Ias) -> None:
         self.Ias = Ias
@@ -108,11 +109,13 @@ class Disease_transmission:
         for _ in range(num):
             patient_zero = random.choice(self.students)
             patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
+            patient_zero.set_day_infected(0)
 
     def set_patient_zero(self, person) -> None:
         """Sets a specific Person object to be patient zero"""
         self.patient_zero = person
         self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
+        self.patient_zero.set_day_infected(0)
 
     def get_patient_zero(self) -> Person:
         return self.patient_zero
@@ -143,6 +146,7 @@ class Disease_transmission:
         are looped over and their neighbors have a given probability of getting exposed
 
         """
+        j = 0
         for stud in self.students:
             # If the student has a state that is transmissible, its neighbours will have a probability of being exposed
             if stud.state in [Disease_states.IP, Disease_states.IAS, Disease_states.IS]:
@@ -154,9 +158,11 @@ class Disease_transmission:
                         )
                         rand = random.random()
                         infected = rand < p_inf
-                        print(f"p_inf: {p_inf}, random: {rand}, infected: {infected}")
-                        if infected:
+                        # print(f"p_inf: {p_inf}, random: {rand}, infected: {infected}")
+                        if infected and n.get_state() == Disease_states.S:
                             n.set_state(Disease_states.E)
+                            n.set_day_infected(self.day_no)
+                            n.set_infected_by(stud)
 
     def run_transmission(self, days, plot=True, Ias=0.4, testing=False) -> dict:
         """Simulate and draw the disease transmission for multiple days
@@ -190,6 +196,8 @@ class Disease_transmission:
                     self.graph = self.generate_red_stoplight(self.graph)
                 else:
                     self.graph = self.network.generate_a_day()  # A new network is generated each day
+
+                self.days.append(self.graph)
                 self.infection_spread()
 
             for stud in self.students:
@@ -346,21 +354,48 @@ class Disease_transmission:
             day_list = day_list / 20
             Ias_dict[Ias] = day_list.tolist()
 
-        print(Ias_dict)
         with open("asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
     def R_null(self):
+        """
+        We assume self.run_transmission has aldready been run
+        """
         # TODO: kjøre smitte i 30 dager, se hvor mange de som blir smittet i løpet av de 5 første dagene smitter videre. Kjøre gjennomsnitt.
+        assert len(self.days) > 5, f"Disease transmission object has only {len(self.days)} days generated"
+        infected_dict = dict([(stud.get_ID(), 0) for stud in self.students])
 
-        return
+        # for day in range(5):
+        #     infected.append(list(lambda x: x.get_infection_day() == day, self.students))
+
+        for stud in filter(lambda x: x.get_state() != Disease_states.S, self.students):
+            key = stud.get_infected_by()
+            if key is None:
+                infected_dict[None] = 1
+            else:
+                infected_dict[stud.get_infected_by().get_ID()] = (
+                    infected_dict.get(stud.get_infected_by().get_ID(), 0) + 1
+                )
+        infected_day_5_or_less = list(
+            filter(lambda x: x.get_day_infected() is not None and x.get_day_infected() <= 5, self.students)
+        )
+
+        summ = 0
+        for stud in infected_day_5_or_less:
+            if stud is not None:
+                summ += infected_dict[stud.get_ID()]
+
+        print(f"sum: {summ}")
+        print(f"Infected day 5 or less: {len(infected_day_5_or_less)}")
+        return summ / (len(infected_day_5_or_less) - 1)
 
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission(16)
+    disease_transmission.run_transmission(15, plot=False)
+    print(f"R_null: {disease_transmission.R_null()}")
     # disease_transmission.generate_cohorts()
 
     # disease_transmission.asymptomatic_calibration()
