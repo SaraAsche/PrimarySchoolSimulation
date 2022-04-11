@@ -20,6 +20,7 @@ Date: 14.02.2022
 File: disease_transmission.py
 """
 
+import re
 from enums import Disease_states, Traffic_light
 from network import Network
 from person import Person
@@ -77,7 +78,7 @@ class Disease_transmission:
 
         self.patient_zero = None
         # self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 0.1}  # FHI
-        self.infectious_rates = {Disease_states.IAS: 0.2, Disease_states.IP: 0.4, Disease_states.IS: 0.1}
+        self.infectious_rates = {Disease_states.IAS: 0.06, Disease_states.IP: 0.45, Disease_states.IS: 0.4}
         self.Ias = Ias
         self.Ip = 1 - self.Ias
         self.positions = nx.spring_layout(self.graph, seed=10396953)
@@ -110,12 +111,14 @@ class Disease_transmission:
             patient_zero = random.choice(self.students)
             patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
             patient_zero.set_day_infected(0)
+            patient_zero.set_infected_by(None)
 
     def set_patient_zero(self, person) -> None:
         """Sets a specific Person object to be patient zero"""
         self.patient_zero = person
         self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
         self.patient_zero.set_day_infected(0)
+        self.patient_zero.set_infected_by(None)
 
     def get_patient_zero(self) -> Person:
         return self.patient_zero
@@ -164,7 +167,7 @@ class Disease_transmission:
                             n.set_day_infected(self.day_no)
                             n.set_infected_by(stud)
 
-    def run_transmission(self, days, plot=True, Ias=0.4, testing=False) -> dict:
+    def run_transmission(self, days, plot=True, Ias=0.4, testing=False, save_to_file=False) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
         Generates a plot for transmission of each day in days. A new network
@@ -208,6 +211,10 @@ class Disease_transmission:
 
             print(f"-------------Day {i}-------------")
             pprint(d)
+            print(f"New: {self.new_r_null(i)}\nNew_new: {self.new_new_r_null()}")
+
+            # r0 = self.new_new_r_null()
+            # print(r0)
 
             days_dic[i] = d
             self.day_no += 1
@@ -219,6 +226,7 @@ class Disease_transmission:
                     self.plot(block=True)
                 else:
                     self.plot()
+        print(days_dic)
 
         return self.diff(days_dic)
 
@@ -346,7 +354,7 @@ class Disease_transmission:
             Is = Is / 100
 
             day_list = np.zeros(35)  # 15
-            for replica in range(0, 20):  # 20
+            for _ in range(0, 20):  # 20
                 for key, val in self.run_transmission(35, plot=False, Ias=Ias).items():  # 14
                     day_list[key] += val
 
@@ -357,12 +365,12 @@ class Disease_transmission:
         with open("asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
-    def R_null(self):
+    def R_null(self, days=5):
         """
         We assume self.run_transmission has aldready been run
         """
         # TODO: kjøre smitte i 30 dager, se hvor mange de som blir smittet i løpet av de 5 første dagene smitter videre. Kjøre gjennomsnitt.
-        assert len(self.days) > 5, f"Disease transmission object has only {len(self.days)} days generated"
+        # assert len(self.days) > 0, f"Disease transmission object has only {len(self.days)} days generated"
         infected_dict = dict([(stud.get_ID(), 0) for stud in self.students])
 
         # for day in range(5):
@@ -377,7 +385,7 @@ class Disease_transmission:
                     infected_dict.get(stud.get_infected_by().get_ID(), 0) + 1
                 )
         infected_day_5_or_less = list(
-            filter(lambda x: x.get_day_infected() is not None and x.get_day_infected() <= 5, self.students)
+            filter(lambda x: x.get_day_infected() is not None and x.get_day_infected() <= days, self.students)
         )
 
         summ = 0
@@ -387,14 +395,59 @@ class Disease_transmission:
 
         print(f"sum: {summ}")
         print(f"Infected day 5 or less: {len(infected_day_5_or_less)}")
+        if len(infected_day_5_or_less) == 1:
+            return 0.0
         return summ / (len(infected_day_5_or_less) - 1)
+
+    def new_r_null(self, day):
+        infected_dict = {}  # dict([(stud.get_ID(), 0) for stud in self.students])
+
+        for stud in filter(lambda x: x.get_day_infected() == day, self.students):
+            key = stud.get_infected_by()
+            if key == -1 or key is None:
+                continue
+            infected_dict[stud.get_infected_by().get_ID()] = infected_dict.get(stud.get_infected_by().get_ID(), 0) + 1
+        if not len(infected_dict):
+            return 0.0
+        return sum(infected_dict.values()) / len(infected_dict)
+
+    def new_new_r_null(self):
+        recovered = list(filter(lambda x: x.get_state() == Disease_states.R, self.students))
+        if not len(recovered):
+            return 0
+
+        infected_dict = {}
+        for stud in filter(lambda x: x.get_state() != Disease_states.S, self.students):
+            key = stud.get_infected_by()
+            if key is None:
+                continue
+            if key in recovered:
+                infected_dict[key] = infected_dict.get(key, 0) + 1
+
+        return sum(infected_dict.values()) / len(infected_dict)
+
+    def plot_exposed(self):
+        # TODO: Plotter x (antall dager) vs y (antall exposed på de dagene)
+        return
+
+    def plot_recovered(self):
+        # TODO: plotter recovered y på alle dager x
+        return
+
+    def plot_R0(self, day=5):
+        # TODO: Plotter R0 for hver dag etter dag no, day
+        return
+
+    def save_transmission(self):
+        # TODO: lagrer csv fil med dag, antall susceptible, antall exposed, antall presymptomatiske, antall symptomatiske, antall asymptimatiske og antall recovered og R0
+        return
 
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission(15, plot=False)
+    disease_transmission.run_transmission(10, plot=False)
     print(f"R_null: {disease_transmission.R_null()}")
     # disease_transmission.generate_cohorts()
 

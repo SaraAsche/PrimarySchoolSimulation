@@ -134,7 +134,7 @@ class Person:
         self.cohort = None
         self.infected_on_day = None
         self.recovered_on_day = None
-        self.infected_by = None
+        self.infected_by = -1
 
     def get_state(self) -> str:
         return self.state
