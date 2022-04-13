@@ -64,7 +64,9 @@ class Network:
         Returns the final nx.Graph object out of number days.
     """
 
-    def __init__(self, num_students, num_grades, num_classes, class_treshold=20, parameter_list=[]):
+    def __init__(
+        self, num_students=236, num_grades=5, num_classes=2, class_treshold=20, parameter_list=[], empiric=None
+    ):
         """Inits Network object with num_students, num_grades and num_classes parameters
 
         Parameters
@@ -80,7 +82,6 @@ class Network:
         parameter_list: list
             List containing parameters used to generate p_vector in the Person class.
         """
-
         self.parameter_list = parameter_list
         self.weigths = {
             "None": [100, 80, 60],
@@ -90,10 +91,15 @@ class Network:
             "R": [25, 20, 15],
             "RC": [50, 40, 30],
         }
-        self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_treshold)
         self.d = (1) * pow(10, -2)  # 4.3
-        self.graph = self.generate_a_day()
+
         self.iteration_list = []
+
+        if empiric:
+            self.students = empiric
+        else:
+            self.students = self.generate_students(num_students, num_grades, num_classes, class_treshold=class_treshold)
+            self.graph = self.generate_a_day()
 
     def get_graph(self) -> nx:
         return self.graph
@@ -159,36 +165,6 @@ class Network:
 
         same_cohort = stud1.get_cohort() == stud2.get_cohort() and stud1.get_cohort() is not None
 
-        # weight_same_class = 100
-        # weight_same_grade = 80
-        # weight_rest = 60
-
-        # f1=0
-        # f2=0
-        # f3=0
-
-        # if stoplight == Traffic_light.G:
-        #     f1 = 1
-        #     f2 = 2
-        #     f3 = 3
-
-        # elif stoplight == Traffic_light.O:
-        #     if same_cohort:
-        #         weight_same_class = 100
-        #         weight_same_grade = 80
-        #         weight_rest = 60
-        #     else:
-        #         weight_same_class = 100
-        #         weight_same_grade = 80
-        #         weight_rest = 60
-
-        # elif stoplight == Traffic_light.R:
-        #     weight_same_class = 100
-        #     weight_same_grade = 80
-        #     weight_rest = 60
-
-        # return weight_same_class - f1, weight_same_grade - f2, weight_rest - f3
-
         return (
             self.weigths["None"]
             if stoplight is None
@@ -248,7 +224,7 @@ class Network:
     def get_available_grades(self) -> list:
         return self.available_grades
 
-    def generate_network(self, stoplight=None) -> nx.Graph:
+    def generate_network(self, stoplight=None, empiric=None) -> nx.Graph:
         """Generates a hourly network
 
         Uses the Person objects in the students list as nodes and adds all interactions
@@ -261,15 +237,23 @@ class Network:
 
         for student in self.students:
             graph.add_node(student)
+        if empiric:
+            for interaction in empiric:
 
-        for interaction in self.generate_interactions_for_network(stoplight):
+                p1 = interaction.get_p1()
+                p2 = interaction.get_p2()
+                weight = interaction.get_count()
 
-            p1 = interaction.get_p1()
-            p2 = interaction.get_p2()
-            weight = interaction.get_count()
+                graph.add_edge(p1, p2, count=weight)
+        else:
+            for interaction in self.generate_interactions_for_network(stoplight):
 
-            graph.add_edge(p1, p2, count=weight)
+                p1 = interaction.get_p1()
+                p2 = interaction.get_p2()
+                weight = interaction.get_count()
 
+                graph.add_edge(p1, p2, count=weight)
+        self.graph = graph
         return graph
 
     def generate_a_day(

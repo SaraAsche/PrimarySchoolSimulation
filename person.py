@@ -102,7 +102,7 @@ class Person:
 
     newid = itertools.count()
 
-    def __init__(self, grade, class_group):
+    def __init__(self, grade, class_group, id=None):
         """Inits Person object with grade and class parameters
 
         Parameters
@@ -112,8 +112,11 @@ class Person:
         class_group : str
             the class of the Person
         """
+        if id != None:
+            self.id = id
+        else:
+            self.id = next(Person.newid)
 
-        self.id = next(Person.newid)
         self.sex = self.get_gender()
 
         self.vaccinated = self.get_vaccinated_status()
@@ -142,6 +145,9 @@ class Person:
     def set_state(self, state) -> None:
         self.state = state
         # self.states[state] += 1
+
+    def clean_states(self) -> None:
+        self.state = None
 
     def set_tested(self, tested) -> None:
         self.tested = tested

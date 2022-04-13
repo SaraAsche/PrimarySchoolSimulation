@@ -1,0 +1,84 @@
+from disease_transmission import Disease_transmission
+from person import Person
+from interaction import Interaction
+from network import Network
+import random
+import numpy as np
+import networkx as nx
+import pickle
+from enums import Disease_states
+
+
+def create_graph(day1=True) -> list:
+    students = []
+    interactions = []
+
+    if day1:
+        with open("./Empiric_network/dayOneNewIndex.csv", mode="r") as primarySchoolData:
+
+            for line in primarySchoolData:
+
+                temp = list(map(lambda x: x.strip(), line.split(",")))
+                if temp[3] == "Teachers" or temp[4] == "Teachers":
+                    continue
+                else:
+                    if int(temp[1]) not in map(lambda x: x.get_ID(), students):
+                        p1 = Person(grade=int(temp[3][0]), class_group=temp[3][1], id=int(temp[1]))
+                        students.append(p1)
+                    else:
+                        p1 = list(filter(lambda x: x.get_ID() == int(temp[1]), students))[0]
+
+                    if int(temp[2]) not in map(lambda x: x.get_ID(), students):
+                        p2 = Person(grade=int(temp[4][0]), class_group=temp[4][1], id=int(temp[2]))
+                        students.append(p2)
+                    else:
+                        p2 = list(filter(lambda x: x.get_ID() == int(temp[2]), students))[0]
+
+                interaction = Interaction(p1, p2, count=int(temp[5]))
+                interactions.append(interaction)
+
+    else:
+        with open("./Empiric_network/dayTwoNewIndex.csv", mode="r") as primarySchoolData:
+
+            for line in primarySchoolData:
+
+                temp = list(map(lambda x: x.strip(), line.split(",")))
+                if temp[3] == "Teachers" or temp[4] == "Teachers":
+                    continue
+                else:
+                    if int(temp[1]) not in map(lambda x: x.get_ID(), students):
+                        p1 = Person(grade=int(temp[3][0]), class_group=temp[3][1], id=int(temp[1]))
+                        students.append(p1)
+                    else:
+                        p1 = list(filter(lambda x: x.get_ID() == int(temp[1]), students))[0]
+
+                    if int(temp[2]) not in map(lambda x: x.get_ID(), students):
+                        p2 = Person(grade=int(temp[4][0]), class_group=temp[4][1], id=int(temp[2]))
+                        students.append(p2)
+                    else:
+                        p2 = list(filter(lambda x: x.get_ID() == int(temp[2]), students))[0]
+
+                interaction = Interaction(p1, p2, count=temp[5])
+                interactions.append(interaction)
+
+    n = Network(empiric=students)
+    n.generate_network(empiric=interactions)
+    return n
+
+
+def run_disease_transmission():
+    graph1 = create_graph(day1=True)
+    graph2 = create_graph(day1=False)
+
+    dis = Disease_transmission(graph1)
+
+    dis.run_transmission_empiric(
+        days=14,
+        graph1=graph1,
+        graph2=graph2,
+        day1=True,
+        switch=False,
+    )
+
+
+run_disease_transmission()
