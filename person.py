@@ -182,6 +182,12 @@ class Person:
         return self.cohort
 
     def disease_state_start(self) -> str:
+        self.states = dict([(e, 0) for e in Disease_states])
+        self.cohort = None
+        self.infected_on_day = None
+        self.recovered_on_day = None
+        self.infected_by = -1
+
         return Disease_states.S
 
     def set_diasease_state(self, state) -> None:
@@ -391,6 +397,9 @@ class Person:
 
     def get_infected_by(self):
         return self.infected_by
+
+    def is_symptomatic(self) -> bool:
+        return bool(self.states[Disease_states.IS])
 
     def __str__(self):
         return (

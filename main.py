@@ -17,10 +17,11 @@ def main():
         network = Network(225, 5, 2)
 
     analysis = Analysis(network)
+
     analysis.heatmap_asymptomatic_calibration()
 
-    disease_transmission = Disease_transmission(network, stoplight=Traffic_light.G)
-    disease_transmission.run_transmission(days=16, testing=True)
+    # disease_transmission = Disease_transmission(network, stoplight=Traffic_light.G)
+    # disease_transmission.run_transmission(days=16, testing=True)
 
 
 main()

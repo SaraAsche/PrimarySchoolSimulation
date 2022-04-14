@@ -33,6 +33,7 @@ import networkx as nx
 import numpy as np
 import pickle as pickle
 import os
+import seaborn as sns
 
 
 class Disease_transmission:
@@ -92,10 +93,10 @@ class Disease_transmission:
         self.Ip = 1 - self.Ias
 
     def get_day(self) -> int:
-        return self.day_number
+        return self.day_n0
 
     def set_day(self, day) -> None:
-        self.day_number = day
+        self.day_no = day
 
     def get_all_states(self) -> list:
         state_list = []
@@ -189,6 +190,7 @@ class Disease_transmission:
             The number of days the transmission should be simulated
         """
         self.network.reset_student_disease_states()
+        self.set_day(0)
 
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
@@ -313,7 +315,6 @@ class Disease_transmission:
                         self.graph = graph1.get_graph()
 
                 self.days.append(self.graph)
-                print(self.graph)
 
                 self.infection_spread()
 
@@ -343,7 +344,6 @@ class Disease_transmission:
                     self.plot(block=True)
                 else:
                     self.plot()
-        print(days_dic)
 
         return self.diff(days_dic)
 
@@ -608,17 +608,73 @@ class Disease_transmission:
         df = pd.DataFrame(R_null_list)
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
+    def get_all_person_has_infected(self, p: Person):
+        return list(filter(lambda x: x.get_infected_by() == p, self.students))
+
+    def extract_r0_day(self):
+        d = {}
+        l = []
+        for stud in filter(lambda x: x.state == Disease_states.R, self.students):
+            sympt = stud.is_symptomatic()
+            day_infected = stud.get_day_infected()
+
+            r0 = len(self.get_all_person_has_infected(stud))
+            d[(day_infected, r0, sympt)] = d.get((day_infected, r0, sympt), 0) + 1
+
+        for (day_infected, r0, sympt), count in d.items():
+            l.append((day_infected, r0, sympt, count))
+
+        return pd.DataFrame(data=l, columns=["day_infected", "r0", "sympt", "count"])
+
+    def plot_r0_and_day(self, data, plot=True):
+        b = sns.scatterplot(
+            data=data,
+            x="day_infected",
+            y="r0",
+            size="count",
+            hue="sympt",
+            sizes=(100, 200),
+            alpha=0.5,
+            legend=False,
+            palette=["darkgreen", "rebeccapurple"],
+        )
+        b.set_yticklabels(b.get_yticks(), size=12)
+        b.set_xticklabels(b.get_yticks(), size=12)
+        plt.tight_layout()
+        b.set(xlabel=[])
+        b.set(ylabel=[])
+        b.set_xlabel("Day infected", fontsize=12)
+        b.set_ylabel("$R_{0}$", fontsize=12)
+
+        if plot:
+            plt.show()
+        else:
+            plt.savefig("./fig_master/R0_and_day.png", transparent=True, dpi=500)
+
+    def run_transmission_with_R0_plots(self, iterations, num_days, save=True):
+        df1 = pd.DataFrame(data=[], columns=["day_infected", "r0", "sympt", "count"])
+        for _ in range(iterations):
+            self.run_transmission(num_days, plot=False, save_to_file=True)
+            df = self.extract_r0_day()
+            df1 = (
+                pd.concat([df1, df])
+                .groupby(["day_infected", "r0", "sympt"], as_index=False)["count"]
+                .sum()
+                .reset_index()
+            )
+
+        self.plot_r0_and_day(df1, plot=not save)
+
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    # disease_transmission.run_transmission(30, plot=False, save_to_file=True)
-    # print(f"R_null: {disease_transmission.R_null()}")
+    disease_transmission.run_transmission_with_R0_plots(10, 50)
 
     # disease_transmission.plot_exposed("./data/003transmission.csv")
     # disease_transmission.plot_recovered("./data/003transmission.csv")
     # disease_transmission.plot_R0("./data/003transmission.csv")
 
-    disease_transmission.sympt_asympt_R_0(iterations=100)
-    disease_transmission.sympt_asympt_R_0(iterations=100, sympt=False)
+    # disease_transmission.sympt_asympt_R_0(iterations=100)
+    # disease_transmission.sympt_asympt_R_0(iterations=100, sympt=False)

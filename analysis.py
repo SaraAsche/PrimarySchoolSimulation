@@ -845,3 +845,50 @@ class Analysis:
         plt.ylabel("%Asymptomatic")
         plt.show()
         return df
+
+    def pie_chart(self, filename):
+        df = pd.read_csv(r"./asymptomatic_symptomatic/sympt:False.csv")
+        list_of_R_null = df.values.tolist()
+
+        list_no_1 = []
+        for item in list_of_R_null:
+            list_no_1.append(item[1])
+        list_no_1.sort()
+        print(len(list_no_1))
+
+        new_list = []
+        for item in list_no_1:
+            # if item > 6:
+            #    new_list.append("$\geq 7$")
+            # else:
+            new_list.append("=" + str(item))
+
+        new_dict = {}
+        R_0 = "$R_{0}$"
+        for item in new_list:
+            if R_0 + str(item) not in new_dict:
+                new_dict[R_0 + str(item)] = 1
+            else:
+                new_dict[R_0 + str(item)] += 1
+        labels = []
+        sizes = []
+        print(new_dict)
+        for x, y in new_dict.items():
+            labels.append(x)
+
+            sizes.append(y)
+
+        # Plot
+        # plt.pie(sizes, labels=labels)
+        colors = ["#7F4F24", "#936639", "#A68A64", "#B6AD90", "#C2C5AA", "#A4AC86", "#656D4A", "#414833"][::-1]
+        # colors = ["#CB997E", "#EDDCD2", "#FFF1E6", "#F0EFEB", "#DDBEA9", "#A5A58D", "#B7B7A4", "#414833"]
+        # Set your custom color palette
+        sns.set_palette(sns.color_palette(colors))
+
+        # colors = sns.color_palette("dark")
+        plt.pie(sizes, labels=labels, colors=colors)  # autopct="%0.0f%%"
+        plt.tight_layout()
+        # plt.savefig("./fig_master/R0_symptomatic.png", transparent=True, dpi=500)
+
+        # plt.axis("equal")
+        # plt.show()
