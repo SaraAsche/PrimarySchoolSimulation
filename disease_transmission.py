@@ -20,7 +20,6 @@ Date: 14.02.2022
 File: disease_transmission.py
 """
 
-import re
 from enums import Disease_states, Traffic_light
 from network import Network
 from person import Person
@@ -44,10 +43,43 @@ class Disease_transmission:
 
     Attributes
     ----------
+    network : Network
+         Network object containing a nx.Graph and students present in the network
+    stoplight : Traffic_light
+        Contains a Traffic_light entry from the traffic light model (green ("G"), yellow ("Y"), red("R")) or None
+    graph : nx.Graph
+        nx.Graph object containing interactions between Person objects
+    students : list
+        list of all person objects that are a part of Network
+    patient_zero : Person
+        The first person to introduce disease into the Network
+    day_no : int
+        Keeps track of the current day Disease_transmission is run on
+    days : list
+        list of graphs generated for all days Disease_transmission is run on
+    p_0 : float
+        Estimated Disease_transmission parameter
+    infectious_rates : dict
+        Dict containing Disease_states as keys and their relative infectiousness (in relation to the symptomaticstate) as values
+    Ias : float
+        Describes the percentage of individuals having a asymptomatic disease course
+    Ip : float
+        Describes the percentage of individuals having a presymptomatic/symptomatic disease course
+    positions : dict
+        A dictionary of positions keyed by node
     ....
 
     Methods
     -------
+    set_day(int)
+        Sets the disease_transmissions object day_no to a specific day
+    get_day()
+        Returns a int representing the day Disease_transmission is currently on
+    get_all_states(Disease_state)
+        Returns a list of all Person objects' current Disease_states
+    update_ias_ip(Ias)
+        Updates the attribute of Disease_transmission to the given float Ias
+
     .....
     """
 
@@ -58,57 +90,79 @@ class Disease_transmission:
         ----------
         network: Network
             Network object containing interactions between Person objects
-        students: list
-            List of all person objects that are a part of Network
-        patient_zero: Person
-            The first person to introduce disease into the Network
-        day_number: int
-            The number of days the model has been run
-        infectious_rates: dict
-            Keeps track of the likelyhood of a Person having an asymptomatic
-            or presymptomatic course of the disease.
-
-        Methods
-        --------
-        ..
+        stoplight : None or Traffic_light
+            Contains a Traffic_light entry from the traffic light model (green ("G"), yellow ("Y"), red("R")). Default is None
+        Ias : float
+            Describes the percentage of individuals having a asymptomatic disease course. Default is 0.4
         """
 
         self.network = network
+        self.stoplight = stoplight
+
         self.graph = network.get_graph()
         self.students = network.get_students()
-        self.day_no = 0
-        self.p_0 = 0.001
-
         self.patient_zero = None
-        self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 1}  # FHI
-        # self.infectious_rates = {Disease_states.IAS: 0.06, Disease_states.IP: 0.45, Disease_states.IS: 0.4}
-        self.Ias = Ias
-        self.Ip = 1 - self.Ias
-        self.positions = nx.spring_layout(self.graph, seed=10396953)
-        self.stoplight = stoplight
+
+        self.day_no = 0
         self.days = [self.graph]
 
-    def update_ias_ip(self, Ias) -> None:
+        self.p_0 = 0.001
+        self.infectious_rates = {Disease_states.IAS: 0.1, Disease_states.IP: 1.3, Disease_states.IS: 1}  # FHI
         self.Ias = Ias
         self.Ip = 1 - self.Ias
+
+        self.positions = nx.spring_layout(self.graph, seed=10396953)
+
+    def set_day(self, day: int) -> None:
+        self.day_no = day
 
     def get_day(self) -> int:
         return self.day_n0
 
-    def set_day(self, day) -> None:
-        self.day_no = day
-
     def get_all_states(self) -> list:
+        """Returns a list of all Person objects that have a given state"""
         state_list = []
         for student in self.students:
             state_list.append(student.get_state())
         return state_list
+
+    def update_ias_ip(self, Ias: float) -> None:
+        """Updates the attribute asymptomatic proportion, Ias, for the Disease_transmission object
+
+        Parameters
+        ----------
+        Ias : float
+            The percentage of individuals having a asymptomatic disease course
+        """
+
+        self.Ias = Ias
+        self.Ip = 1 - self.Ias
+
+    def set_patient_zero(self, person: Person) -> None:
+        """Sets a specific Person object to be patient_zero
+
+        Parameters
+        ----------
+        person : Person
+            The Person object that is going to be set as patient_zero
+        """
+        self.patient_zero = person
+        self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
+        self.patient_zero.set_day_infected(0)
+        self.patient_zero.set_infected_by(None)
 
     def generate_patient_zero(self, num=1, sympt=True) -> None:
         """Generates num students in the network that are infected
 
         Default is to start with one infected individual with num=1.
 
+        Parameters
+        ----------
+        num : int
+            The number of patient_zeros that should be introduced into the model at a given time. Default is 1
+        sympt : bool
+            Denotes whether or not patient_zero will have a symptomatic or asymptomatic Disease_state.
+            Default is True, meaning that patient_zero is set to a symptomatic disease course
         """
         for _ in range(num):
             self.patient_zero = random.choice(self.students)
@@ -119,35 +173,37 @@ class Disease_transmission:
             # else:
             # self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
             self.patient_zero.set_day_infected(0)
-            self.patient_zero.set_infected_by(None)
-
-    def set_patient_zero(self, person) -> None:
-        """Sets a specific Person object to be patient zero"""
-        self.patient_zero = person
-        self.patient_zero.set_state(Helpers.get_infection_root(pA=self.Ias, pP=self.Ip))
-        self.patient_zero.set_day_infected(0)
-        self.patient_zero.set_infected_by(None)
+            self.patient_zero.set_infected_by(
+                None
+            )  # Since it is the first infected individual, it is infected from an outside source
 
     def get_patient_zero(self) -> Person:
+        """Returns the Person object that is patient_zero"""
         return self.patient_zero
 
-    def get_susceptible(self) -> list:
-        """Returns a list of all susceptible Person objects in the Network"""
-        susceptible = []
+    def get_state(self, state: Disease_states) -> list:
+        """Returns a list of all Person objects in the Network with the given Disease_state, state
+
+        Parameters
+        ----------
+        state : Disease_state
+            The state in which you would like to extract a list of individuals in
+        """
+        state = []
         for student in self.students:
+            if student.get_state() == state:
+                state.append(student)
+        return state
 
-            if student.get_state() == "S":
-                susceptible.append(student)
-        return susceptible
+    def get_all_person_has_infected(self, p: Person) -> list:
+        """Returns a list of all the Person objects Person p has infected
 
-    def get_exposed(self) -> list:
-        """Returns a list of all exposed Person objects in the Network"""
-        exposed = []
-        for student in self.students:
-
-            if student.get_state() == "E":
-                exposed.append(student)
-        return exposed
+        Parameters
+        ----------
+        p : Person
+            The Person object in which you would like to get a list of who they have infected
+        """
+        return list(filter(lambda x: x.get_infected_by() == p, self.students))
 
     def infection_spread(self) -> None:
         """Simulate disease transmission for one day
@@ -155,7 +211,6 @@ class Disease_transmission:
         Using the graph initialised for disease_transmission, the students that are
         either infected presymptomatic, infected asymptomatic or infected symptomatic
         are looped over and their neighbors have a given probability of getting exposed
-
         """
         j = 0
         for stud in self.students:
@@ -163,13 +218,11 @@ class Disease_transmission:
             if stud.state in [Disease_states.IP, Disease_states.IAS, Disease_states.IS]:
                 if not stud.get_tested():
                     for n in self.graph.neighbors(stud):
-                        # infected = self.infectious_rates[stud.state] * self.graph.edges[(stud, n)]["count"] > 15
                         p_inf = 1 - (1 - self.p_0) ** (
                             self.graph.edges[(stud, n)]["count"] * self.infectious_rates[stud.state]
                         )
                         rand = random.random()
                         infected = rand < p_inf
-                        # print(f"p_inf: {p_inf}, random: {rand}, infected: {infected}")
                         if infected and n.get_state() == Disease_states.S:
 
                             n.set_state(Disease_states.E)
@@ -177,7 +230,7 @@ class Disease_transmission:
                             n.set_infected_by(stud)
 
     def run_transmission(
-        self, days, plot=True, Ias=0.4, testing=False, save_to_file=False, sympt=True, R_null=False
+        self, days: int, plot=True, Ias=0.4, testing=False, save_to_file=False, sympt=True, R_null=False
     ) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
@@ -186,11 +239,23 @@ class Disease_transmission:
 
         Parameters
         ----------
-        days int:
+        days : int
             The number of days the transmission should be simulated
+        plot : bool
+            Determines if transmission should be plotted. If True, which is the default, the transmission is plotted day by day.
+        Ias : float
+            Describes the percentage of asymptomatic individuals for the given day run_transmission is run. Default is 0.4
+        testing : bool
+            Determined wheter or not weekly testing is implemented. By default it is False, meaning no testing is implemented
+        dave_to_file : bool
+            Determines if the disease transmission should be saved to a file or not. Default is False, meaning the data is not saved to file
+        sympt : bool
+            Determines whether patient_zero is asymptomatic or presymptomatic. Default is True, meaning patient_zero is set to a symptomatic disease course
+        R_null : bool
+            Determines the output of the model. If True, the model only returns the R_0 of patient_zero. If False, it returns a dict of the number of individuals in different Disease_states
         """
-        self.network.reset_student_disease_states()
-        self.set_day(0)
+        self.network.reset_student_disease_states()  # Reset the states of the Person objects
+        self.set_day(0)  # Resets the day
 
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
@@ -205,13 +270,12 @@ class Disease_transmission:
             else:
                 if self.stoplight == Traffic_light.G:
                     self.graph = self.generate_green_stoplight(self.graph)
-                elif self.stoplight == Traffic_light.O:
-                    self.graph = self.generate_orange_stoplight(self.graph)
+                elif self.stoplight == Traffic_light.Y:
+                    self.graph = self.generate_yellow_stoplight(self.graph)
                 elif self.stoplight == Traffic_light.R:
                     self.graph = self.generate_red_stoplight(self.graph)
                 else:
                     self.graph = self.network.generate_a_day()  # A new network is generated each day
-
                 self.days.append(self.graph)
                 self.infection_spread()
 
@@ -228,16 +292,15 @@ class Disease_transmission:
                     self.plot(block=True)
                 else:
                     self.plot()
-
+            ######## Prints out how many individuals are in a given disease state for each day########
             print(f"-------------Day {i}-------------")
             pprint(d)
-            print(f"New: {self.new_r_null(i)}\nNew_new: {self.new_new_r_null()}")
-
-            d["R_null"] = self.new_new_r_null()
+            print(f"New: {self.average_infected_on_day(i)}\nNew_new: {self.average_recovered_infected()}")
+            d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
 
-        if save_to_file:
+        if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
             dirs = os.listdir("./data")
             if not len(dirs):
                 last_file = -1
@@ -273,7 +336,7 @@ class Disease_transmission:
 
     def run_transmission_empiric(
         self,
-        days,
+        days: int,
         graph1=None,
         graph2=None,
         day1=True,
@@ -283,6 +346,36 @@ class Disease_transmission:
         testing=False,
         save_to_file=False,
     ):
+        """Simulate and draw the disease transmission for days on the empiric network
+
+        Generates a plot for transmission of each day in days. The empiric network is used as a graph.
+        Whether or not one switches between the two empiric days or not is denotes by the switch parameter.
+        Traffic_light conditions are not implemented.
+
+        Parameters
+        ----------
+        days : int
+            The number of days the transmission should be simulated
+        graph1 : nx.Graph
+            The empiric graph for interactions on day 1
+        graph2 : nx.Graph
+            The empiric graph for interactions on day 1
+        day1 : bool
+            Determines if transmission should begin on day 1. If True, which is the default, transmission begins on day 1.
+        switch : bool
+            Determines if transmission is run on only one of the two days or not. If switch is False, transmission is only run on one network for all the days
+            If True, transmission is run on alternating graphs for day 1 and day 2.
+        plot : bool
+            Determines if transmission should be plotted. If True, which is the default, the transmission is plotted day by day.
+        Ias : float
+            Describes the percentage of asymptomatic individuals for the given day run_transmission is run. Default is 0.4
+        testing : bool
+            Determined wheter or not weekly testing is implemented. By default it is False, meaning no testing is implemented
+        dave_to_file : bool
+            Determines if the disease transmission should be saved to a file or not. Default is False, meaning the data is not saved to file
+        sympt : bool
+            Determines whether patient_zero is asymptomatic or presymptomatic. Default is True, meaning patient_zero is set to a symptomatic disease course
+        """
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
         self.network.reset_student_disease_states()
 
@@ -301,13 +394,6 @@ class Disease_transmission:
                 self.generate_patient_zero()  # Patient zero is introduced
 
             else:
-                # if self.stoplight == Traffic_light.G:
-                #     self.graph = self.generate_green_stoplight(self.graph)
-                # elif self.stoplight == Traffic_light.O:
-                #     self.graph = self.generate_orange_stoplight(self.graph)
-                # elif self.stoplight == Traffic_light.R:
-                #     self.graph = self.generate_red_stoplight(self.graph)
-
                 if switch:
                     if self.graph == graph1.get_graph():
                         self.graph = graph2.get_graph()
@@ -326,10 +412,9 @@ class Disease_transmission:
 
             print(f"-------------Day {i}-------------")
             pprint(d)
-            print(f"New: {self.new_r_null(i)}\nNew_new: {self.new_new_r_null()}")
-
-            # r0 = self.new_new_r_null()
-            # print(r0)
+            print(
+                f"Average infected today: {self.average_infected_on_day(i)}\nAverage infected of all recovered: {self.average_recovered_infected()}"
+            )
 
             days_dic[i] = d
             self.day_no += 1
@@ -347,68 +432,6 @@ class Disease_transmission:
 
         return self.diff(days_dic)
 
-    def isolate(self, graph):
-        if self.stoplight in [Traffic_light.O, Traffic_light.R]:
-            for stud in self.students:
-                if stud.state == Disease_states.IS:
-                    self.network.remove_all_interactions(graph, stud)
-
-    def generate_green_stoplight(self, graph):
-        graph = self.network.decrease_interaction_day(self.stoplight)
-        self.isolate(graph)
-        return graph
-
-    def generate_orange_stoplight(self, graph):
-        ## TODO: Associate cohorts with normal interaction, less elsewhere
-
-        self.generate_cohorts()
-        graph = self.network.decrease_interaction_day(self.stoplight)
-        self.isolate(graph)
-        return graph
-
-    def generate_red_stoplight(self, graph):
-        ## TODO: almost exclusively cohort interactions
-        self.generate_cohorts()
-        graph = self.network.decrease_interaction_day(self.stoplight)
-        self.isolate(graph)
-        return graph
-
-    def generate_cohorts(self) -> None:
-
-        grades = self.network.get_available_grades()
-        classes = self.network.get_available_classes()
-        grade_and_classes = [f"{i}{j}" for i in grades for j in classes]
-        cohorts = []
-
-        if self.stoplight == Traffic_light.O:
-            for i in range(0, len(grade_and_classes) - 1, 2):
-                cohorts.append(f"{grade_and_classes[i]}{grade_and_classes[i+1]}")
-                students = list(
-                    filter(
-                        lambda x: x.get_class_and_grade() == grade_and_classes[i]
-                        or x.get_class_and_grade() == grade_and_classes[i + 1],
-                        self.students,
-                    )
-                )
-                for stud in students:
-                    stud.set_cohort(cohorts[-1])
-
-        elif self.stoplight == Traffic_light.R:
-            for class_group in grade_and_classes:
-                students = list(filter(lambda x: x.get_class_and_grade() == class_group, self.students))
-                for i in range(0, (len(students) // 2) + 1):
-                    students[i].set_cohort(f"{class_group}1")
-                    students[-i - 1].set_cohort(f"{class_group}2")
-
-    def weekly_testing(self, recurr=7) -> None:
-        ## Testing vil plukke opp asymtpomatiske og symptomatiske og isolere til R
-        ## Må forbli isolerte til de er recovered.
-        if self.day_no % 7 == 0 and self.day_no != 0:
-            for stud in self.students:
-                if stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]:
-                    self.network.remove_all_interactions(self.graph, stud)
-                    stud.set_tested(True)
-
     def plot(self, interval=1, block=False) -> None:
         """Plots the Disease_states of each node at a given day
 
@@ -420,9 +443,9 @@ class Disease_transmission:
         Parameters
         ----------
         interval int:
-            How long of a time, in seconds, a plot should be shown
+            How long of a time, in seconds, a plot should be shown. Default is 1 seconds
         block bool:
-            Keeps track of whether or not the plot is the last day defined
+            Keeps track of whether or not the plot is the last day defined. Default is False
         """
 
         plt.clf()
@@ -458,40 +481,31 @@ class Disease_transmission:
         else:
             plt.pause(interval)
 
-    def diff(self, state_dict) -> dict:
-        """Returns a dict of how many individuals that are not susceptible in the model for the days it is run"""
+    def diff(self, state_dict: dict) -> dict:
+        """Returns a dict of how many individuals that are not susceptible in the model for the days it is run
+
+        Parameters
+        ----------
+        state_dict : dict
+            Dict containing Disease_states as keys and number of individuals in that given state as the value
+        """
+
         for entry in state_dict:
             state_dict.update({entry: 236 - state_dict[entry][Disease_states.S]})
         return state_dict
 
-    def asymptomatic_calibration(self) -> None:
-        Ias_dict = {}
-        for Is in range(0, 101, 10):
-            Ias = (100 - Is) / 100
-            Is = Is / 100
+    def R_null(self, days=5) -> float:
+        """Is generated after run_transmission is run. Gives an estimate on R_0 based on the first days (5) infected individuals
 
-            day_list = np.zeros(35)  # 15
-            for _ in range(0, 20):  # 20
-                for key, val in self.run_transmission(35, plot=False, Ias=Ias).items():  # 14
-                    day_list[key] += val
+        Counts how many Person objects the first days (5) infected infect before they recover. Draws an average of the days (5). Default is 5 days.
 
-                self.network.reset_student_disease_states()
-            day_list = day_list / 20
-            Ias_dict[Ias] = day_list.tolist()
-
-        with open("asymptomatic_calibration.pickle", "wb") as handle:
-            pickle.dump(Ias_dict, handle)
-
-    def R_null(self, days=5):
+        Parameters
+        ----------
+        days : int
+            Determines how many infected during the first days days, and furthermore how many they infect. Default is 5,
+            meaning that the R0 is calculated by taking the average of how many the infected individuals on day 5 infect before they recover
         """
-        We assume self.run_transmission has aldready been run
-        """
-        # TODO: kjøre smitte i 30 dager, se hvor mange de som blir smittet i løpet av de 5 første dagene smitter videre. Kjøre gjennomsnitt.
-        # assert len(self.days) > 0, f"Disease transmission object has only {len(self.days)} days generated"
         infected_dict = dict([(stud.get_ID(), 0) for stud in self.students])
-
-        # for day in range(5):
-        #     infected.append(list(lambda x: x.get_infection_day() == day, self.students))
 
         for stud in filter(lambda x: x.get_state() != Disease_states.S, self.students):
             key = stud.get_infected_by()
@@ -516,7 +530,14 @@ class Disease_transmission:
             return 0.0
         return summ / (len(infected_day_5_or_less) - 1)
 
-    def new_r_null(self, day):
+    def average_infected_on_day(self, day: int) -> float:
+        """Calculates how many are on average infected on a certain day
+
+        Parameters
+        ----------
+        day : int
+            The day in which one would like to calculate how many on average are infected
+        """
         infected_dict = {}  # dict([(stud.get_ID(), 0) for stud in self.students])
 
         for stud in filter(lambda x: x.get_day_infected() == day, self.students):
@@ -528,7 +549,8 @@ class Disease_transmission:
             return 0.0
         return sum(infected_dict.values()) / len(infected_dict)
 
-    def new_new_r_null(self):
+    def average_recovered_infected(self) -> float:
+        """How many on average all individuals have infected before they recovered. Is accumulating"""
         recovered = list(filter(lambda x: x.get_state() == Disease_states.R, self.students))
         if not len(recovered):
             return 0
@@ -544,7 +566,14 @@ class Disease_transmission:
             return 0.0
         return sum(infected_dict.values()) / len(infected_dict)
 
-    def plot_exposed(self, filename):
+    def plot_exposed(self, filename: str) -> None:
+        """Plots the number of exposed individuals as a function of the day
+
+        Parameters
+        ----------
+        filename : str
+            String with filename and path
+        """
         plt.rcParams["figure.figsize"] = [7.50, 3.50]
         plt.rcParams["figure.autolayout"] = True
 
@@ -560,7 +589,14 @@ class Disease_transmission:
         # plt.gcf().autofmt_xdate()
         plt.show()
 
-    def plot_recovered(self, filename):
+    def plot_recovered(self, filename: str):
+        """Plots the number of recovered individuals as a function of the day
+
+        Parameters
+        ----------
+        filename : str
+            String with filename and path
+        """
         plt.rcParams["figure.figsize"] = [7.50, 3.50]
         plt.rcParams["figure.autolayout"] = True
 
@@ -578,6 +614,13 @@ class Disease_transmission:
         return
 
     def plot_R0(self, filename):
+        """Plots the number of R0 as a function of the day
+
+        Parameters
+        ----------
+        filename : str
+            String with filename and path
+        """
         plt.rcParams["figure.figsize"] = [7.50, 3.50]
         plt.rcParams["figure.autolayout"] = True
 
@@ -594,39 +637,8 @@ class Disease_transmission:
 
         plt.show()
 
-    def sympt_asympt_R_0(self, iterations=100, sympt=True):
-
-        # dict = {'First Name': 'Vikram', 'Last Name': 'Aruchamy', 'Country': 'India'}
-        # df = df.append(dict, ignore_index = True)
-        R_null_list = []
-        for i in range(1, iterations + 1):
-
-            pers, R_null = self.run_transmission(days=12, plot=False, sympt=sympt, R_null=True)
-
-            R_null_list.append(R_null)
-        print(R_null_list)
-        df = pd.DataFrame(R_null_list)
-        df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
-
-    def get_all_person_has_infected(self, p: Person):
-        return list(filter(lambda x: x.get_infected_by() == p, self.students))
-
-    def extract_r0_day(self):
-        d = {}
-        l = []
-        for stud in filter(lambda x: x.state == Disease_states.R, self.students):
-            sympt = stud.is_symptomatic()
-            day_infected = stud.get_day_infected()
-
-            r0 = len(self.get_all_person_has_infected(stud))
-            d[(day_infected, r0, sympt)] = d.get((day_infected, r0, sympt), 0) + 1
-
-        for (day_infected, r0, sympt), count in d.items():
-            l.append((day_infected, r0, sympt, count))
-
-        return pd.DataFrame(data=l, columns=["day_infected", "r0", "sympt", "count"])
-
-    def plot_r0_and_day(self, data, plot=True):
+    def plot_r0_and_day(self, data: pd.DataFrame, plot=True) -> None:
+        """Scatterplot of R0 for the days. Not currently in use"""
         b = sns.scatterplot(
             data=data,
             x="day_infected",
@@ -651,7 +663,35 @@ class Disease_transmission:
         else:
             plt.savefig("./fig_master/R0_and_day.png", transparent=True, dpi=500)
 
-    def run_transmission_with_R0_plots(self, iterations, num_days, save=True):
+    def extract_r0_day(self) -> pd.DataFrame:
+        """Extracts the number of infected, R0, symptomatic, and"""
+        d = {}
+        l = []
+        for stud in filter(lambda x: x.state == Disease_states.R, self.students):
+            sympt = stud.is_symptomatic()
+            day_infected = stud.get_day_infected()
+
+            r0 = len(self.get_all_person_has_infected(stud))
+            d[(day_infected, r0, sympt)] = d.get((day_infected, r0, sympt), 0) + 1
+
+        for (day_infected, r0, sympt), count in d.items():
+            l.append((day_infected, r0, sympt, count))
+
+        return pd.DataFrame(data=l, columns=["day_infected", "r0", "sympt", "count"])
+
+    def run_transmission_with_R0_plots(self, iterations: int, num_days: int, save=True) -> None:
+        """Plots the average of numberous iterations for num_days days.
+
+        Parameters
+        ----------
+        iterations : int
+            the number of iterations transmission should be run for
+        num_days : int
+            The number of days each iteration shoulc be run for
+        save : bool
+            Whether or not to save or plot the results
+
+        """
         df1 = pd.DataFrame(data=[], columns=["day_infected", "r0", "sympt", "count"])
         for _ in range(iterations):
             self.run_transmission(num_days, plot=False, save_to_file=True)
@@ -664,6 +704,153 @@ class Disease_transmission:
             )
 
         self.plot_r0_and_day(df1, plot=not save)
+
+    def isolate(self, graph: nx.Graph) -> None:
+        """Isolates all individuals in a graph that has the disease_state Infected_symptomatic
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            nx.Graph that contains all interactions between the Person objects
+        """
+
+        if self.stoplight in [Traffic_light.G, Traffic_light.Y, Traffic_light.R]:
+            for stud in self.students:
+                if stud.state == Disease_states.IS:
+                    self.network.remove_all_interactions(graph, stud)
+
+    def generate_green_stoplight(self, graph: nx.Graph) -> nx.Graph:
+        """The level in the primary school is set to green.
+
+        In effect this means decreasing the interactions slightly, and isolating sick individuals
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            nx.Graph that contains all interactions between the Person objects
+        """
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_yellow_stoplight(self, graph: nx.Graph) -> nx.Graph:
+        """The level in the primary school is set to yellow.
+
+        In effect this means decreasing the interactions more, isolating sick individuals and dividing into cohorts
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            nx.Graph that contains all interactions between the Person objects
+        """
+
+        self.generate_cohorts()
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_red_stoplight(self, graph: nx.Graph) -> nx.Graph:
+        """The level in the primary school is set to red.
+
+        In effect this means decreasing the interactions more, isolating sick individuals and
+        dividing each class into two cohorts
+
+        Parameters
+        ----------
+        graph : nx.Graph
+            nx.Graph that contains all interactions between the Person objects
+        """
+        self.generate_cohorts()
+        graph = self.network.decrease_interaction_day(self.stoplight)
+        self.isolate(graph)
+        return graph
+
+    def generate_cohorts(self) -> None:
+        """Generates cohorts for the Person objects present in the students list
+
+        If Traffic_light is yellow, one class is divided into one cohort.
+        If the level is red, one class is divided into two cohorts
+        """
+
+        grades = self.network.get_available_grades()
+        classes = self.network.get_available_classes()
+        grade_and_classes = [f"{i}{j}" for i in grades for j in classes]
+        cohorts = []
+
+        if self.stoplight == Traffic_light.Y:
+            for i in range(0, len(grade_and_classes) - 1, 2):
+                cohorts.append(f"{grade_and_classes[i]}{grade_and_classes[i+1]}")
+                students = list(
+                    filter(
+                        lambda x: x.get_class_and_grade() == grade_and_classes[i]
+                        or x.get_class_and_grade() == grade_and_classes[i + 1],
+                        self.students,
+                    )
+                )
+                for stud in students:
+                    stud.set_cohort(cohorts[-1])
+
+        elif self.stoplight == Traffic_light.R:
+            for class_group in grade_and_classes:
+                students = list(filter(lambda x: x.get_class_and_grade() == class_group, self.students))
+                for i in range(0, (len(students) // 2) + 1):
+                    students[i].set_cohort(f"{class_group}1")
+                    students[-i - 1].set_cohort(f"{class_group}2")
+
+    def weekly_testing(self, recurr=7) -> None:
+        """Weekly testing sets a tested state to True in all Person objects presents, and registreres every IS, IP and IAS.
+
+        Parameters
+        ----------
+        recurr : int
+            Determines the interval for how often testing should be performed. Default is every week, meaning every 7 days.
+        """
+
+        if self.day_no % 7 == 0 and self.day_no != 0:
+            for stud in self.students:
+                if stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]:
+                    self.network.remove_all_interactions(self.graph, stud)
+                    stud.set_tested(True)
+
+    def asymptomatic_calibration(self) -> None:
+        """Investigates the effect of changing asymptomatic vs symptomatic percentage"""
+        Ias_dict = {}
+        for Is in range(0, 101, 10):
+            Ias = (100 - Is) / 100
+            Is = Is / 100
+
+            day_list = np.zeros(35)  # 15
+            for _ in range(0, 20):  # 20
+                for key, val in self.run_transmission(35, plot=False, Ias=Ias).items():  # 14
+                    day_list[key] += val
+
+                self.network.reset_student_disease_states()
+            day_list = day_list / 20
+            Ias_dict[Ias] = day_list.tolist()
+
+        with open("asymptomatic_calibration.pickle", "wb") as handle:
+            pickle.dump(Ias_dict, handle)
+
+    def sympt_asympt_R_0(self, iterations=100, sympt=True):
+        """Stores how many individuals patient_zero infect and takes the average of 100 iterations
+
+        Parameters
+        ----------
+        iterations : int
+            Determines how many times disease transmission should be run for the 12 days. Default is 100
+        sympt : bool
+            Determines if patient_zero is symptomatic or asymptomatic. True meaning, symptomatic patient_zero is default
+        """
+
+        R_null_list = []
+        for i in range(1, iterations + 1):
+
+            pers, R_null = self.run_transmission(days=12, plot=False, sympt=sympt, R_null=True)
+
+            R_null_list.append(R_null)
+        print(R_null_list)
+        df = pd.DataFrame(R_null_list)
+        df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
 
 if __name__ == "__main__":

@@ -15,6 +15,8 @@ File: analysis.py
 
 """
 
+
+from cProfile import label
 import networkx as nx
 from networkx.algorithms import community
 import numpy as np
@@ -148,7 +150,9 @@ class Analysis:
                         G.add_node(n)
         return G
 
-    def pixel_dist(self, graph, logX, logY, axis=None, old=False, label=None, wait=False, replica=False) -> None:
+    def pixel_dist(
+        self, graph, logX, logY, axis=None, old=False, label=None, wait=False, replica=False, colour="grey"
+    ) -> None:
         """Plots the distribution of all interactions that has occured between two individuals.
 
         Parameters
@@ -190,10 +194,10 @@ class Analysis:
         if axis:
             if old:
                 ## If old, the label is specified by the input variable label. Label can be "Day 1" or "Day 2"
-                axis.plot(d.keys(), d.values(), label=label)
+                axis.plot(d.keys(), d.values(), label=label, color=colour)
             else:
                 ## If not old, the label is simulated
-                axis.plot(d.keys(), d.values(), label="Simulated")
+                axis.plot(d.keys(), d.values(), label="Simulated", color=colour)
 
             ## Then the x-axis and y-axis are scaled according to the logX and logY variables.
             if logX:
@@ -272,53 +276,63 @@ class Analysis:
             old_grade2 = self.pickle_load("graph2_grade_pixel.pkl")
             old_class2 = self.pickle_load("graph2_class_pixel.pkl")
 
-        ## Generate 2x2 subplot
-        figure, axis = plt.subplots(2, 2, figsize=(8, 8))
-        figure.tight_layout(pad=3)
+        for i in range(0, 2):
+            print(i)
+            ## Generate 2x2 subplot
+            figure, axis = plt.subplots(2, 2, figsize=(8, 8))
+            figure.tight_layout(pad=3)
 
-        ## Setting up wether or not the x and y axis are log10 scale
-        logx = True
-        logy = True
+            ## Setting up wether or not the x and y axis are log10 scale
+            logx = True
+            logy = True
 
-        ## Adding the whole graph pixel distribution to the [0,0] position of the graph
-        self.pixel_dist(graph, logx, logy, axis[0, 0])
-        if old:
-            self.pixel_dist(old_graph, logx, logy, axis[0, 0], old=True, label="Day 1")
-        if both:
-            self.pixel_dist(old_graph2, logx, logy, axis[0, 0], old=True, label="Day 2")
-        axis[0, 0].set_title("Whole network")
+            ## Adding the whole graph pixel distribution to the [0,0] position of the graph
+            self.pixel_dist(graph, logx, logy, axis[0, 0], colour="darkseagreen")
+            if old:
+                self.pixel_dist(old_graph, logx, logy, axis[0, 0], old=True, label="Day 1", colour="rosybrown")
+            if both:
+                self.pixel_dist(old_graph2, logx, logy, axis[0, 0], old=True, label="Day 2", colour="cadetblue")
+            axis[0, 0].set_title("Whole network")
 
-        ## Adding the off diagonal pixel distribution to the [1,0] position of the graph
-        self.pixel_dist(off_diagonal, logx, logy, axis[1, 0])
-        if old:
-            self.pixel_dist(old_off_diagonal, logx, logy, axis[1, 0], old=True, label="Day 1")
-        if both:
-            self.pixel_dist(old_off_diagonal2, logx, logy, axis[1, 0], old=True, label="Day 2")
-        axis[1, 0].set_title("Off-diagonal")
+            ## Adding the off diagonal pixel distribution to the [1,0] position of the graph
+            self.pixel_dist(off_diagonal, logx, logy, axis[1, 0], colour="darkseagreen")
+            if old:
+                self.pixel_dist(old_off_diagonal, logx, logy, axis[1, 0], old=True, label="Day 1", colour="rosybrown")
+            if both:
+                self.pixel_dist(old_off_diagonal2, logx, logy, axis[1, 0], old=True, label="Day 2", colour="cadetblue")
+            axis[1, 0].set_title("Off-diagonal")
 
-        ## Adding the grade_grade pixel distribution to the [0,1] position of the graph
-        self.pixel_dist(grade_grade, logx, logy, axis[0, 1])
-        if old:
-            self.pixel_dist(old_grade, logx, logy, axis[0, 1], old=True, label="Day 1")
-        if both:
-            self.pixel_dist(old_grade2, logx, logy, axis[0, 1], old=True, label="Day 2")
-        axis[0, 1].set_title("grade-grade")
+            ## Adding the grade_grade pixel distribution to the [0,1] position of the graph
+            self.pixel_dist(grade_grade, logx, logy, axis[0, 1], colour="darkseagreen")
+            if old:
+                self.pixel_dist(old_grade, logx, logy, axis[0, 1], old=True, label="Day 1", colour="rosybrown")
+            if both:
+                self.pixel_dist(old_grade2, logx, logy, axis[0, 1], old=True, label="Day 2", colour="cadetblue")
+            axis[0, 1].set_title("Grade")
 
-        ## Adding the class_class pixel distribution to the [1,1] position on the graph
-        self.pixel_dist(class_class, logx, logy, axis[1, 1])
-        if old:
-            self.pixel_dist(old_class, logx, logy, axis[1, 1], old=True, label="Day 1")
-        if both:
-            self.pixel_dist(old_class2, logx, logy, axis[1, 1], old=True, label="Day 2")
-        axis[1, 1].set_title("class-class")
+            ## Adding the class_class pixel distribution to the [1,1] position on the graph
+            self.pixel_dist(class_class, logx, logy, axis[1, 1], colour="darkseagreen")
+            if old:
+                self.pixel_dist(old_class, logx, logy, axis[1, 1], old=True, label="Day 1", colour="rosybrown")
+            if both:
+                self.pixel_dist(old_class2, logx, logy, axis[1, 1], old=True, label="Day 2", colour="cadetblue")
+            axis[1, 1].set_title("Class")
 
-        ## Adding a combined label according to the labels specified when plotting
-        handles, labels = axis[1, 1].get_legend_handles_labels()
-        figure.legend(handles, labels, loc="upper center")
+            if i == 0:
+                ## Adding a combined label according to the labels specified when plotting
+                handles, labels = axis[1, 1].get_legend_handles_labels()
+                figure.legend(handles, labels, loc="upper center")
 
-        plt.savefig("./fig_master/pixelDist_simulated.png", transparent=True, dpi=500)
+                plt.savefig("./fig_master/pixelDist_simulated_with.png", transparent=True, dpi=500)
 
-        plt.show()
+                plt.show()
+
+            if i == 1:
+
+                figure.legend([])
+                plt.savefig("./fig_master/pixelDist_simulated_without.png", transparent=True, dpi=500)
+
+                plt.show()
 
     def plot_correlation_between_days(self, day1, day2) -> None:
         """Plots the linear correlation between the amount of interactions a specific indicidual
@@ -383,9 +397,15 @@ class Analysis:
         if axis:
             sns.heatmap(A_M, robust=False, ax=axis)
         else:
-            sns.heatmap(A_M, robust=True)
-            plt.savefig("./fig_master/heatmap.png", transparent=True, dpi=500)
-            plt.show()
+            for i in range(0, 2):
+                if i == 0:
+                    sns.heatmap(A_M, robust=True)
+                    plt.savefig("./fig_master/heatmap_sim.png", transparent=True, dpi=500)
+                    plt.show()
+                else:
+                    sns.heatmap(A_M, robust=False)
+                    plt.savefig("./fig_master/heatmap_sim_not_robust.png", transparent=True, dpi=500)
+                    plt.show()
 
     # Generates histogram of degree distribution
     def hist_distribution(self, graph) -> None:
@@ -446,7 +466,17 @@ class Analysis:
         return cHist
 
     def cumulative_distribution_log(
-        self, graph, logX=False, logY=True, axis=None, old=False, label=None, cap=0, wait=False, replica=False
+        self,
+        graph,
+        logX=False,
+        logY=True,
+        axis=None,
+        old=False,
+        label=None,
+        cap=0,
+        wait=False,
+        replica=False,
+        colour="grey",
     ) -> None:
         """Plots the cumulative degree P(X>=x), where x is the frequency distribution of a given graph.
 
@@ -499,9 +529,9 @@ class Analysis:
         ##If subplot is created label can be added
         if axis:
             if label:
-                axis.plot(d.keys(), d.values(), label=label)
+                axis.plot(d.keys(), d.values(), label=label, color=colour)
             else:
-                axis.plot(d.keys(), d.values())
+                axis.plot(d.keys(), d.values(), color=colour)
 
         ## Else creates normal matplotlib object for a single plot
         else:
@@ -529,7 +559,7 @@ class Analysis:
             if not wait:
                 plt.show()
 
-    def hist_plot(self, d, label, logX=False, logY=True, axis=None) -> None:
+    def hist_plot(self, d, label, logX=False, logY=True, axis=None, colour="grey") -> None:
         """Plots a dictionary d with a label on a given matplotlib axis
         Parameters
         ----------
@@ -544,7 +574,7 @@ class Analysis:
         """
 
         if axis:
-            axis.plot(d.keys(), d.values(), label=label)
+            axis.plot(d.keys(), d.values(), label=label, color=colour)
             if logX:
                 axis.set_xscale("log")
                 axis.set_xlabel("log Degree")
@@ -556,7 +586,7 @@ class Analysis:
             else:
                 axis.set_ylabel("Frequency")
         else:
-            plt.plot(d.keys(), d.values(), label=label)
+            plt.plot(d.keys(), d.values(), label=label, color=colour)
             if logX:
                 plt.xscale("log")
                 plt.xlabel("log Degree")
@@ -600,54 +630,69 @@ class Analysis:
         ## load experimental graphs
         if experimental:
             graph = sim
-            off_diagE = self.create_sub_graph_off_diagonal(graph, True, False)
-            gradeE = self.create_sub_graph_grade_class(graph, False, True)
-            classE = self.create_sub_graph_grade_class(graph, True, False)
+            off_diagE = self.create_sub_graph_off_diagonal(self.network.get_graph(), True, False)
+            gradeE = self.create_sub_graph_grade_class(self.network.get_graph(), False, True)
+            classE = self.create_sub_graph_grade_class(self.network.get_graph(), True, False)
+        for i in range(0, 2):
+            ## Create figure and axis objects for subplot
+            figure, axis = plt.subplots(2, 2, figsize=(10, 8))
+            figure.tight_layout(pad=4)
 
-        ## Create figure and axis objects for subplot
-        figure, axis = plt.subplots(2, 2, figsize=(10, 8))
-        figure.tight_layout(pad=4)
+            xlog = False
+            ylog = True
 
-        xlog = False
-        ylog = True
+            #  self.iterator_colours = iter(["rosybrown", "sienna", "tan", "darkgoldenrod", "olivedrab"])
 
-        ## Adding the whole graph degree distribution to the [0,0] position of the graph
-        self.hist_plot(graph1, logX=xlog, logY=ylog, axis=axis[0, 0], label="Day 1")
-        if both:
-            self.hist_plot(graph2, logX=xlog, logY=ylog, axis=axis[0, 0], label="Day 2")
-        if experimental:
-            self.cumulative_distribution_log(graph, xlog, ylog, axis=axis[0, 0], label="Simulated")
-        axis[0, 0].set_title("Whole graph")
+            ## Adding the whole graph degree distribution to the [0,0] position of the graph
+            self.hist_plot(graph1, logX=xlog, logY=ylog, axis=axis[0, 0], label="Day 1", colour="rosybrown")
+            if both:
+                self.hist_plot(graph2, logX=xlog, logY=ylog, axis=axis[0, 0], label="Day 2", colour="cadetblue")
+            if experimental:
+                self.cumulative_distribution_log(
+                    graph, xlog, ylog, axis=axis[0, 0], label="Simulated", colour="darkseagreen"
+                )
+            axis[0, 0].set_title("Whole graph")
 
-        ## Adding the off diagonal degree distribution to the [1,0] position of the graph
-        self.hist_plot(off_diag1, logX=xlog, logY=ylog, axis=axis[1, 0], label="Day 1")
-        if both:
-            self.hist_plot(off_diag2, logX=xlog, logY=ylog, axis=axis[1, 0], label="Day 2")
-        if experimental:
-            self.cumulative_distribution_log(off_diagE, logX=xlog, logY=ylog, axis=axis[1, 0], label="Simulated")
-        axis[1, 0].set_title("Off diagonal")
+            ## Adding the off diagonal degree distribution to the [1,0] position of the graph
+            self.hist_plot(off_diag1, logX=xlog, logY=ylog, axis=axis[1, 0], label="Day 1", colour="rosybrown")
+            if both:
+                self.hist_plot(off_diag2, logX=xlog, logY=ylog, axis=axis[1, 0], label="Day 2", colour="cadetblue")
+            if experimental:
+                self.cumulative_distribution_log(
+                    off_diagE, logX=xlog, logY=ylog, axis=axis[1, 0], label="Simulated", colour="darkseagreen"
+                )
+            axis[1, 0].set_title("Off diagonal")
 
-        ## Adding the grade-grade degree distribution to the [0,1] position of the graph
-        self.hist_plot(grade1, logX=xlog, logY=ylog, axis=axis[0, 1], label="Day 1")
-        if both:
-            self.hist_plot(grade2, logX=xlog, logY=ylog, axis=axis[0, 1], label="Day 2")
-        if experimental:
-            self.cumulative_distribution_log(gradeE, logX=xlog, logY=ylog, axis=axis[0, 1], label="Simulated")
-        axis[0, 1].set_title("Grade")
+            ## Adding the grade-grade degree distribution to the [0,1] position of the graph
+            self.hist_plot(grade1, logX=xlog, logY=ylog, axis=axis[0, 1], label="Day 1", colour="rosybrown")
+            if both:
+                self.hist_plot(grade2, logX=xlog, logY=ylog, axis=axis[0, 1], label="Day 2", colour="cadetblue")
+            if experimental:
+                self.cumulative_distribution_log(
+                    gradeE, logX=xlog, logY=ylog, axis=axis[0, 1], label="Simulated", colour="darkseagreen"
+                )
+            axis[0, 1].set_title("Grade")
 
-        ## Adding the class-class degree distribution to the [1,1] position of the graph
-        self.hist_plot(class1, logX=xlog, logY=ylog, axis=axis[1, 1], label="Day 1")
-        if both:
-            self.hist_plot(class2, logX=xlog, logY=ylog, axis=axis[1, 1], label="Day 2")
-        if experimental:
-            self.cumulative_distribution_log(classE, logX=xlog, logY=ylog, axis=axis[1, 1], label="Simulated")
-        axis[1, 1].set_title("Class")
+            ## Adding the class-class degree distribution to the [1,1] position of the graph
+            self.hist_plot(class1, logX=xlog, logY=ylog, axis=axis[1, 1], label="Day 1", colour="rosybrown")
+            if both:
+                self.hist_plot(class2, logX=xlog, logY=ylog, axis=axis[1, 1], label="Day 2", colour="cadetblue")
+            if experimental:
+                self.cumulative_distribution_log(
+                    classE, logX=xlog, logY=ylog, axis=axis[1, 1], label="Simulated", colour="darkseagreen"
+                )
+            axis[1, 1].set_title("Class")
 
-        ## Adding a combined label according to the labels specified when plotting
-        handles, labels = axis[1, 1].get_legend_handles_labels()
-        figure.legend(handles, labels, loc="center")  # loc="lower center"
-        plt.savefig("./fig_master/degree_dist.png", transparent=True, dpi=500)
-        plt.show()
+            if i == 0:
+                ## Adding a combined label according to the labels specified when plotting
+                handles, labels = axis[1, 1].get_legend_handles_labels()
+                figure.legend(handles, labels, loc="center")  # loc="lower center"
+                plt.savefig("./fig_master/degree_dist_sim_with.png", transparent=True, dpi=500)
+                plt.show()
+            if i == 1:
+                figure.legend([])
+                plt.savefig("./fig_master/degree_dist_sim_no_lable.png", transparent=True, dpi=500)
+                plt.show()
 
     def outlierDist(self, graph) -> None:
         """Get the distribution of all interactions a max node has with others
@@ -847,7 +892,7 @@ class Analysis:
         return df
 
     def pie_chart(self, filename):
-        df = pd.read_csv(r"./asymptomatic_symptomatic/sympt:False.csv")
+        df = pd.read_csv(r"./asymptomatic_symptomatic/sympt:True.csv")
         list_of_R_null = df.values.tolist()
 
         list_no_1 = []

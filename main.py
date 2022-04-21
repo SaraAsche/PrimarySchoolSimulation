@@ -15,10 +15,13 @@ def main():
         network.generate_iterations(int(num_days))
     else:
         network = Network(225, 5, 2)
-
+    network.generate_a_day()
     analysis = Analysis(network)
-
-    analysis.heatmap_asymptomatic_calibration()
+    analysis.pie_chart("./asymptomatic_symptomatic/sympt:False.csv")
+    # network.generate_a_day()
+    # analysis = Analysis(network)
+    # analysis.degree_distribution_layers(both=True, experimental=False)
+    # analysis.heatmap_asymptomatic_calibration()
 
     # disease_transmission = Disease_transmission(network, stoplight=Traffic_light.G)
     # disease_transmission.run_transmission(days=16, testing=True)

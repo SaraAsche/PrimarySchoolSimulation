@@ -21,5 +21,5 @@ class Disease_states(enum.Enum):
 
 class Traffic_light(enum.Enum):
     G = "G"
-    O = "O"
+    Y = "Y"
     R = "R"
