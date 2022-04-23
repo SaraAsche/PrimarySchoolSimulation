@@ -33,6 +33,7 @@ import numpy as np
 import pickle as pickle
 import os
 import seaborn as sns
+import os.path
 
 
 class Disease_transmission:
@@ -67,7 +68,6 @@ class Disease_transmission:
         Describes the percentage of individuals having a presymptomatic/symptomatic disease course
     positions : dict
         A dictionary of positions keyed by node
-    ....
 
     Methods
     -------
@@ -79,8 +79,60 @@ class Disease_transmission:
         Returns a list of all Person objects' current Disease_states
     update_ias_ip(Ias)
         Updates the attribute of Disease_transmission to the given float Ias
-
-    .....
+    set_patient_zero(person: Person)
+        Sets a specific Person object to be patient_zero
+    generate_patient_zero(num=1, sympt=True)
+        Sets num random Person object in the network to be infected
+    get_patient_zero()
+        Returns the Person object that is patient_zero
+    get_state(state: Disease_states)
+        Returns a list of all Person objects in the Network with the given Disease_state, state
+    get_all_person_has_infected(p: Person)
+        Returns a list of all the Person objects Person p has infected
+    infection_spread()
+        Simulate disease transmission for one day
+    run_transmission(days: int, plot=True, Ias=0.4, testing=False, save_to_file=False, sympt=True, R_null=False)
+        Simulate and draw the disease transmission for multiple days
+    run_transmission_empiric(days: int, graph1=None, graph2=None, day1=True, switch=False, plot=True, Ias=0.4, testing=False,save_to_file=False)
+        Simulate and draw the disease transmission for days on the empiric network
+    plot(interval=1, block=False)
+        Plots the Disease_states of each node at a given day
+    diff(state_dict: dict)
+        Returns a dict of how many individuals that are not susceptible in the model for the days it is run
+    R_null(days=5)
+        Is generated after run_transmission is run. Gives an estimate on R_0 based on the first days (5) infected individuals
+    average_infected_on_day(day: int)
+        Calculates how many are on average infected on a certain day
+    average_recovered_infected()
+        How many on average all individuals have infected before they recovered. Is accumulating
+    plot_exposed(filename: str)
+        Plots the number of exposed individuals as a function of the day
+    plot_recovered(filename: str, show=True, lab=None, colour="grey")
+        Plots the number of recovered individuals as a function of the day
+    plot_R0(filename)
+        Plots the number of R0 as a function of the day
+    plot_r0_and_day(data: pd.DataFrame, plot=True)
+        Scatterplot of R0 for the days. Not currently in use
+    extract_r0_day()
+        Extracts the number of infected, R0, symptomatic and count. Not currently in use
+    run_transmission_with_R0_plots(iterations: int, num_days: int, save=True)
+        Plots the average of numberous iterations for num_days days. Not currently in use
+    isolate(graph: nx.Graph)
+        Isolates all individuals in a graph that has the disease_state Infected_symptomatic
+    generate_green_stoplight(graph: nx.Graph)
+        The level in the primary school is set to green
+    generate_yellow_stoplight(graph: nx.Graph)
+        The level in the primary school is set to yellow
+    generate_red_stoplight(graph: nx.Graph)
+        The level in the primary school is set to red
+    generate_cohorts()
+        Generates cohorts for the Person objects present in the students list
+    weekly_testing(recurr=7)
+        Weekly testing sets a tested state to True in all Person objects presents, and registreres every IS, IP and IAS.
+    asymptomatic_calibration()
+        Investigates the effect of changing asymptomatic vs symptomatic percentage
+    sympt_asympt_R_0(iterations=100, sympt=True)
+        Stores how many individuals patient_zero infect and takes the average of 100 iterations
     """
 
     def __init__(self, network, stoplight=None, Ias=0.4):
@@ -152,7 +204,7 @@ class Disease_transmission:
         self.patient_zero.set_infected_by(None)
 
     def generate_patient_zero(self, num=1, sympt=True) -> None:
-        """Generates num students in the network that are infected
+        """Sets num random Person object in the network to be infected
 
         Default is to start with one infected individual with num=1.
 
@@ -301,7 +353,7 @@ class Disease_transmission:
             self.day_no += 1
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
-            dirs = os.listdir("./data")
+            dirs = list(filter(lambda x: os.path.isfile(x), os.listdir("./data")))
             if not len(dirs):
                 last_file = -1
             else:
@@ -332,7 +384,7 @@ class Disease_transmission:
 
             return self.patient_zero, i
 
-        return self.diff(days_dic)
+        return days_dic  # return diff(days_dict)
 
     def run_transmission_empiric(
         self,
@@ -397,8 +449,10 @@ class Disease_transmission:
                 if switch:
                     if self.graph == graph1.get_graph():
                         self.graph = graph2.get_graph()
+                        self.students = graph2.get_students()
                     else:
                         self.graph = graph1.get_graph()
+                        self.students = graph1.get_students()
 
                 self.days.append(self.graph)
 
@@ -415,12 +469,28 @@ class Disease_transmission:
             print(
                 f"Average infected today: {self.average_infected_on_day(i)}\nAverage infected of all recovered: {self.average_recovered_infected()}"
             )
-
+            d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
 
-            if save_to_file:
-                continue
+        if save_to_file:
+            with open(f"./data/empiric_vs_model/day1{day1}switch{switch}.csv", "w") as f:
+                f.write(
+                    "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
+                )
+                for key, val in days_dic.items():
+                    s, e, ia, ip, Is, r, h, death, r_null = (
+                        val[Disease_states.S],
+                        val[Disease_states.E],
+                        val[Disease_states.IAS],
+                        val[Disease_states.IP],
+                        val[Disease_states.IS],
+                        val[Disease_states.R],
+                        val[Disease_states.H],
+                        val[Disease_states.D],
+                        val["R_null"],
+                    )
+                    f.write(f"{key},{s},{e},{ia},{ip},{Is},{r},{h},{death},{r_null}\n")
 
             # Sets the key (represents day i) to have the value: dict over states and people in that state
             if plot:
@@ -430,7 +500,7 @@ class Disease_transmission:
                 else:
                     self.plot()
 
-        return self.diff(days_dic)
+        return days_dic
 
     def plot(self, interval=1, block=False) -> None:
         """Plots the Disease_states of each node at a given day
@@ -586,17 +656,23 @@ class Disease_transmission:
 
         plt.xlabel("Day")
         plt.ylabel("Exposed")
-        # plt.gcf().autofmt_xdate()
         plt.show()
 
-    def plot_recovered(self, filename: str):
+    def plot_recovered(self, filename: str, show=True, lab=None, colour="grey"):
         """Plots the number of recovered individuals as a function of the day
 
         Parameters
         ----------
         filename : str
             String with filename and path
+        show : bool
+            Whether or not to plt.show() the plot. Default is True
+        lab : str
+            The label of the data plotted. Default is None
+        colour : str
+            Matplotlib color for the data plotted. Default is "grey"
         """
+
         plt.rcParams["figure.figsize"] = [7.50, 3.50]
         plt.rcParams["figure.autolayout"] = True
 
@@ -605,13 +681,20 @@ class Disease_transmission:
         x = df["Day"]
         y = df["Recovered"]
 
-        plt.scatter(x, y)
+        plt.scatter(x, y, label=lab, color=colour, alpha=0.5, s=30)
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
 
-        plt.show()
-        return
+        if show:
+            plt.xlabel("Days since disease introduction", fontsize=16)
+            plt.ylabel("Number of recovered individuals", fontsize=16)
+            plt.xticks(fontsize=16)
+            plt.yticks(fontsize=16)
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig("./fig_master/recovered_empiric_vs_model.png", transparent=True, dpi=500)
+            plt.show()
 
     def plot_R0(self, filename):
         """Plots the number of R0 as a function of the day
@@ -664,7 +747,7 @@ class Disease_transmission:
             plt.savefig("./fig_master/R0_and_day.png", transparent=True, dpi=500)
 
     def extract_r0_day(self) -> pd.DataFrame:
-        """Extracts the number of infected, R0, symptomatic, and"""
+        """Extracts the number of infected, R0, symptomatic and count. Not currently in use"""
         d = {}
         l = []
         for stud in filter(lambda x: x.state == Disease_states.R, self.students):
@@ -854,10 +937,13 @@ class Disease_transmission:
 
 
 if __name__ == "__main__":
-    network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
+    # network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
+    network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission_with_R0_plots(10, 50)
+    disease_transmission.run_transmission_with_R0_plots(3, 5)
+
+    # disease_transmission.run_transmission(100, plot=False, save_to_file=True)
 
     # disease_transmission.plot_exposed("./data/003transmission.csv")
     # disease_transmission.plot_recovered("./data/003transmission.csv")

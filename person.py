@@ -102,7 +102,7 @@ class Person:
 
     newid = itertools.count()
 
-    def __init__(self, grade, class_group, id=None):
+    def __init__(self, grade, class_group, ID=None):
         """Inits Person object with grade and class parameters
 
         Parameters
@@ -112,8 +112,8 @@ class Person:
         class_group : str
             the class of the Person
         """
-        if id != None:
-            self.id = id
+        if ID != None:
+            self.id = ID
         else:
             self.id = next(Person.newid)
 
