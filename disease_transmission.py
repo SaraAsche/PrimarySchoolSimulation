@@ -31,7 +31,6 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 import pickle as pickle
-import os
 import seaborn as sns
 import os.path
 
@@ -166,9 +165,11 @@ class Disease_transmission:
         self.positions = nx.spring_layout(self.graph, seed=10396953)
 
     def set_day(self, day: int) -> None:
+        """Sets the day disease transmission is run on. Is used to reset when running iterations"""
         self.day_no = day
 
     def get_day(self) -> int:
+        """Returns the current day disease transmission is run on"""
         return self.day_n0
 
     def get_all_states(self) -> list:
@@ -282,7 +283,7 @@ class Disease_transmission:
                             n.set_infected_by(stud)
 
     def run_transmission(
-        self, days: int, plot=True, Ias=0.4, testing=False, save_to_file=False, sympt=True, R_null=False
+        self, days: int, plot=True, Ias=0.4, testing=False, save_to_file=None, sympt=True, R_null=False
     ) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
@@ -345,21 +346,16 @@ class Disease_transmission:
                 else:
                     self.plot()
             ######## Prints out how many individuals are in a given disease state for each day########
-            print(f"-------------Day {i}-------------")
-            pprint(d)
-            print(f"New: {self.average_infected_on_day(i)}\nNew_new: {self.average_recovered_infected()}")
+            # print(f"-------------Day {i}-------------")
+            # pprint(d)
+            # print(f"New: {self.average_infected_on_day(i)}\nNew_new: {self.average_recovered_infected()}")
             d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
-            dirs = list(filter(lambda x: os.path.isfile(x), os.listdir("./data")))
-            if not len(dirs):
-                last_file = -1
-            else:
-                last_file = int(dirs[-1][2])
 
-            with open(f"./data/{str(last_file + 1).zfill(3)}transmission.csv", "w") as f:
+            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -382,7 +378,7 @@ class Disease_transmission:
                 if stud.get_infected_by() == self.patient_zero:
                     i += 1
 
-            return self.patient_zero, i
+            return days_dic, i
 
         return days_dic  # return diff(days_dict)
 
@@ -658,7 +654,7 @@ class Disease_transmission:
         plt.ylabel("Exposed")
         plt.show()
 
-    def plot_recovered(self, filename: str, show=True, lab=None, colour="grey"):
+    def plot_recovered(self, filename: str, show=True, lab=None, colour="grey", alpha=1):
         """Plots the number of recovered individuals as a function of the day
 
         Parameters
@@ -681,7 +677,7 @@ class Disease_transmission:
         x = df["Day"]
         y = df["Recovered"]
 
-        plt.scatter(x, y, label=lab, color=colour, alpha=0.5, s=30)
+        plt.scatter(x, y, label=lab, color=colour, alpha=alpha, s=30)
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
@@ -693,8 +689,8 @@ class Disease_transmission:
             plt.yticks(fontsize=16)
             plt.legend()
             plt.tight_layout()
-            plt.savefig("./fig_master/recovered_empiric_vs_model.png", transparent=True, dpi=500)
-            plt.show()
+            plt.savefig("./fig_master/traffic_light_transmission.png", transparent=True, dpi=500)
+            # plt.show()
 
     def plot_R0(self, filename):
         """Plots the number of R0 as a function of the day
@@ -747,7 +743,7 @@ class Disease_transmission:
             plt.savefig("./fig_master/R0_and_day.png", transparent=True, dpi=500)
 
     def extract_r0_day(self) -> pd.DataFrame:
-        """Extracts the number of infected, R0, symptomatic and count. Not currently in use"""
+        """Extracts the number of infected, R0, symptomatic and count."""
         d = {}
         l = []
         for stud in filter(lambda x: x.state == Disease_states.R, self.students):
@@ -763,7 +759,7 @@ class Disease_transmission:
         return pd.DataFrame(data=l, columns=["day_infected", "r0", "sympt", "count"])
 
     def run_transmission_with_R0_plots(self, iterations: int, num_days: int, save=True) -> None:
-        """Plots the average of numberous iterations for num_days days.
+        """Plots the average of numerous iterations for num_days days.
 
         Parameters
         ----------
@@ -812,6 +808,7 @@ class Disease_transmission:
         graph : nx.Graph
             nx.Graph that contains all interactions between the Person objects
         """
+
         graph = self.network.decrease_interaction_day(self.stoplight)
         self.isolate(graph)
         return graph
@@ -926,28 +923,123 @@ class Disease_transmission:
         """
 
         R_null_list = []
-        for i in range(1, iterations + 1):
+        for _ in range(1, iterations + 1):
 
-            pers, R_null = self.run_transmission(days=12, plot=False, sympt=sympt, R_null=True)
+            _, R_null = self.run_transmission(days=12, plot=False, sympt=sympt, R_null=True)
 
             R_null_list.append(R_null)
         print(R_null_list)
         df = pd.DataFrame(R_null_list)
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
+    def save_R_null_recovered(self, d):
+        #
+        return 0
+
+    def traffic_light_transmission(self, iterations=3, days=100):
+        # TODO: implement that you save the R0 of the recovered individuals on the 50 first days
+
+        d = {}
+        for e in Traffic_light:
+            d[e] = {}
+            for i in range(days):
+                d[e][i] = {}
+        R_null_dict = dict([(stoplight, []) for stoplight in Traffic_light])
+        for i in range(1, iterations + 1):
+            for stoplight in [Traffic_light.G, Traffic_light.Y, Traffic_light.R]:
+                self.stoplight = stoplight
+                dic, people_infected_by_p0 = self.run_transmission(
+                    days=days, save_to_file=str(stoplight) + str(i), plot=False, R_null=True
+                )
+                for day in range(days):
+                    for disease_key in [e for e in Disease_states] + ["R_null"]:
+                        d[stoplight][day][disease_key] = d[stoplight][day].get(disease_key, 0) + dic[day][disease_key]
+                R_null_dict[stoplight].append(people_infected_by_p0)
+
+        green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
+        yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
+        red_averages = self.calculate_averages(d[Traffic_light.R], iterations)
+
+        self.save_to_file(green_averages, "Traffic_light.G_average.csv")
+        self.save_to_file(yellow_averages, "Traffic_light.Y_average.csv")
+        self.save_to_file(red_averages, "Traffic_light.R_average.csv")
+
+        print(R_null_dict)
+        for key, val in R_null_dict.items():
+            R_null_list = val
+            df = pd.DataFrame(R_null_list)
+            df.to_csv(f"./data/traffic_light/{key}_infection_by_p0.csv")
+
+    def traffic_light_plots(self):
+        self.plot_recovered(
+            "./data/traffic_light/Traffic_light.G_average.csv",
+            show=False,
+            lab="Green",
+            colour="darkolivegreen",
+            alpha=0.8,
+        )
+        self.plot_recovered(
+            "./data/traffic_light/Traffic_light.Y_average.csv", show=False, lab="Yellow", colour="gold", alpha=0.8
+        )
+        self.plot_recovered(
+            "./data/traffic_light/Traffic_light.R_average.csv", show=True, lab="Red", colour="indianred", alpha=0.8
+        )
+
+    def save_to_file(self, d, filename):
+        """Saves a disease states for each day into a csv.
+
+        Parameters
+        ----------
+        d : dict
+            Dict containing the day as key and the number of individuals in each disease state as value
+        filename : str
+            The filename in which to save the dict as
+        """
+        with open(f"./data/traffic_light/{filename}", "w") as f:
+            f.write(
+                "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
+            )
+            for key, val in d.items():
+                s, e, ia, ip, Is, r, h, death, r_null = (
+                    val[Disease_states.S],
+                    val[Disease_states.E],
+                    val[Disease_states.IAS],
+                    val[Disease_states.IP],
+                    val[Disease_states.IS],
+                    val[Disease_states.R],
+                    val[Disease_states.H],
+                    val[Disease_states.D],
+                    val["R_null"],
+                )
+                f.write(f"{key},{s},{e},{ia},{ip},{Is},{r},{h},{death},{r_null}\n")
+
+    def calculate_averages(self, d, iterations):
+        dic = {}
+
+        for day, states_dic in d.items():
+            dic[day] = {
+                Disease_states.S: states_dic[Disease_states.S] / iterations,
+                Disease_states.E: states_dic[Disease_states.E] / iterations,
+                Disease_states.IAS: states_dic[Disease_states.IAS] / iterations,
+                Disease_states.IP: states_dic[Disease_states.IP] / iterations,
+                Disease_states.IS: states_dic[Disease_states.IS] / iterations,
+                Disease_states.R: states_dic[Disease_states.R] / iterations,
+                Disease_states.H: states_dic[Disease_states.H] / iterations,
+                Disease_states.D: states_dic[Disease_states.D] / iterations,
+                "R_null": states_dic["R_null"] / iterations,
+            }
+
+        return dic
+
+    def weekly_testing_transmission(self):
+        # TODO: pie chart of R0. R0 should be saved in a list where the amount of people a single person has infected before recovery on the 50 first days is saved.
+        # average_recovered_infected without summing and taking the average. Just return the list.
+        return None
+
 
 if __name__ == "__main__":
-    # network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.run_transmission_with_R0_plots(3, 5)
-
-    # disease_transmission.run_transmission(100, plot=False, save_to_file=True)
-
-    # disease_transmission.plot_exposed("./data/003transmission.csv")
-    # disease_transmission.plot_recovered("./data/003transmission.csv")
-    # disease_transmission.plot_R0("./data/003transmission.csv")
-
-    # disease_transmission.sympt_asympt_R_0(iterations=100)
-    # disease_transmission.sympt_asympt_R_0(iterations=100, sympt=False)
+    disease_transmission.traffic_light_transmission(iterations=10, days=100)
+    disease_transmission.traffic_light_plots()

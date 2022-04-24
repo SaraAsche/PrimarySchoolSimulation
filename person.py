@@ -8,6 +8,9 @@ network.py or analysis.py.
 
   person = Person(5, 'A')
   person2 = Person(3, 'B')
+  
+  person.set_state(Disease_states.IA)
+  person.get_interaction(person2)
 
 Author: Sara Johanne Asche
 Date: 14.02.2022
@@ -37,10 +40,6 @@ class Person:
         A unique number attached to the person object ranging from 0 to the max capacity at each school.
     sex : str
         Denotes the sex of the person object. Can be "F" for female or "M" for male
-    state : str
-        Disease spread model attribute.
-    vaccinated: bool
-        True if person object has been given a vaccine the last 6 months. False otherwise
     grade : int
         Number denoting the grade of the person object. Is limited by grades present at the school.
     age : int
@@ -61,43 +60,94 @@ class Person:
         Each Person object is initiated with a float value that denotes their bias for interacting with any other Person objects of the same class.
     p_vector : dictionary
         Dictionary that keeps track of the possibility that one Person object has to interact with another Person object
+    state : str
+        Disease spread model attribute.
+    vaccinated: bool
+        True if person object has been given a vaccine the last 6 months. False otherwise
+    tested : bool
+        True if person has tested positive for the disease
+    states : dict
+        Dict of the states an individual can be in, with states as the keys and number of days as values
+    cohort : str
+        String that determines the cohort an individual belongs in
+    infected_on_day : int
+        Integer that denotes the day an individual was infected
+    recovered_on_day : int
+        Integer that denotes the day an individual was recovered
+    infected_by : Person
+        The Person object that infected this individual
 
     Methods
     -------
-    generate_valid_age(self, grade, is_teacher=False)
+    get_gender()
+        Returns a string value representing a Person object's sex that is either "F" or "M" with a 50/50 percentage.
+    get_ID()
+        Returns a Person object's ID
+    get_grade():
+        Returns a Person object's Grade (i.e 5 or 1)
+    get_class():
+        Returns a Person Object's Class (i.e "A" or "B")
+    get_class_and_grade():
+        Returns a string consisting of the grade plus the class (i.e "5A" or "1B")
+    get_lunch_group():
+        Returns the lunch_group attribute of a Person object
+    get_interaction( p)
+        Returns the Interaction object of an interaction between Person object (self) and Person object (p).
+    get_min_p_vector()
+        Returns the lowest p value in a Person (self)'s p_vector dictionary.
+    generate_valid_age(grade, is_teacher=False)
         Returns the age of an individual that is in grade grade, 50% likely that they have had their bithday before the school starts, 50% they have had their birthday after. If object is teacher, another method is used.
-    generate_lunch_group(self)
+    generate_lunch_group()
         Generates the lunch_group attribute to a boolean depending on which grade the Person object is in.
-    generate_age_group(self)
+    generate_age_group()
         Generates the age_group attribute to an Age_group enum value depending on the age of the Person object.
+    generate_bias()
+        Generated base_bias, bias_grade and bias_class
     add_interaction(self, interaction)
         Attaches an Interaction object to the Person object's interaction dictionary attribute.
-    get_interaction(self, p)
-        Returns the Interaction object of an interaction between Person object (self) and Person object (p).
-    get_gender(self)
-        Returns a string value representing a Person object's sex that is either "F" or "M" with a 50/50 percentage.
-    get_vaccinated_status(self)
-        Returns True if an individual has gotten a vaccine dose less than 6 months from now.
     has_interacted_with(self, p)
         Returns True if Person object (p) is in Person object (self)'s interaction dictionary
-    get_ID(self)
-        Returns a Person object's ID
-    get_grade(self):
-        Returns a Person object's Grade (i.e 5 or 1)
-    get_class(self):
-        Returns a Person Object's Class (i.e "A" or "B")
-    get_class_and_grade(self):
-        Returns a string consisting of the grade plus the class (i.e "5A" or "1B")
-    get_lunch_group(self):
-        Returns the lunch_group attribute of a Person object
-    generate_bias(self):
-        Generates the different bias attributes (base, grade and class)
     generate_p_vector(self, students, X)
         Generates a p_vector dictionary where keys are all possible Person objects Person (self) can interact with and the key is probability p that they will interact. Uses the similarity between two Person objects to generate a probability p.
-    get_min_p_vector(self)
-        Returns the lowest p value in a Person (self)'s p_vector dictionary.
     renormalize(self)
         Updates the bias_vector of a Person object (self) where the base_bias is affected by an additional random bias and then normalised to avoid a strictly growing bias.
+    get_state()
+        Returns the state of the Person object
+    set_state(state)
+        Sets the state of an individual to state
+    clean_states()
+        Sets the states dictionary to empty
+    set_tested(tested: bool):
+        Sets wheter or not the person has tested positive for the disease
+    get_tested()
+        Returns weter or not the person has tested positive for the disease
+    get_vaccinated_status(self)
+        Returns True if an individual has gotten a vaccine dose less than 6 months from now.
+    set_cohort(cohort)
+        Sets the cohort attribute of an individual
+    get_cohort()
+        Gets the cohort attribute of an individual
+    set_diasease_state(state : Disease_states)
+        Sets the disease state to state
+    set_day_infected(day)
+        Sets the day the individual was infected on
+    get_day_infected()
+        Gets the day the individual was infected on
+    set_day_recovered(day)
+        Sets the day the individual was recovered on
+    get_day_recovered()
+        Gets the day the individual was recovered on
+    set_infected_by(pers)
+        Sets the person pers this individual was infected by
+    get_infected_by()
+        Gets the person pers this individual was infected by
+    is_symptomatic()
+        Returns whether or not the person has a symptomatic or asymptomatic disease course
+    add_day_in_state(self, pA=0.4, 0.6)
+        For each day, the it will update the disease state of the person
+    disease_state_start()
+        Resets the states, cohort, infected_on_day, recovered_on_day, infected_by to 0 or None
+
     """
 
     newid = itertools.count()
@@ -111,6 +161,8 @@ class Person:
             The grade of the Person
         class_group : str
             the class of the Person
+        ID : int/None
+            If the person already has an ID, it should be input. Default is None, and the ID is generated
         """
         if ID != None:
             self.id = ID
@@ -119,8 +171,6 @@ class Person:
 
         self.sex = self.get_gender()
 
-        self.vaccinated = self.get_vaccinated_status()
-        self.tested = False
         self.grade = grade
         self.age = self.generate_valid_age(grade)
         self.age_group = self.generate_age_group()
@@ -133,30 +183,41 @@ class Person:
         self.p_vector = {}
 
         self.state = self.disease_state_start()
+        self.vaccinated = self.get_vaccinated_status()
+        self.tested = False
         self.states = dict([(e, 0) for e in Disease_states])
         self.cohort = None
         self.infected_on_day = None
         self.recovered_on_day = None
         self.infected_by = -1
 
-    def get_state(self) -> str:
-        return self.state
+    def get_gender(self) -> str:  # Returns gender of Person
+        return "F" if random.random() > 0.5 else "M"
 
-    def set_state(self, state) -> None:
-        self.state = state
-        # self.states[state] += 1
+    def get_ID(self) -> int:
+        return self.id
 
-    def clean_states(self) -> None:
-        self.state = None
+    def get_grade(self) -> int:
+        return self.grade
 
-    def set_tested(self, tested) -> None:
-        self.tested = tested
+    def get_class(self) -> str:
+        return self.class_group
 
-    def get_tested(self) -> bool:
-        return self.tested
+    def get_class_and_grade(self) -> str:
+        return str(self.grade) + self.class_group
 
-    def generate_valid_age(self, grade, is_teacher=False) -> int:
-        # TODO: Add teacher functionality
+    def get_lunch_group(self) -> bool:
+        return self.lunch_group
+
+    def get_interaction(self, p) -> Interaction:  # Returns interaction object between self and p
+        return self.interactions.get(p, Interaction(self, p, 0))
+
+    def get_min_p_vector(self) -> float:
+        """Returns minimum value of a given p-vector"""
+        return min(self.p_vector, key=self.p_vector.get)
+
+    def generate_valid_age(self, grade: int) -> int:
+
         """Generates and returns the age of the Person
 
         Uses grade to generate an appropriate age. Takes
@@ -169,29 +230,9 @@ class Person:
         ----------
         grade : int
             The grade the Person object is in
-        is_teacher : Bool
-            True if the Object is teacher, False if it is not.
         """
 
         return random.choice([grade + 4, grade + 5])
-
-    def set_cohort(self, cohort) -> None:
-        self.cohort = cohort
-
-    def get_cohort(self) -> str:
-        return self.cohort
-
-    def disease_state_start(self) -> str:
-        self.states = dict([(e, 0) for e in Disease_states])
-        self.cohort = None
-        self.infected_on_day = None
-        self.recovered_on_day = None
-        self.infected_by = -1
-
-        return Disease_states.S
-
-    def set_diasease_state(self, state) -> None:
-        self.state = state
 
     def generate_lunch_group(self) -> bool:
         """Generates an appropriate bool value for lunch_group according to grade"""
@@ -235,35 +276,10 @@ class Person:
 
         self.interactions[other] = interaction
 
-    def get_interaction(self, p) -> Interaction:  # Returns interaction object between self and p
-        return self.interactions.get(p, Interaction(self, p, 0))
-
-    def get_gender(self) -> str:  # Returns gender of Person
-        return "F" if random.random() > 0.5 else "M"
-
-    def get_vaccinated_status(self) -> bool:
-        # TODO: returns true if individual has gotten a dose less than 6 months from now
-        return 1 if random.random() > 0.2 else 0
-
     def has_interacted_with(self, p) -> bool:  # Returns True if two individuals have interacted. False otherwise.
         return p in self.interactions
 
-    def get_ID(self) -> int:
-        return self.id
-
-    def get_grade(self) -> int:
-        return self.grade
-
-    def get_class(self) -> str:
-        return self.class_group
-
-    def get_class_and_grade(self) -> str:
-        return str(self.grade) + self.class_group
-
-    def get_lunch_group(self) -> bool:
-        return self.lunch_group
-
-    def generate_p_vector(self, students, X) -> None:
+    def generate_p_vector(self, students: list, X=[]) -> None:
         """Generates a p-vector dictionary for a Person object with respect to all other students
 
         If no X is given, the length of X is 0 and this function returns a p-vector with the given
@@ -333,10 +349,6 @@ class Person:
 
             self.p_vector[students[i]] = p
 
-    def get_min_p_vector(self) -> float:
-        """Returns minimum value of a given p-vector"""
-        return min(self.p_vector, key=self.p_vector.get)
-
     def renormalize(self) -> None:
         # TODO: remove renormalize
         """Renormalises the bias_vector of a Person object
@@ -362,7 +374,88 @@ class Person:
 
         self.bias_vector = newVector.copy()
 
+    def get_state(self) -> str:
+        """Returns the state of the Person object"""
+        return self.state
+
+    def set_state(self, state: Disease_states) -> None:
+        """Sets the state of the Person object"""
+        self.state = state
+        # self.states[state] += 1
+
+    def clean_states(self) -> None:
+        """Sets the states dictionary to empty"""
+        self.state = None
+
+    def set_tested(self, tested: bool) -> None:
+        """Sets wheter or not the person has tested positive for the disease
+
+        Parameters
+        ----------
+        tested : bool
+            Denotes if the person has tested positive for the disease
+        """
+        self.tested = tested
+
+    def get_tested(self) -> bool:
+        """Returns weter or not the person has tested positive for the disease"""
+        return self.tested
+
+    def get_vaccinated_status(self) -> bool:
+        """Returns True if an individual has gotten a vaccine dose less than 6 months from now"""
+
+        return 1 if random.random() > 0.2 else 0
+
+    def set_cohort(self, cohort: str) -> None:
+        """Sets the cohort attribute of an individual"""
+        self.cohort = cohort
+
+    def get_cohort(self) -> str:
+        """Gets the cohort attribute of an individual"""
+        return self.cohort
+
+    def set_diasease_state(self, state) -> None:
+        """Sets the disease state to state"""
+        self.state = state
+
+    def set_day_infected(self, day):
+        """Sets the day the individual was infected on"""
+        self.infected_on_day = day
+
+    def get_day_infected(self):
+        """Gets the day the individual was infected on"""
+        return self.infected_on_day
+
+    def set_day_recovered(self, day):
+        """Sets the day the individual was recovered on"""
+        self.recovered_on_day = day
+
+    def get_day_recovered(self):
+        """Gets the day the individual was recovered on"""
+        return self.recovered_on_day
+
+    def set_infected_by(self, pers):
+        """Sets the person pers this individual was infected by"""
+        self.infected_by = pers
+
+    def get_infected_by(self):
+        """Gets the person pers this individual was infected by"""
+        return self.infected_by
+
+    def is_symptomatic(self) -> bool:
+        """Returns whether or not the person has a symptomatic or asymptomatic disease course"""
+        return bool(self.states[Disease_states.IS])
+
     def add_day_in_state(self, pA=0.4, pP=0.6):  # FHI: pA = 0.4
+        """For each day, the add_day_in_state will update the disease state of the person. A day wil also be added to the states dict
+
+        Parameters
+        ----------
+        pA : float
+            Describes the percentage of individuals having a asymptomatic disease course
+        pP : float
+             Describes the percentage of individuals having a presymptomatic disease course
+        """
 
         if self.state == Disease_states.E and self.states[self.state] == 3:
             # print("Hello")
@@ -380,26 +473,15 @@ class Person:
         else:
             self.states[self.state] += 1
 
-    def set_day_infected(self, day):
-        self.infected_on_day = day
+    def disease_state_start(self) -> str:
+        """Resets the states, cohort, infected_on_day, recovered_on_day, infected_by to 0 or None"""
+        self.states = dict([(e, 0) for e in Disease_states])
+        self.cohort = None
+        self.infected_on_day = None
+        self.recovered_on_day = None
+        self.infected_by = -1
 
-    def get_day_infected(self):
-        return self.infected_on_day
-
-    def set_day_recovered(self, day):
-        self.recovered_on_day = day
-
-    def get_day_recovered(self):
-        return self.recovered_on_day
-
-    def set_infected_by(self, pers):
-        self.infected_by = pers
-
-    def get_infected_by(self):
-        return self.infected_by
-
-    def is_symptomatic(self) -> bool:
-        return bool(self.states[Disease_states.IS])
+        return Disease_states.S
 
     def __str__(self):
         return (

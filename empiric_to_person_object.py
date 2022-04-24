@@ -116,7 +116,7 @@ def run_disease_transmission(iterations=10, days=100):
         for day1, switch in [(True, False), (True, True), (False, False)]:
 
             dic = dis1.run_transmission_empiric(
-                days=days, graph1=graph1, graph2=graph2, day1=day1, switch=switch, save_to_file=False, plot=False
+                days=days, graph1=graph1, graph2=graph2, day1=day1, switch=switch, plot=False
             )
 
             for day in range(days):
@@ -167,7 +167,7 @@ def save_to_file(d, filename):
     filename : str
         The filename in which to save the dict as
     """
-    with open(f"./data/empiric_vs_model_new/{filename}", "w") as f:
+    with open(f"./data/empiric_vs_model/{filename}", "w") as f:
         f.write(
             "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
         )
@@ -191,7 +191,7 @@ def plot_recovered():
     graph1 = generate_network(day1=True)
 
     dis = Disease_transmission(graph1)
-    directory = "./data/empiric_vs_model_new/"
+    directory = "./data/empiric_vs_model/"
     files = os.listdir(directory)
     colours = ["darkgoldenrod", "rosybrown", "cadetblue", "mediumseagreen"]
     labels = ["Day two", "Day one", "Switch", "Model"]
