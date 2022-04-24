@@ -954,7 +954,7 @@ class Disease_transmission:
                 for day in range(days):
                     for disease_key in [e for e in Disease_states] + ["R_null"]:
                         d[stoplight][day][disease_key] = d[stoplight][day].get(disease_key, 0) + dic[day][disease_key]
-                R_null_dict[stoplight].append(people_infected_by_p0)
+                    R_null_dict[stoplight].append(people_infected_by_p0)
 
         green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
         yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
