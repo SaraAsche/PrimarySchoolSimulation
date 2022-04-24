@@ -1041,5 +1041,5 @@ if __name__ == "__main__":
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.traffic_light_transmission(iterations=10, days=100)
+    disease_transmission.traffic_light_transmission(iterations=2, days=14)
     disease_transmission.traffic_light_plots()
