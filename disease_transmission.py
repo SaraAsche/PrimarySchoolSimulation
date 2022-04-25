@@ -355,7 +355,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/weekly_testing//{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -1031,15 +1031,44 @@ class Disease_transmission:
 
         return dic
 
-    def weekly_testing_transmission(self):
-        # TODO: pie chart of R0. R0 should be saved in a list where the amount of people a single person has infected before recovery on the 50 first days is saved.
-        # average_recovered_infected without summing and taking the average. Just return the list.
-        return None
+    def weekly_testing_transmission(self, iterations=10, days=100):
+        # TODO: pie chart of R0.
+        d = {}
+        for test in ["tested", "not_tested"]:
+            d[test] = {}
+            for i in range(days):
+                d[test][i] = {}
+
+        R_null_dict = dict([(test, []) for test in ["tested", "not_tested"]])
+
+        for i in range(1, iterations + 1):
+            for test in ["tested", "not_tested"]:
+                dic, people_infected_by_p0 = self.run_transmission(
+                    days=days, save_to_file=str(test) + str(i), plot=False, R_null=True, testing=True
+                )
+                for day in range(days):
+                    for disease_key in [e for e in Disease_states] + ["R_null"]:
+                        d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
+                    R_null_dict[test].append(people_infected_by_p0)
+
+        tested_average = self.calculate_averages(d["tested"], iterations)
+        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+
+        self.save_to_file(tested_average, "tested_average.csv")
+        self.save_to_file(not_tested_average, "not_tested_average.csv")
+
+        print(R_null_dict)
+        for key, val in R_null_dict.items():
+            R_null_list = val
+            df = pd.DataFrame(R_null_list)
+            df.to_csv(f"./data/weekly_testing/{key}_infection_by_p0.csv")
 
 
 if __name__ == "__main__":
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.traffic_light_transmission(iterations=10, days=100)
-    disease_transmission.traffic_light_plots()
+    # disease_transmission.traffic_light_transmission(iterations=10, days=100)
+    # disease_transmission.traffic_light_plots()
+
+    disease_transmission.weekly_testing_transmission(iterations=10, days=100)
