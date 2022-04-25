@@ -17,9 +17,10 @@ def main():
         network = Network(225, 5, 2)
     network.generate_a_day()
     analysis = Analysis(network)
-    analysis.pie_chart("./data/traffic_light/Traffic_light.G_infection_by_p0.csv", save_as="traffic_light.G")
-    analysis.pie_chart("./data/traffic_light/Traffic_light.Y_infection_by_p0.csv", save_as="traffic_light.Y")
-    analysis.pie_chart("./data/traffic_light/Traffic_light.R_infection_by_p0.csv", save_as="traffic_light.R")
+    # analysis.pie_chart("./data/traffic_light/Traffic_light.G_infection_by_p0.csv", save_as="traffic_light.G")
+    # analysis.pie_chart("./data/traffic_light/Traffic_light.Y_infection_by_p0.csv", save_as="traffic_light.Y")
+    # analysis.pie_chart("./data/traffic_light/Traffic_light.R_infection_by_p0.csv", save_as="traffic_light.R")
+
     # network.generate_a_day()
     # analysis = Analysis(network)
     # analysis.degree_distribution_layers(both=True, experimental=False)

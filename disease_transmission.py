@@ -283,7 +283,15 @@ class Disease_transmission:
                             n.set_infected_by(stud)
 
     def run_transmission(
-        self, days: int, plot=True, Ias=0.4, testing=False, save_to_file=None, sympt=True, R_null=False
+        self,
+        days: int,
+        plot=True,
+        Ias=0.4,
+        testing=False,
+        save_to_file=None,
+        sympt=True,
+        R_null=False,
+        recovered_R0=False,
     ) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
@@ -313,7 +321,8 @@ class Disease_transmission:
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
         days_dic = {}  # Keeps track of how many individuals are in the given state at time key
-
+        # if recovered_R0:
+        #     recovered_R0_dict = {}
         for i in range(days):  # Meaning: 0-day-1
             if testing:
                 self.weekly_testing()
@@ -353,6 +362,9 @@ class Disease_transmission:
             days_dic[i] = d
             self.day_no += 1
 
+            # if recovered_R0:
+            #     recovered_R0_dict[i] = self.average_recovered_infected(return_list=True)
+
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
             with open(f"./data/weekly_testing//{save_to_file}transmission.csv", "w") as f:
@@ -379,7 +391,8 @@ class Disease_transmission:
                     i += 1
 
             return days_dic, i
-
+        if recovered_R0:
+            return days_dic, self.average_recovered_infected(return_list=True)
         return days_dic  # return diff(days_dict)
 
     def run_transmission_empiric(
@@ -615,7 +628,7 @@ class Disease_transmission:
             return 0.0
         return sum(infected_dict.values()) / len(infected_dict)
 
-    def average_recovered_infected(self) -> float:
+    def average_recovered_infected(self, return_list=False) -> float:
         """How many on average all individuals have infected before they recovered. Is accumulating"""
         recovered = list(filter(lambda x: x.get_state() == Disease_states.R, self.students))
         if not len(recovered):
@@ -628,6 +641,8 @@ class Disease_transmission:
                 continue
             if key in recovered:
                 infected_dict[key] = infected_dict.get(key, 0) + 1
+        if return_list:
+            return infected_dict
         if not len(infected_dict):
             return 0.0
         return sum(infected_dict.values()) / len(infected_dict)
@@ -1032,33 +1047,46 @@ class Disease_transmission:
         return dic
 
     def weekly_testing_transmission(self, iterations=10, days=100):
-        # TODO: pie chart of R0.
+        # TODO: pie chart of R0. Lagre annen R0. Basert på flere. Som average bare uten å ta average og lagre enkeltindividene de første 50 dagene elns
         d = {}
+        R_null_dict = {}
+
         for test in ["tested", "not_tested"]:
             d[test] = {}
+            R_null_dict[test] = {}
             for i in range(days):
                 d[test][i] = {}
-
-        R_null_dict = dict([(test, []) for test in ["tested", "not_tested"]])
+                R_null_dict[test][i] = {}
 
         for i in range(1, iterations + 1):
             for test in ["tested", "not_tested"]:
-                dic, people_infected_by_p0 = self.run_transmission(
-                    days=days, save_to_file=str(test) + str(i), plot=False, R_null=True, testing=True
+                dic, recovered_R0 = self.run_transmission(
+                    days=days, save_to_file=str(test) + str(i), plot=False, testing=True, recovered_R0=True
                 )
+                print(recovered_R0)
+                R_null_dict[test][i] = recovered_R0
+
                 for day in range(days):
                     for disease_key in [e for e in Disease_states] + ["R_null"]:
+
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
-                    R_null_dict[test].append(people_infected_by_p0)
 
-        tested_average = self.calculate_averages(d["tested"], iterations)
-        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        # tested_average = self.calculate_averages(d["tested"], iterations)
+        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        self.save_to_file(tested_average, "tested_average.csv")
-        self.save_to_file(not_tested_average, "not_tested_average.csv")
+        # self.save_to_file(tested_average, "tested_average.csv")
+        # self.save_to_file(not_tested_average, "not_tested_average.csv")
+        # pprint(R_null_dict)
+        total_R0 = {}
+        for tested, dict_of_iterations in R_null_dict.items():
+            l = []
+            for itera in range(1, iterations + 1):
+                new_dict = R_null_dict[tested][itera]
+                for ID, R_0 in new_dict.items():
+                    l.append(R_0)
+            total_R0[tested] = l.copy()
 
-        print(R_null_dict)
-        for key, val in R_null_dict.items():
+        for key, val in total_R0.items():
             R_null_list = val
             df = pd.DataFrame(R_null_list)
             df.to_csv(f"./data/weekly_testing/{key}_infection_by_p0.csv")
@@ -1068,7 +1096,8 @@ if __name__ == "__main__":
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
+    disease_transmission.weekly_testing_transmission(10, 100)
     # disease_transmission.traffic_light_transmission(iterations=10, days=100)
     # disease_transmission.traffic_light_plots()
 
-    disease_transmission.weekly_testing_transmission(iterations=10, days=100)
+    # disease_transmission.weekly_testing_transmission(iterations=10, days=100)
