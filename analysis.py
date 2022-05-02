@@ -16,7 +16,6 @@ File: analysis.py
 """
 
 
-from cProfile import label
 import networkx as nx
 from networkx.algorithms import community
 import numpy as np
@@ -26,9 +25,6 @@ import seaborn as sns
 import pickle
 
 from scipy import stats
-
-from sklearn import neighbors
-from sklearn.ensemble import GradientBoostingClassifier
 
 
 class Analysis:

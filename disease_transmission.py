@@ -32,7 +32,6 @@ import networkx as nx
 import numpy as np
 import pickle as pickle
 import seaborn as sns
-import os.path
 
 
 class Disease_transmission:
@@ -292,6 +291,7 @@ class Disease_transmission:
         sympt=True,
         R_null=False,
         recovered_R0=False,
+        test_every=7,
     ) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
@@ -321,11 +321,10 @@ class Disease_transmission:
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
         days_dic = {}  # Keeps track of how many individuals are in the given state at time key
-        # if recovered_R0:
-        #     recovered_R0_dict = {}
+
         for i in range(days):  # Meaning: 0-day-1
             if testing:
-                self.weekly_testing()
+                self.weekly_testing(test_every)
             d = dict([(e, 0) for e in Disease_states])  # Keeps track of how many individuals are in a given state
             if i == 0:  # Day 0, no disease_transmission. Patient zero is introduced
                 self.generate_patient_zero(sympt=sympt)  # Set patient to be symptomatic
@@ -349,7 +348,7 @@ class Disease_transmission:
 
                 # Sets the key (represents day i) to have the value: dict over states and people in that state
             if plot:
-                if i == days:
+                if i == days - 1:
                     # On the last day, the plot stays untill being dismissed
                     self.plot(block=True)
                 else:
@@ -361,9 +360,6 @@ class Disease_transmission:
             d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
-
-            # if recovered_R0:
-            #     recovered_R0_dict[i] = self.average_recovered_infected(return_list=True)
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
@@ -535,13 +531,13 @@ class Disease_transmission:
 
         for i, stud in enumerate(G.nodes):
             if stud.state == Disease_states.E:
-                edge_color[i] = "yellow"
+                edge_color[i] = "khaki"
             elif stud.state in [Disease_states.IP, Disease_states.IS]:
-                edge_color[i] = "red"
+                edge_color[i] = "indianred"
             elif stud.state == Disease_states.IAS:
-                edge_color[i] = "blue"
+                edge_color[i] = "cadetblue"
             elif stud.state == Disease_states.R:
-                edge_color[i] = "lightgreen"
+                edge_color[i] = "darkseagreen"
         maximum_count = max(list(map(lambda x: x[-1]["count"], G.edges(data=True))))
         for i, e in enumerate(G.edges(data=True)):
             weights[i] = (0, 0, 0, e[-1]["count"] / maximum_count)
@@ -556,7 +552,9 @@ class Disease_transmission:
         )
 
         if block:
+            plt.savefig("./fig_master/transmission.png", transparent=True, dpi=500)
             plt.show(block=True)
+
         else:
             plt.pause(interval)
 
@@ -634,7 +632,7 @@ class Disease_transmission:
         if not len(recovered):
             return 0
 
-        infected_dict = {}
+        infected_dict = {key: 0 for key in recovered}
         for stud in filter(lambda x: x.get_state() != Disease_states.S, self.students):
             key = stud.get_infected_by()
             if key is None:
@@ -642,6 +640,7 @@ class Disease_transmission:
             if key in recovered:
                 infected_dict[key] = infected_dict.get(key, 0) + 1
         if return_list:
+            print(infected_dict)
             return infected_dict
         if not len(infected_dict):
             return 0.0
@@ -669,7 +668,7 @@ class Disease_transmission:
         plt.ylabel("Exposed")
         plt.show()
 
-    def plot_recovered(self, filename: str, show=True, lab=None, colour="grey", alpha=1):
+    def plot_recovered(self, filename: str, show=True, lab=None, colour="grey", alpha=1, tested=False):
         """Plots the number of recovered individuals as a function of the day
 
         Parameters
@@ -692,20 +691,29 @@ class Disease_transmission:
         x = df["Day"]
         y = df["Recovered"]
 
-        plt.scatter(x, y, label=lab, color=colour, alpha=alpha, s=30)
+        plt.plot(x, y, label=lab, color=colour, alpha=alpha, linewidth=3)  # s=30
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
 
         if show:
-            plt.xlabel("Days since disease introduction", fontsize=16)
-            plt.ylabel("Number of recovered individuals", fontsize=16)
-            plt.xticks(fontsize=16)
-            plt.yticks(fontsize=16)
+            if tested:
+                for i in range(7, 101, 7):
+                    if i > 97:
+                        plt.vlines(
+                            i, ymin=0, ymax=100, colors="grey", linestyles="dashed", label="Days tested", alpha=0.7
+                        )
+                    else:
+                        plt.vlines(i, ymin=0, ymax=100, colors="grey", linestyles="dashed", alpha=0.7)
+
+            plt.ylabel("#Recovered", fontsize=14)
+            plt.xlabel("Day", fontsize=14)
+            plt.xticks(fontsize=14)
+            plt.yticks(fontsize=14)
             plt.legend()
             plt.tight_layout()
-            plt.savefig("./fig_master/traffic_light_transmission.png", transparent=True, dpi=500)
-            # plt.show()
+            plt.savefig("./fig_master/tested_vs_not_recovered.png", transparent=True, dpi=500)
+            plt.show()
 
     def plot_R0(self, filename):
         """Plots the number of R0 as a function of the day
@@ -895,17 +903,21 @@ class Disease_transmission:
     def weekly_testing(self, recurr=7) -> None:
         """Weekly testing sets a tested state to True in all Person objects presents, and registreres every IS, IP and IAS.
 
+        Has a 80% chance of picking up disease
+
         Parameters
         ----------
         recurr : int
             Determines the interval for how often testing should be performed. Default is every week, meaning every 7 days.
         """
 
-        if self.day_no % 7 == 0 and self.day_no != 0:
+        if self.day_no % recurr == 0 and self.day_no != 0:
             for stud in self.students:
                 if stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]:
-                    self.network.remove_all_interactions(self.graph, stud)
-                    stud.set_tested(True)
+                    r = random.random()
+                    if r < 0.6:
+                        self.network.remove_all_interactions(self.graph, stud)
+                        stud.set_tested(True)
 
     def asymptomatic_calibration(self) -> None:
         """Investigates the effect of changing asymptomatic vs symptomatic percentage"""
@@ -947,13 +959,7 @@ class Disease_transmission:
         df = pd.DataFrame(R_null_list)
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
-    def save_R_null_recovered(self, d):
-        #
-        return 0
-
     def traffic_light_transmission(self, iterations=3, days=100):
-        # TODO: implement that you save the R0 of the recovered individuals on the 50 first days
-
         d = {}
         for e in Traffic_light:
             d[e] = {}
@@ -1010,7 +1016,7 @@ class Disease_transmission:
         filename : str
             The filename in which to save the dict as
         """
-        with open(f"./data/traffic_light/{filename}", "w") as f:
+        with open(f"./data/weekly_testing/{filename}", "w") as f:
             f.write(
                 "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
             )
@@ -1047,11 +1053,10 @@ class Disease_transmission:
         return dic
 
     def weekly_testing_transmission(self, iterations=10, days=100):
-        # TODO: pie chart of R0. Lagre annen R0. Basert på flere. Som average bare uten å ta average og lagre enkeltindividene de første 50 dagene elns
         d = {}
         R_null_dict = {}
 
-        for test in ["tested", "not_tested"]:
+        for test in ["tested7", "tested14", "not_tested"]:
             d[test] = {}
             R_null_dict[test] = {}
             for i in range(days):
@@ -1059,11 +1064,32 @@ class Disease_transmission:
                 R_null_dict[test][i] = {}
 
         for i in range(1, iterations + 1):
-            for test in ["tested", "not_tested"]:
-                dic, recovered_R0 = self.run_transmission(
-                    days=days, save_to_file=str(test) + str(i), plot=False, testing=True, recovered_R0=True
-                )
-                print(recovered_R0)
+            print(i)
+            for test in d.keys():
+                print(test)
+                if test == "tested7":
+                    dic, recovered_R0 = self.run_transmission(
+                        days=days,
+                        save_to_file=str(test) + str(i),
+                        plot=False,
+                        testing=True,
+                        recovered_R0=True,
+                        test_every=7,
+                    )
+                if test == "tested14":
+                    dic, recovered_R0 = self.run_transmission(
+                        days=days,
+                        save_to_file=str(test) + str(i),
+                        plot=False,
+                        testing=True,
+                        recovered_R0=True,
+                        test_every=14,
+                    )
+                else:
+                    dic, recovered_R0 = self.run_transmission(
+                        days=days, save_to_file=str(test) + str(i), plot=False, testing=False, recovered_R0=True
+                    )
+
                 R_null_dict[test][i] = recovered_R0
 
                 for day in range(days):
@@ -1071,12 +1097,14 @@ class Disease_transmission:
 
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
 
-        # tested_average = self.calculate_averages(d["tested"], iterations)
-        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        tested7_average = self.calculate_averages(d["tested7"], iterations)
+        tested14_average = self.calculate_averages(d["tested14"], iterations)
+        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        # self.save_to_file(tested_average, "tested_average.csv")
-        # self.save_to_file(not_tested_average, "not_tested_average.csv")
-        # pprint(R_null_dict)
+        self.save_to_file(tested7_average, "tested7_average.csv")
+        self.save_to_file(tested14_average, "tested14_average.csv")
+        self.save_to_file(not_tested_average, "not_tested_average.csv")
+
         total_R0 = {}
         for tested, dict_of_iterations in R_null_dict.items():
             l = []
@@ -1097,7 +1125,16 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
     disease_transmission.weekly_testing_transmission(10, 100)
-    # disease_transmission.traffic_light_transmission(iterations=10, days=100)
-    # disease_transmission.traffic_light_plots()
-
-    # disease_transmission.weekly_testing_transmission(iterations=10, days=100)
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/tested7_average.csv", show=False, lab="Weekly tested", colour="darkseagreen", tested=True
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/tested14_average.csv",
+        show=True,
+        lab="Biweekly tested",
+        colour="darkgoldenrod",
+        tested=True,
+    )
