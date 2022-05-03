@@ -1160,7 +1160,7 @@ if __name__ == "__main__":
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
     ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(0, 100, ID=ID)
+    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
