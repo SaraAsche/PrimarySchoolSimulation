@@ -1077,7 +1077,7 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) + str(ID),
+                        save_to_file=(str(test) + str(ID)),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1086,7 +1086,7 @@ class Disease_transmission:
                 if test == "tested_biweekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) + str(ID),
+                        save_to_file=(str(test) + str(ID)),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1094,7 +1094,7 @@ class Disease_transmission:
                     )
                 else:
                     dic, recovered_R0 = self.run_transmission(
-                        days=days, save_to_file=str(test) + str(ID), plot=False, testing=False, recovered_R0=True
+                        days=days, save_to_file=(str(test) + str(ID)), plot=False, testing=False, recovered_R0=True
                     )
 
                 R_null_dict[test][i] = recovered_R0
