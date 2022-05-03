@@ -1077,21 +1077,14 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) str(i)#+ str(ID),
+                        save_to_file=str(test) + str(i)#+ str(ID),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
                         test_every=7,
                     )
-                if test == "tested_biweekly":
-                    dic, recovered_R0 = self.run_transmission(
-                        days=days,
-                        save_to_file=str(test) + str(ID)#str(ID),
-                        plot=False,
-                        testing=True,
-                        recovered_R0=True,
-                        test_every=14,
-                    )
+                if test == "tested_biweekly": #str(ID),
+                    dic, recovered_R0 = self.run_transmission(days=days,save_to_file=(str(test) + str(ID)),plot=False, testing=True,recovered_R0=True, test_every=14)
                 else:
                     dic, recovered_R0 = self.run_transmission(
                         days=days, save_to_file=str(test) + str(i), plot=False, testing=False, recovered_R0=True
@@ -1158,9 +1151,10 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
+    
     #ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(100, 100, ID=0) #ID=ID
+    disease_transmission.weekly_testing_transmission(100, 100) #, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
