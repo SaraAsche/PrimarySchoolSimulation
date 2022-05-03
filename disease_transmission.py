@@ -365,7 +365,7 @@ class Disease_transmission:
             d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
-
+        print(save_to_file)
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
             with open(f"./data/weekly_testing2/{save_to_file}transmission.csv", "w") as f:
