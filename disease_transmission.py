@@ -1077,7 +1077,7 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) str(i)#+ str(ID),
+                        save_to_file=str(test) + str(ID),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1086,7 +1086,7 @@ class Disease_transmission:
                 if test == "tested_biweekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) + str(ID)#str(ID),
+                        save_to_file=str(test) + str(ID),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1094,7 +1094,7 @@ class Disease_transmission:
                     )
                 else:
                     dic, recovered_R0 = self.run_transmission(
-                        days=days, save_to_file=str(test) + str(i), plot=False, testing=False, recovered_R0=True
+                        days=days, save_to_file=str(test) + str(ID), plot=False, testing=False, recovered_R0=True
                     )
 
                 R_null_dict[test][i] = recovered_R0
@@ -1104,13 +1104,13 @@ class Disease_transmission:
 
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
 
-        tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
-        tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
-        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        # tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
+        # tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
+        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        self.save_to_file(tested7_average, "tested_weekly_average.csv")
-        self.save_to_file(tested14_average, "tested_biweekly_average.csv")
-        self.save_to_file(not_tested_average, "not_tested_average.csv")
+        # self.save_to_file(tested7_average, "tested_weekly_average.csv")
+        # self.save_to_file(tested14_average, "tested_biweekly_average.csv")
+        # self.save_to_file(not_tested_average, "not_tested_average.csv")
 
         total_R0 = {}
         for tested, dict_of_iterations in R_null_dict.items():
@@ -1158,9 +1158,9 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
-    #ID = sys.argv[1]
+    ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(100, 100, ID=0) #ID=ID
+    disease_transmission.weekly_testing_transmission(0, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
