@@ -1077,14 +1077,21 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) + str(i)#+ str(ID),
+                        save_to_file=str(test) + str(i),  # + str(ID),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
                         test_every=7,
                     )
-                if test == "tested_biweekly": #str(ID),
-                    dic, recovered_R0 = self.run_transmission(days=days,save_to_file=(str(test) + str(ID)),plot=False, testing=True,recovered_R0=True, test_every=14)
+                if test == "tested_biweekly":  # str(ID),
+                    dic, recovered_R0 = self.run_transmission(
+                        days=days,
+                        save_to_file=(str(test) + str(ID)),
+                        plot=False,
+                        testing=True,
+                        recovered_R0=True,
+                        test_every=14,
+                    )
                 else:
                     dic, recovered_R0 = self.run_transmission(
                         days=days, save_to_file=str(test) + str(i), plot=False, testing=False, recovered_R0=True
@@ -1151,10 +1158,10 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
-    
-    #ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(100, 100) #, ID=ID)
+    # ID = sys.argv[1]
+
+    disease_transmission.weekly_testing_transmission(100, 100)  # , ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1172,20 +1179,20 @@ if __name__ == "__main__":
     #     lab="Red",
     #     colour="indianred",
     # )
-# empiric vs model transmission
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1FalseSwitchFalse_average.csv", show=False, lab="Day two", colour="khaki"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1TrueSwitchFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1TrueSwitchTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-# )
+    # empiric vs model transmission
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1FalseSwitchFalse_average.csv", show=False, lab="Day two", colour="khaki"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1TrueSwitchFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1TrueSwitchTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    # )
 
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
-# )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
+    # )
 
 # testing
 # disease_transmission.plot_recovered(
