@@ -1161,7 +1161,7 @@ if __name__ == "__main__":
 
     # ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(100, 100)  # , ID=ID)
+    disease_transmission.weekly_testing_transmission(1000, 100)  # , ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
