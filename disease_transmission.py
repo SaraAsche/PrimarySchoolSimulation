@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/weekly_testing/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/weekly_testing2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -1089,7 +1089,7 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=str(test) + str(i),  # + str(ID),
+                        save_to_file=str(test) + str(ID),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1106,7 +1106,7 @@ class Disease_transmission:
                     )
                 else:
                     dic, recovered_R0 = self.run_transmission(
-                        days=days, save_to_file=str(test) + str(i), plot=False, testing=False, recovered_R0=True
+                        days=days, save_to_file=str(test) + str(ID), plot=False, testing=False, recovered_R0=True
                     )
 
                 R_null_dict[test][i] = recovered_R0
@@ -1171,9 +1171,9 @@ if __name__ == "__main__":
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
 
-    # ID = sys.argv[1]
+    ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(10, 100)  # , ID=ID)
+    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)  # , ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1206,21 +1206,21 @@ if __name__ == "__main__":
     #     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
     # )
 
-# testing
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_weekly_average.csv",
-#     show=False,
-#     lab="Weekly tested",
-#     colour="darkseagreen",
-#     tested=True,
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_biweekly_average.csv",
-#     show=True,
-#     lab="Biweekly tested",
-#     colour="darkgoldenrod",
-#     tested=True,
-# )
+    # testing
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing/tested_weekly_average.csv",
+    #     show=False,
+    #     lab="Weekly tested",
+    #     colour="darkseagreen",
+    #     tested=True,
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing/tested_biweekly_average.csv",
+    #     show=True,
+    #     lab="Biweekly tested",
+    #     colour="darkgoldenrod",
+    #     tested=True,
+    # )
