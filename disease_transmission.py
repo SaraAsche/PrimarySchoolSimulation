@@ -450,7 +450,8 @@ class Disease_transmission:
             Determines whether patient_zero is asymptomatic or presymptomatic. Default is True, meaning patient_zero is set to a symptomatic disease course
         """
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
-        self.network.reset_student_disease_states()
+
+        self.reset()
 
         days_dic = {}  # Keeps track of how many individuals are in the given state at time key
 
