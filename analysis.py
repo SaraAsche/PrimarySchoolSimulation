@@ -936,7 +936,7 @@ class Analysis:
         plt.axis("equal")
         plt.show()
 
-    def average_of_simulations(self, networkType: str):
+    def average_of_simulations(self, networkType: str) -> pd.DataFrame:
         dfs = []
         for filename in filter(
             lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/weekly_testing2")
@@ -948,3 +948,18 @@ class Analysis:
         new_df = new_df / len(dfs)
         new_df.to_csv(f"./data/weekly_testing2/{networkType}_average.csv", index=False)
         return new_df
+
+    def accumulate_R0(self, networkType: str) -> pd.DataFrame:
+        l = []
+        for filename in sorted(
+            filter(
+                lambda x: networkType in x and "average" not in x and "transmission" not in x,
+                os.listdir("./data/weekly_testing2"),
+            )
+        ):
+            with open(f"./data/weekly_testing2/{filename}") as f:
+                l.extend([int(x.split(",")[-1].strip("\n")) for x in f.readlines()])
+                print(filename)
+
+        with open(f"{networkType}_average_by_p0.csv", "w") as f:
+            f.writelines(map(lambda x: str(x) + "\n", l))
