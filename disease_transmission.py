@@ -1036,7 +1036,7 @@ class Disease_transmission:
         filename : str
             The filename in which to save the dict as
         """
-        with open(f"./data/weekly_testing2/{filename}", "w") as f:
+        with open(f"./data/weekly_testing/{filename}", "w") as f:
             f.write(
                 "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
             )
@@ -1136,7 +1136,7 @@ class Disease_transmission:
         for key, val in total_R0.items():
             R_null_list = val
             df = pd.DataFrame(R_null_list)
-            df.to_csv(f"./data/weekly_testing2/{key}_infection_by_p0.csv")
+            df.to_csv(f"./data/weekly_testing/{key}_infection_by_p0.csv")
 
     def plot_all_recovered(self, filename, testing_type=None):  # red: indi
 
@@ -1206,21 +1206,20 @@ if __name__ == "__main__":
     #     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
     # )
 
-# testing
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_weekly_average.csv",
-#     show=False,
-#     lab="Weekly tested",
-#     colour="darkseagreen",
-#     tested=True,
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_biweekly_average.csv",
-#     show=True,
-#     lab="Biweekly tested",
-#     colour="darkgoldenrod",
-#     tested=True,
-# )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/tested_weekly_average.csv",
+        show=False,
+        lab="Weekly tested",
+        colour="darkseagreen",
+        tested=True,
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing/tested_biweekly_average.csv",
+        show=True,
+        lab="Biweekly tested",
+        colour="darkgoldenrod",
+        tested=True,
+    )
