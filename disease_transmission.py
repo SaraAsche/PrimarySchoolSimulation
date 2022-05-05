@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/traffic_light2/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/weekly_testing2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -1036,7 +1036,7 @@ class Disease_transmission:
         filename : str
             The filename in which to save the dict as
         """
-        with open(f"./data/traffic_light2/{filename}", "w") as f:
+        with open(f"./data/weekly_testing2/{filename}", "w") as f:
             f.write(
                 "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
             )
@@ -1120,9 +1120,9 @@ class Disease_transmission:
         tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
         not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        self.save_to_file(tested7_average, "tested_weekly_average.csv")
-        self.save_to_file(tested14_average, "tested_biweekly_average.csv")
-        self.save_to_file(not_tested_average, "not_tested_average.csv")
+        # self.save_to_file(tested7_average, "tested_weekly_average.csv")
+        # self.save_to_file(tested14_average, "tested_biweekly_average.csv")
+        # self.save_to_file(not_tested_average, "not_tested_average.csv")
 
         total_R0 = {}
         for tested, dict_of_iterations in R_null_dict.items():
@@ -1172,9 +1172,9 @@ if __name__ == "__main__":
 
     ID = sys.argv[1]
 
-    disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
+    # disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
 
-    # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
+    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
