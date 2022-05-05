@@ -1171,9 +1171,9 @@ if __name__ == "__main__":
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
 
-    # ID = sys.argv[1]
+    ID = sys.argv[1]
 
-    # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)  # , ID=ID)
+    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1207,20 +1207,20 @@ if __name__ == "__main__":
     # )
 
     # testing
-    disease_transmission.plot_recovered(
-        "./data/weekly_testing2/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
-    )
-    disease_transmission.plot_recovered(
-        "./data/weekly_testing2/tested_weekly_average.csv",
-        show=False,
-        lab="Weekly tested",
-        colour="darkseagreen",
-        tested=True,
-    )
-    disease_transmission.plot_recovered(
-        "./data/weekly_testing2/tested_biweekly_average.csv",
-        show=True,
-        lab="Biweekly tested",
-        colour="darkgoldenrod",
-        tested=True,
-    )
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing2/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing2/tested_weekly_average.csv",
+    #     show=False,
+    #     lab="Weekly tested",
+    #     colour="darkseagreen",
+    #     tested=True,
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/weekly_testing2/tested_biweekly_average.csv",
+    #     show=True,
+    #     lab="Biweekly tested",
+    #     colour="darkgoldenrod",
+    #     tested=True,
+    # )
