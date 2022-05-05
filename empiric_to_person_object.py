@@ -82,7 +82,8 @@ def generate_network(day1=True) -> Network:
         interactions.append(interaction)
 
     n = Network(empiric=students.copy())
-    return n.generate_network(empiric=interactions)
+    n.generate_network(empiric=interactions)
+    return n
 
 
 def run_disease_transmission(iterations=10, days=100, ID=0):
@@ -212,6 +213,7 @@ def plot_recovered():
             dis.plot_recovered(path, lab=labels[i], colour=colours[i])
 
 
-ID = sys.argv[1]
+if __name__ == "__main__":
+    ID = sys.argv[1]
 
-run_disease_transmission(1, 100, ID=ID)
+    run_disease_transmission(1, 100, ID=ID)

@@ -457,8 +457,10 @@ class Disease_transmission:
 
         if day1 == True:
             self.graph = graph1.get_graph()
+            self.students = graph1.get_students()
         else:
             self.graph = graph2.get_graph()
+            self.students = graph2.get_students()
 
         for i in range(days):  # Meaning: 0-day-1
             if testing:
@@ -496,7 +498,7 @@ class Disease_transmission:
             self.day_no += 1
 
         if save_to_file:
-            with open(f"./data/empiric_vs_model2/day1{day1}switch{switch}.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/{save_to_file}.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
