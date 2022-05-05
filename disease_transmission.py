@@ -286,6 +286,16 @@ class Disease_transmission:
                             n.set_day_infected(self.day_no)
                             n.set_infected_by(stud)
 
+    def reset(self):
+        self.network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
+
+        self.graph = self.network.get_graph()
+        self.students = self.network.get_students()
+        self.patient_zero = None
+
+        self.day_no = 0
+        self.days = [self.graph]
+
     def run_transmission(
         self,
         days: int,
@@ -320,8 +330,9 @@ class Disease_transmission:
         R_null : bool
             Determines the output of the model. If True, the model only returns the R_0 of patient_zero. If False, it returns a dict of the number of individuals in different Disease_states
         """
-        self.network.reset_student_disease_states()  # Reset the states of the Person objects
-        self.set_day(0)  # Resets the day
+        # self.network.reset_student_disease_states()  # Reset the states of the Person objects
+        self.reset()
+        # self.set_day(0)  # Resets the day
 
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
@@ -474,11 +485,11 @@ class Disease_transmission:
                 # Update the amount of days an individual has been in state
                 d[stud.state] += 1
 
-            print(f"-------------Day {i}-------------")
-            pprint(d)
-            print(
-                f"Average infected today: {self.average_infected_on_day(i)}\nAverage infected of all recovered: {self.average_recovered_infected()}"
-            )
+            # print(f"-------------Day {i}-------------")
+            # pprint(d)
+            # print(
+            #     f"Average infected today: {self.average_infected_on_day(i)}\nAverage infected of all recovered: {self.average_recovered_infected()}"
+            # )
             d["R_null"] = self.average_recovered_infected()
             days_dic[i] = d
             self.day_no += 1
@@ -606,8 +617,8 @@ class Disease_transmission:
             if stud is not None:
                 summ += infected_dict[stud.get_ID()]
 
-        print(f"sum: {summ}")
-        print(f"Infected day 5 or less: {len(infected_day_5_or_less)}")
+        # print(f"sum: {summ}")
+        # print(f"Infected day 5 or less: {len(infected_day_5_or_less)}")
         if len(infected_day_5_or_less) == 1:
             return 0.0
         return summ / (len(infected_day_5_or_less) - 1)
@@ -1161,7 +1172,7 @@ if __name__ == "__main__":
 
     # ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(1000, 100)  # , ID=ID)
+    disease_transmission.weekly_testing_transmission(10, 100)  # , ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(

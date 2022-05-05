@@ -212,6 +212,9 @@ class Person:
     def get_interaction(self, p) -> Interaction:  # Returns interaction object between self and p
         return self.interactions.get(p, Interaction(self, p, 0))
 
+    def remove_interactions(self):
+        self.interactions.clear()
+
     def get_min_p_vector(self) -> float:
         """Returns minimum value of a given p-vector"""
         return min(self.p_vector, key=self.p_vector.get)
@@ -473,6 +476,8 @@ class Person:
         else:
             self.states[self.state] += 1
 
+        self.remove_interactions()
+
     def disease_state_start(self) -> str:
         """Resets the states, cohort, infected_on_day, recovered_on_day, infected_by to 0 or None"""
         self.states = dict([(e, 0) for e in Disease_states])
@@ -480,6 +485,7 @@ class Person:
         self.infected_on_day = None
         self.recovered_on_day = None
         self.infected_by = -1
+        self.tested = False
 
         return Disease_states.S
 
