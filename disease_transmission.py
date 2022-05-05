@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/weekly_testing2/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -496,7 +496,7 @@ class Disease_transmission:
             self.day_no += 1
 
         if save_to_file:
-            with open(f"./data/empiric_vs_model/day1{day1}switch{switch}.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/day1{day1}switch{switch}.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )

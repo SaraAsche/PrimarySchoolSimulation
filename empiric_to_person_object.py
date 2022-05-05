@@ -9,6 +9,9 @@ Date: 14.02.2022
 File: empiric_to_person_object.py
 """
 
+import sys
+
+from numpy import save
 from disease_transmission import Disease_transmission
 from person import Person
 from interaction import Interaction
@@ -82,7 +85,7 @@ def generate_network(day1=True) -> Network:
     return n.generate_network(empiric=interactions)
 
 
-def run_disease_transmission(iterations=10, days=100):
+def run_disease_transmission(iterations=10, days=100, ID=0):
     """Runs 10 iterations of transmission over 100 days for each one of the empiric days and a switch in addition to the model
 
     Parameters
@@ -112,13 +115,18 @@ def run_disease_transmission(iterations=10, days=100):
     # Generates an empty dict for the model where the key is the number of the day and the values are empty dics
     model_int = dict([(i, {}) for i in range(days)])
     for i in range(0, iterations):
-        dic2 = dis2.run_transmission(days=days, plot=False)
+        dic2 = dis2.run_transmission(days=days, plot=False, save_to_file=f"empiric{ID}")
         for day1, switch in [(True, False), (True, True), (False, False)]:
 
             dic = dis1.run_transmission_empiric(
-                days=days, graph1=graph1, graph2=graph2, day1=day1, switch=switch, plot=False
+                days=days,
+                graph1=graph1,
+                graph2=graph2,
+                day1=day1,
+                switch=switch,
+                plot=False,
+                save_to_file=f"{day1}{switch}{ID}",
             )
-
             for day in range(days):
                 # Saves the dic to interaction_dict
 
@@ -131,30 +139,30 @@ def run_disease_transmission(iterations=10, days=100):
             for disease_key in [e for e in Disease_states] + ["R_null"]:
                 model_int[day][disease_key] = model_int.get(day, {}).get(disease_key, 0) + dic2[day][disease_key]
 
-    # Takes the average of all the days and creates a new dict with day as key and an average disease states dicst as values
-    day1TrueSwitchFalse = {
-        k: {k1: v1 / iterations for k1, v1 in iterations_dict[(True, False)][k].items()}
-        for k, v in iterations_dict[(True, False)].items()
-    }
+    # # Takes the average of all the days and creates a new dict with day as key and an average disease states dicst as values
+    # day1TrueSwitchFalse = {
+    #     k: {k1: v1 / iterations for k1, v1 in iterations_dict[(True, False)][k].items()}
+    #     for k, v in iterations_dict[(True, False)].items()
+    # }
 
-    day1FalseSwitchFalse = {
-        k: {k1: v1 / iterations for k1, v1 in iterations_dict[(False, False)][k].items()}
-        for k, v in iterations_dict[(False, False)].items()
-    }
+    # day1FalseSwitchFalse = {
+    #     k: {k1: v1 / iterations for k1, v1 in iterations_dict[(False, False)][k].items()}
+    #     for k, v in iterations_dict[(False, False)].items()
+    # }
 
-    day1TrueSwitchTrue = {
-        k: {k1: v1 / iterations for k1, v1 in iterations_dict[(True, True)][k].items()}
-        for k, v in iterations_dict[(True, True)].items()
-    }
+    # day1TrueSwitchTrue = {
+    #     k: {k1: v1 / iterations for k1, v1 in iterations_dict[(True, True)][k].items()}
+    #     for k, v in iterations_dict[(True, True)].items()
+    # }
 
-    model = {k: {k1: v1 / iterations for k1, v1 in v.items()} for k, v in model_int.items()}
+    # model = {k: {k1: v1 / iterations for k1, v1 in v.items()} for k, v in model_int.items()}
 
-    save_to_file(day1TrueSwitchFalse, "day1TrueSwitchFalse_average.csv")
-    save_to_file(day1FalseSwitchFalse, "day1FalseSwitchFalse_average.csv")
-    save_to_file(day1TrueSwitchTrue, "day1TrueSwitchTrue_average.csv")
-    save_to_file(model, "model_average.csv")
+    # save_to_file(day1TrueSwitchFalse, "day1TrueSwitchFalse_average.csv")
+    # save_to_file(day1FalseSwitchFalse, "day1FalseSwitchFalse_average.csv")
+    # save_to_file(day1TrueSwitchTrue, "day1TrueSwitchTrue_average.csv")
+    # save_to_file(model, "model_average.csv")
 
-    plot_recovered()
+    # plot_recovered()
 
 
 def save_to_file(d, filename):
@@ -204,4 +212,6 @@ def plot_recovered():
             dis.plot_recovered(path, lab=labels[i], colour=colours[i])
 
 
-run_disease_transmission(10, 100)
+ID = sys.argv[1]
+
+run_disease_transmission(1, 100, ID=ID)
