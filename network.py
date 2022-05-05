@@ -428,6 +428,9 @@ class Network:
         file_to_read = open("./pickles/" + ("pixel/" if pixel else "degree/") + name, "rb")
         return pickle.load(file_to_read)
 
+    def add_tested(self, stud):
+        self.tested.append(stud)
+
 
 if __name__ == "__main__":
     network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)

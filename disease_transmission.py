@@ -911,7 +911,7 @@ class Disease_transmission:
     def weekly_testing(self, recurr=7) -> None:
         """Weekly testing sets a tested state to True in all Person objects presents, and registreres every IS, IP and IAS.
 
-        Has a 80% chance of picking up disease
+        Has a 60% chance of picking up disease
 
         Parameters
         ----------
@@ -921,7 +921,10 @@ class Disease_transmission:
 
         if self.day_no % recurr == 0 and self.day_no != 0:
             for stud in self.students:
-                if stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]:
+                if (
+                    stud.get_state() in [Disease_states.IAS, Disease_states.IS, Disease_states.IP]
+                    and not stud.get_tested()
+                ):
                     r = random.random()
                     if r < 0.6:
                         self.network.remove_all_interactions(self.graph, stud)
@@ -1077,7 +1080,7 @@ class Disease_transmission:
                 if test == "tested_weekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=(str(test) + str(ID)),
+                        save_to_file=(str(test) + str(i)),  # + str(ID)),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1086,7 +1089,7 @@ class Disease_transmission:
                 if test == "tested_biweekly":
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
-                        save_to_file=(str(test) + str(ID)),
+                        save_to_file=(str(test) + str(i)),  # + str(ID)),
                         plot=False,
                         testing=True,
                         recovered_R0=True,
@@ -1094,7 +1097,11 @@ class Disease_transmission:
                     )
                 else:
                     dic, recovered_R0 = self.run_transmission(
-                        days=days, save_to_file=(str(test) + str(ID)), plot=False, testing=False, recovered_R0=True
+                        days=days,
+                        save_to_file=(str(test) + str(i)),
+                        plot=False,
+                        testing=False,
+                        recovered_R0=True,  # str(ID)
                     )
 
                 R_null_dict[test][i] = recovered_R0
@@ -1104,13 +1111,13 @@ class Disease_transmission:
 
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
 
-        # tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
-        # tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
-        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
+        tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
+        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        # self.save_to_file(tested7_average, "tested_weekly_average.csv")
-        # self.save_to_file(tested14_average, "tested_biweekly_average.csv")
-        # self.save_to_file(not_tested_average, "not_tested_average.csv")
+        self.save_to_file(tested7_average, "tested_weekly_average.csv")
+        self.save_to_file(tested14_average, "tested_biweekly_average.csv")
+        self.save_to_file(not_tested_average, "not_tested_average.csv")
 
         total_R0 = {}
         for tested, dict_of_iterations in R_null_dict.items():
@@ -1158,9 +1165,9 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
-    ID = sys.argv[1]
+    # ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
+    disease_transmission.weekly_testing_transmission(10, 100)  # , ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1178,36 +1185,36 @@ if __name__ == "__main__":
     #     lab="Red",
     #     colour="indianred",
     # )
-# empiric vs model transmission
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1FalseSwitchFalse_average.csv", show=False, lab="Day two", colour="khaki"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1TrueSwitchFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/day1TrueSwitchTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-# )
+    # empiric vs model transmission
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1FalseSwitchFalse_average.csv", show=False, lab="Day two", colour="khaki"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1TrueSwitchFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/day1TrueSwitchTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    # )
 
-# disease_transmission.plot_recovered(
-#     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
-# )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
+    # )
 
-# testing
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_weekly_average.csv",
-#     show=False,
-#     lab="Weekly tested",
-#     colour="darkseagreen",
-#     tested=True,
-# )
-# disease_transmission.plot_recovered(
-#     "./data/weekly_testing/tested_biweekly_average.csv",
-#     show=True,
-#     lab="Biweekly tested",
-#     colour="darkgoldenrod",
-#     tested=True,
-# )
+    # testing
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing2/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing2/tested_weekly_average.csv",
+        show=False,
+        lab="Weekly tested",
+        colour="darkseagreen",
+        tested=True,
+    )
+    disease_transmission.plot_recovered(
+        "./data/weekly_testing2/tested_biweekly_average.csv",
+        show=True,
+        lab="Biweekly tested",
+        colour="darkgoldenrod",
+        tested=True,
+    )
