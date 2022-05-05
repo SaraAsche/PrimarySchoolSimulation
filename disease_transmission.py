@@ -721,10 +721,10 @@ class Disease_transmission:
                 for i in range(7, 101, 7):
                     if i > 97:
                         plt.vlines(
-                            i, ymin=0, ymax=65, colors="grey", linestyles="dashed", label="Days tested", alpha=0.7
+                            i, ymin=0, ymax=200, colors="grey", linestyles="dashed", label="Days tested", alpha=0.7
                         )
                     else:
-                        plt.vlines(i, ymin=0, ymax=65, colors="grey", linestyles="dashed", alpha=0.7)
+                        plt.vlines(i, ymin=0, ymax=200, colors="grey", linestyles="dashed", alpha=0.7)
 
             plt.ylabel("#Recovered", fontsize=14)
             plt.xlabel("Day", fontsize=14)
@@ -979,7 +979,7 @@ class Disease_transmission:
         df = pd.DataFrame(R_null_list)
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
-    def traffic_light_transmission(self, iterations=3, days=100):
+    def traffic_light_transmission(self, iterations=3, days=100, ID=0):
         d = {}
         for e in Traffic_light:
             d[e] = {}
@@ -990,7 +990,7 @@ class Disease_transmission:
             for stoplight in [Traffic_light.G, Traffic_light.Y, Traffic_light.R]:
                 self.stoplight = stoplight
                 dic, people_infected_by_p0 = self.run_transmission(
-                    days=days, save_to_file=str(stoplight) + str(i), plot=False, R_null=True
+                    days=days, save_to_file=str(stoplight) + str(ID), plot=False, R_null=True
                 )
                 for day in range(days):
                     for disease_key in [e for e in Disease_states] + ["R_null"]:
@@ -1009,7 +1009,7 @@ class Disease_transmission:
         for key, val in R_null_dict.items():
             R_null_list = val
             df = pd.DataFrame(R_null_list)
-            df.to_csv(f"./data/traffic_light/{key}_infection_by_p0.csv")
+            df.to_csv(f"./data/traffic_light/{ID}_infection_by_p0.csv")
 
     def traffic_light_plots(self):
         self.plot_recovered(
@@ -1173,7 +1173,9 @@ if __name__ == "__main__":
 
     ID = sys.argv[1]
 
-    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
+    disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
+
+    # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1213,14 +1215,14 @@ if __name__ == "__main__":
     # disease_transmission.plot_recovered(
     #     "./data/weekly_testing2/tested_weekly_average.csv",
     #     show=False,
-    #     lab="Weekly tested",
+    #     lab="Biweekly tested",
     #     colour="darkseagreen",
     #     tested=True,
     # )
     # disease_transmission.plot_recovered(
     #     "./data/weekly_testing2/tested_biweekly_average.csv",
     #     show=True,
-    #     lab="Biweekly tested",
+    #     lab="Weekly tested",
     #     colour="darkgoldenrod",
     #     tested=True,
     # )
