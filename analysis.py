@@ -938,7 +938,9 @@ class Analysis:
 
     def average_of_simulations(self, networkType: str):
         dfs = []
-        for filename in filter(lambda x: networkType in x and "average" not in x, os.listdir("./data/weekly_testing2")):
+        for filename in filter(
+            lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/weekly_testing2")
+        ):
             dfs.append(pd.read_csv(f"./data/weekly_testing2/{filename}", header=0))
 
         new_df = functools.reduce(lambda a, b: a.add(b, fill_value=0), dfs)
