@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/weekly_testing2/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/traffic_light2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -1009,21 +1009,21 @@ class Disease_transmission:
         for key, val in R_null_dict.items():
             R_null_list = val
             df = pd.DataFrame(R_null_list)
-            df.to_csv(f"./data/traffic_light/{ID}_infection_by_p0.csv")
+            df.to_csv(f"./data/traffic_light2/{ID}_infection_by_p0.csv")
 
     def traffic_light_plots(self):
         self.plot_recovered(
-            "./data/traffic_light/Traffic_light.G_average.csv",
+            "./data/traffic_light2/Traffic_light.G_average.csv",
             show=False,
             lab="Green",
             colour="darkolivegreen",
             alpha=0.8,
         )
         self.plot_recovered(
-            "./data/traffic_light/Traffic_light.Y_average.csv", show=False, lab="Yellow", colour="gold", alpha=0.8
+            "./data/traffic_light2/Traffic_light.Y_average.csv", show=False, lab="Yellow", colour="gold", alpha=0.8
         )
         self.plot_recovered(
-            "./data/traffic_light/Traffic_light.R_average.csv", show=True, lab="Red", colour="indianred", alpha=0.8
+            "./data/traffic_light2/Traffic_light.R_average.csv", show=True, lab="Red", colour="indianred", alpha=0.8
         )
 
     def save_to_file(self, d, filename):
@@ -1036,7 +1036,7 @@ class Disease_transmission:
         filename : str
             The filename in which to save the dict as
         """
-        with open(f"./data/weekly_testing2/{filename}", "w") as f:
+        with open(f"./data/traffic_light2/{filename}", "w") as f:
             f.write(
                 "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
             )
@@ -1156,7 +1156,6 @@ class Disease_transmission:
                 colour=col,
                 alpha=i / 10,
             )
-
         self.plot_recovered(
             f"{filename}/{testing_type}_average.csv",
             show=True,
