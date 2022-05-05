@@ -16,6 +16,8 @@ File: analysis.py
 """
 
 
+import functools
+import os
 import networkx as nx
 from networkx.algorithms import community
 import numpy as np
@@ -933,3 +935,14 @@ class Analysis:
 
         plt.axis("equal")
         plt.show()
+
+    def average_of_simulations(self, networkType: str):
+        dfs = []
+        for filename in filter(lambda x: networkType in x and "average" not in x, os.listdir("./data/weekly_testing2")):
+            dfs.append(pd.read_csv(f"./data/weekly_testing2/{filename}", header=0))
+
+        new_df = functools.reduce(lambda a, b: a.add(b, fill_value=0), dfs)
+
+        new_df = new_df / len(dfs)
+        new_df.to_csv(f"./data/weekly_testing2/{networkType}_average.csv", index=False)
+        return new_df
