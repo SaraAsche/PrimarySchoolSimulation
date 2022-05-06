@@ -24,10 +24,14 @@ def main():
     # analysis.accumulate_R0("Traffic_light.Y")
     # analysis.accumulate_R0("Traffic_light.R")
 
-    analysis.average_of_simulations("empiric")
-    analysis.average_of_simulations("FalseFalse")
-    analysis.average_of_simulations("TrueFalse")
-    analysis.average_of_simulations("TrueTrue")
+    # analysis.average_of_simulations("empiric")
+    # analysis.average_of_simulations("FalseFalse")
+    # analysis.average_of_simulations("TrueFalse")
+    # analysis.average_of_simulations("TrueTrue")
+
+    analysis.average_of_simulations("tested_weekly")
+    analysis.average_of_simulations("tested_biweekly")
+    analysis.average_of_simulations("not_tested")
 
     # analysis.pie_chart("./data/weekly_testing/not_tested_infection_by_p0.csv", save_as="not_tested_R0")
     # analysis.pie_chart("./data/weekly_testing/tested14_infection_by_p0.csv", save_as="tested14_R0")

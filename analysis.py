@@ -939,14 +939,14 @@ class Analysis:
     def average_of_simulations(self, networkType: str) -> pd.DataFrame:
         dfs = []
         for filename in filter(
-            lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/empiric_vs_model2/")
+            lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/weekly_testing/")
         ):
-            dfs.append(pd.read_csv(f"./data/empiric_vs_model2/{filename}", header=0))
+            dfs.append(pd.read_csv(f"./data/weekly_testing/{filename}", header=0))
 
         new_df = functools.reduce(lambda a, b: a.add(b, fill_value=0), dfs)
 
         new_df = new_df / len(dfs)
-        new_df.to_csv(f"./data/empiric_vs_model2/{networkType}_average.csv", index=False)
+        new_df.to_csv(f"./data/weekly_testing/{networkType}_average.csv", index=False)
         return new_df
 
     def accumulate_R0(self, networkType: str) -> pd.DataFrame:
@@ -954,10 +954,10 @@ class Analysis:
         for filename in sorted(
             filter(
                 lambda x: networkType in x and "average" not in x and "transmission" not in x,
-                os.listdir("./data/traffic_light"),
+                os.listdir("./data/weekly_testing"),
             )
         ):
-            with open(f"./data//traffic_light/{filename}") as f:
+            with open(f"./data//weekly_testing/{filename}") as f:
                 l.extend([int(x.split(",")[-1].strip("\n")) for x in f.readlines()])
                 print(filename)
 
