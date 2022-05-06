@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/empiric_vs_model/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -1179,9 +1179,9 @@ if __name__ == "__main__":
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
 
-    # ID = sys.argv[1]
+    ID = sys.argv[1]
 
-    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
+    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
     # disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
 
@@ -1201,18 +1201,18 @@ if __name__ == "__main__":
     #     lab="Red",
     #     colour="indianred",
     # )
-    # empiric vs model transmission
+    # mpiric vs model transmission
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model3/FalseFalse_average.csv", show=False, lab="Day two", colour="khaki"
+    #     "./data/empiric_vs_model2/FalseFalse_average.csv", show=False, lab="Day two", colour="khaki"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model3/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    #     "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model3/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    #     "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Model", colour="cadetblue"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model3/empiric_average.csv", show=True, lab="Model", colour="rosybrown"
+    #     "./data/empiric_vs_model2/empiric_average.csv", show=True, lab="Switch", colour="rosybrown"
     # )
 
     # testing
