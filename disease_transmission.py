@@ -1012,7 +1012,7 @@ class Disease_transmission:
             print(key)
             R_null_list = val
             df = pd.DataFrame(R_null_list)
-            df.to_csv(f"./data/traffic_light/{ID}_infection_by_p0.csv")
+            df.to_csv(f"./data/traffic_light/{key}_infection_by_p0{ID}.csv")
 
     def traffic_light_plots(self):
         self.plot_recovered(
@@ -1121,9 +1121,9 @@ class Disease_transmission:
 
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
 
-        tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
-        tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
-        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        # tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
+        # tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
+        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
         # self.save_to_file(tested7_average, "tested_weekly_average.csv")
         # self.save_to_file(tested14_average, "tested_biweekly_average.csv")
@@ -1177,7 +1177,7 @@ if __name__ == "__main__":
 
     ID = sys.argv[1]
 
-    disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
+    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
     # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
