@@ -23,6 +23,7 @@ def main():
     # analysis.accumulate_R0("Traffic_light.G")
     # analysis.accumulate_R0("Traffic_light.Y")
     # analysis.accumulate_R0("Traffic_light.R")
+
     analysis.average_of_simulations("empiric")
     analysis.average_of_simulations("FalseFalse")
     analysis.average_of_simulations("TrueFalse")

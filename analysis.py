@@ -954,10 +954,10 @@ class Analysis:
         for filename in sorted(
             filter(
                 lambda x: networkType in x and "average" not in x and "transmission" not in x,
-                os.listdir("./data/traffic_light2"),
+                os.listdir("./data/traffic_light"),
             )
         ):
-            with open(f"./data//empiric_vs_model2/{filename}") as f:
+            with open(f"./data//traffic_light/{filename}") as f:
                 l.extend([int(x.split(",")[-1].strip("\n")) for x in f.readlines()])
                 print(filename)
 
