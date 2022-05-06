@@ -290,9 +290,9 @@ class Disease_transmission:
         self.network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
         self.graph = self.network.get_graph()
+        self.network.reset_student_disease_states()
         self.students = self.network.get_students()
         self.patient_zero = None
-
         self.day_no = 0
         self.days = [self.graph]
 
@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -451,7 +451,8 @@ class Disease_transmission:
         """
         self.update_ias_ip(Ias)  # makes sure Ip and Ias are set.
 
-        self.reset()
+        self.patient_zero = None
+        self.day_no = 0
 
         days_dic = {}  # Keeps track of how many individuals are in the given state at time key
 
@@ -461,6 +462,9 @@ class Disease_transmission:
         else:
             self.graph = graph2.get_graph()
             self.students = graph2.get_students()
+
+        self.network.reset_student_disease_states()
+        self.days = [self.graph]
 
         for i in range(days):  # Meaning: 0-day-1
             if testing:
@@ -1175,9 +1179,9 @@ if __name__ == "__main__":
     disease_transmission = Disease_transmission(network)
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
 
-    ID = sys.argv[1]
+    # ID = sys.argv[1]
 
-    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
+    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
     # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
@@ -1198,19 +1202,18 @@ if __name__ == "__main__":
     #     colour="indianred",
     # )
     # empiric vs model transmission
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/day1FalseSwitchFalse_average.csv", show=False, lab="Day two", colour="khaki"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/day1TrueSwitchFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/day1TrueSwitchTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-    # )
-
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/model_average.csv", show=True, lab="Model", colour="rosybrown"
-    # )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/FalseFalse_average.csv", show=False, lab="Day two", colour="khaki"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/empiric_average.csv", show=True, lab="Model", colour="rosybrown"
+    )
 
     # testing
     # disease_transmission.plot_recovered(

@@ -129,8 +129,8 @@ def run_disease_transmission(iterations=10, days=100, ID=0):
                 save_to_file=f"{day1}{switch}{ID}",
             )
             for day in range(days):
-                # Saves the dic to interaction_dict
 
+                # Saves the dic to interaction_dict
                 for disease_key in [e for e in Disease_states] + ["R_null"]:
                     iterations_dict[(day1, switch)][day][disease_key] = (
                         iterations_dict.get((day1, switch), {}).get(day, {}).get(disease_key, 0) + dic[day][disease_key]
