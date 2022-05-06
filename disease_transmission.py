@@ -502,7 +502,7 @@ class Disease_transmission:
             self.day_no += 1
 
         if save_to_file:
-            with open(f"./data/empiric_vs_model2/{save_to_file}.csv", "w") as f:
+            with open(f"./data/empiric_vs_model/{save_to_file}.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
