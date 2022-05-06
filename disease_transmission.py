@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/empiric_vs_model2/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -999,19 +999,20 @@ class Disease_transmission:
                         d[stoplight][day][disease_key] = d[stoplight][day].get(disease_key, 0) + dic[day][disease_key]
                     R_null_dict[stoplight].append(people_infected_by_p0)
 
-        green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
-        yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
-        red_averages = self.calculate_averages(d[Traffic_light.R], iterations)
+        # green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
+        # yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
+        # red_averages = self.calculate_averages(d[Traffic_light.R], iterations)
 
-        self.save_to_file(green_averages, "Traffic_light.G_average.csv")
-        self.save_to_file(yellow_averages, "Traffic_light.Y_average.csv")
-        self.save_to_file(red_averages, "Traffic_light.R_average.csv")
+        # self.save_to_file(green_averages, "Traffic_light.G_average.csv")
+        # self.save_to_file(yellow_averages, "Traffic_light.Y_average.csv")
+        # self.save_to_file(red_averages, "Traffic_light.R_average.csv")
 
         print(R_null_dict)
         for key, val in R_null_dict.items():
+            print(key)
             R_null_list = val
             df = pd.DataFrame(R_null_list)
-            df.to_csv(f"./data/traffic_light2/{ID}_infection_by_p0.csv")
+            df.to_csv(f"./data/traffic_light/{ID}_infection_by_p0.csv")
 
     def traffic_light_plots(self):
         self.plot_recovered(
@@ -1038,7 +1039,7 @@ class Disease_transmission:
         filename : str
             The filename in which to save the dict as
         """
-        with open(f"./data/weekly_testing2/{filename}", "w") as f:
+        with open(f"./data/traffic_light/{filename}", "w") as f:
             f.write(
                 "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
             )
@@ -1077,6 +1078,8 @@ class Disease_transmission:
     def weekly_testing_transmission(self, iterations=1, days=100, ID=0):
         d = {}
         R_null_dict = {}
+
+        self.stoplight = Traffic_light.G
 
         for test in ["tested_weekly", "tested_biweekly", "not_tested"]:
             d[test] = {}
@@ -1174,22 +1177,22 @@ if __name__ == "__main__":
 
     ID = sys.argv[1]
 
-    # disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
+    disease_transmission.traffic_light_transmission(iterations=1, days=100, ID=ID)
 
-    disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
+    # disease_transmission.weekly_testing_transmission(1, 100, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.G_average.csv", show=False, lab="Green", colour="darkseagreen"
+    #     "./data/traffic_light2/Traffic_light.G_average.csv", show=False, lab="Green", colour="darkseagreen"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.Y_average.csv",
+    #     "./data/traffic_light2/Traffic_light.Y_average.csv",
     #     show=False,
     #     lab="Yellow",
     #     colour="gold",
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.R_average.csv",
+    #     "./data/traffic_light2/Traffic_light.R_average.csv",
     #     show=True,
     #     lab="Red",
     #     colour="indianred",
