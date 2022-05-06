@@ -1184,28 +1184,28 @@ if __name__ == "__main__":
     disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
 
-    # ID = sys.argv[1]
+    ID = sys.argv[1]
 
-    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
+    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
     # disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
 
     # Traffic light
-    disease_transmission.plot_recovered(
-        "./data/traffic_light/Traffic_light.G_average.csv", show=False, lab="Green", colour="darkseagreen"
-    )
-    disease_transmission.plot_recovered(
-        "./data/traffic_light/Traffic_light.Y_average.csv",
-        show=False,
-        lab="Yellow",
-        colour="gold",
-    )
-    disease_transmission.plot_recovered(
-        "./data/traffic_light/Traffic_light.R_average.csv",
-        show=True,
-        lab="Red",
-        colour="indianred",
-    )
+    # disease_transmission.plot_recovered(
+    #     "./data/traffic_light/Traffic_light.G_average.csv", show=False, lab="Green", colour="darkseagreen"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/traffic_light/Traffic_light.Y_average.csv",
+    #     show=False,
+    #     lab="Yellow",
+    #     colour="gold",
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/traffic_light/Traffic_light.R_average.csv",
+    #     show=True,
+    #     lab="Red",
+    #     colour="indianred",
+    # )
     # mpiric vs model transmission
     # disease_transmission.plot_recovered(
     #     "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Switch", colour="rosybrown"
