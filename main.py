@@ -14,10 +14,10 @@ def main():
         network = Network(int(num_students), int(num_grades), int(num_classes))
         network.generate_iterations(int(num_days))
     else:
-        network = Network(510, 5, 4)
+        network = Network(236, 5, 2)
     network.generate_a_day()
     analysis = Analysis(network)
-    analysis.heatmap(network.get_graph())
+
     # analysis.degree_distribution_layers(both=True, experimental=True, sim=network.get_graph())
     # analysis.pixel_dist_school(network.get_graph(), old=True, both=True)
     # analysis.average_of_simulations("Traffic_light.G")
@@ -32,17 +32,17 @@ def main():
     # analysis.average_of_simulations("TrueFalse")
     # analysis.average_of_simulations("TrueTrue")
 
-    # analysis.accumulate_R0("tested_weekly")
-    # analysis.accumulate_R0("tested_biweekly")
-    # analysis.accumulate_R0("not_tested")
+    analysis.accumulate_R0("tested_weekly")
+    analysis.accumulate_R0("tested_biweekly")
+    analysis.accumulate_R0("not_tested")
 
     # analysis.pie_chart(filename="./data/weekly_testing/not_tested_average_by_p0.csv", save_as="Biweekly")
     # analysis.pie_chart(filename="./data/weekly_testing/tested_biweekly_average_by_p0.csv", save_as="Weekly")
     # analysis.pie_chart(filename="./data/weekly_testing/tested_weekly_average_by_p0.csv", save_as="Not")
 
-    # analysis.average_of_simulations("tested_weekly")
-    # analysis.average_of_simulations("tested_biweekly")
-    # analysis.average_of_simulations("not_tested")
+    analysis.average_of_simulations("tested_weekly")
+    analysis.average_of_simulations("tested_biweekly")
+    analysis.average_of_simulations("not_tested")
 
     # analysis.pie_chart("./data/weekly_testing/not_tested_infection_by_p0.csv", save_as="not_tested_R0")
     # analysis.pie_chart("./data/weekly_testing/tested14_infection_by_p0.csv", save_as="tested14_R0")
