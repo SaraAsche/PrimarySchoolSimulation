@@ -379,7 +379,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/weekly_testing/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
