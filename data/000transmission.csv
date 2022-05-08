@@ -1,6 +1,0 @@
-Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null
-0,221,0,0,1,0,0,0,0,0
-1,221,0,0,1,0,0,0,0,0
-2,219,2,0,1,0,0,0,0,0
-3,218,3,0,0,1,0,0,0,0
-4,217,4,0,0,1,0,0,0,0

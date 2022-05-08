@@ -717,7 +717,7 @@ class Disease_transmission:
         if lab == "Average":
             plt.plot(x, y, label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
         else:
-            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=3)  # s=30
+            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
@@ -985,7 +985,7 @@ class Disease_transmission:
         df = pd.DataFrame(R_null_list)
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
-    def traffic_light_transmission(self, iterations=3, days=100, ID=0):
+    def traffic_light_transmission(self, iterations=1, days=100, ID=0):
         d = {}
         for e in Traffic_light:
             d[e] = {}
@@ -1104,7 +1104,7 @@ class Disease_transmission:
                         recovered_R0=True,
                         test_every=7,
                     )
-                if test == "tested_biweekly":  # str(ID),
+                elif test == "tested_biweekly":  # str(ID),
                     dic, recovered_R0 = self.run_transmission(
                         days=days,
                         save_to_file=(str(test) + str(ID)),
@@ -1161,7 +1161,7 @@ class Disease_transmission:
         n = 1
         for i in range(10, 20):
             self.plot_recovered(
-                f"{filename}/{testing_type}{i}transmission.csv",
+                f"{filename}{testing_type}{i}transmission.csv",
                 show=False,
                 lab=f"{n}",
                 colour=col,
@@ -1169,7 +1169,7 @@ class Disease_transmission:
             )
             n += 1
         self.plot_recovered(
-            f"{filename}/{testing_type}_average.csv",
+            f"{filename}{testing_type}_average.csv",
             show=True,
             lab=f"Average",
             colour=col,
@@ -1181,14 +1181,16 @@ if __name__ == "__main__":
 
     disease_transmission = Disease_transmission(network)
 
-    disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
+    # disease_transmission.plot_all_recovered(filename="./data/traffic_light/Traffic_light.", testing_type="G")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
+    # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_weekly")
+    # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="not_tested")
 
     ID = sys.argv[1]
 
-    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
+    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
-    # disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
+    disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
 
     # Traffic light
     # disease_transmission.plot_recovered(
@@ -1208,16 +1210,16 @@ if __name__ == "__main__":
     # )
     # mpiric vs model transmission
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Switch", colour="rosybrown"
+    #     "./data/empiric_vs_model/empiric_average.csv", show=False, lab="Model", colour="rosybrown"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Model", colour="cadetblue"
+    #     "./data/empiric_vs_model/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    #     "./data/empiric_vs_model/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
     # )
     # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
+    #     "./data/empiric_vs_model/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
     # )
 
     # testing

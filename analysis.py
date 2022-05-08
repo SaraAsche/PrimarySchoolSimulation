@@ -963,3 +963,5 @@ class Analysis:
 
         with open(f"./data/traffic_light/{networkType}_average_by_p0.csv", "w") as f:
             f.writelines(map(lambda x: str(x) + "\n", l))
+
+    

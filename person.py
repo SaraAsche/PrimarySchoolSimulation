@@ -480,6 +480,7 @@ class Person:
 
     def disease_state_start(self) -> str:
         """Resets the states, cohort, infected_on_day, recovered_on_day, infected_by to 0 or None"""
+        self.state = Disease_states.S
         self.states = dict([(e, 0) for e in Disease_states])
         self.cohort = None
         self.infected_on_day = None

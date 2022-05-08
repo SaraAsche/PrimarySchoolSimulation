@@ -143,7 +143,7 @@ def modularity(G):
 
 
 def main():
-    network = Network(225, 5, 2, class_treshold=23)
+    network = Network(236, 5, 2, class_treshold=23)
     net = network.generate_a_day()
 
     analysis = Analysis(network)
@@ -155,11 +155,11 @@ def main():
     # Heatmap of sim
     analysis.heatmap(network.get_graph())
 
-    # Degree dist layers. Endre på graf farge og type, ellers bra
-    analysis.degree_distribution_layers(both=True, experimental=True, sim=network.get_graph())
+    # Degree dist layers.
+    # analysis.degree_distribution_layers(both=True, experimental=True, sim=network.get_graph())
 
-    # Pixel dist layers: Endre på graf farge og type, ellers bra
-    analysis.pixel_dist_school(network.get_graph(), old=True, both=True)
+    # Pixel dist layers:
+    # analysis.pixel_dist_school(network.get_graph(), old=True, both=True)
 
 
 main()
