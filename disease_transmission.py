@@ -307,6 +307,7 @@ class Disease_transmission:
         R_null=False,
         recovered_R0=False,
         test_every=7,
+        static=False,
     ) -> dict:
         """Simulate and draw the disease transmission for multiple days
 
@@ -345,14 +346,16 @@ class Disease_transmission:
             if i == 0:  # Day 0, no disease_transmission. Patient zero is introduced
                 self.generate_patient_zero(sympt=sympt)  # Set patient to be symptomatic
             else:
-                if self.stoplight == Traffic_light.G:
-                    self.graph = self.generate_green_stoplight(self.graph)
-                elif self.stoplight == Traffic_light.Y:
-                    self.graph = self.generate_yellow_stoplight(self.graph)
-                elif self.stoplight == Traffic_light.R:
-                    self.graph = self.generate_red_stoplight(self.graph)
-                else:
-                    self.graph = self.network.generate_a_day()  # A new network is generated each day
+                if not static:
+                    if self.stoplight == Traffic_light.G:
+                        self.graph = self.generate_green_stoplight(self.graph)
+                    elif self.stoplight == Traffic_light.Y:
+                        self.graph = self.generate_yellow_stoplight(self.graph)
+                    elif self.stoplight == Traffic_light.R:
+                        self.graph = self.generate_red_stoplight(self.graph)
+                    else:
+                        self.graph = self.network.generate_a_day()  # A new network is generated each day
+
                 self.days.append(self.graph)
                 self.infection_spread()
 
@@ -379,7 +382,7 @@ class Disease_transmission:
 
         if save_to_file:  # The amount of individuals on certain days and R0 is saved to file
 
-            with open(f"./data/traffic_light/{save_to_file}transmission.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/{save_to_file}transmission.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -502,7 +505,7 @@ class Disease_transmission:
             self.day_no += 1
 
         if save_to_file:
-            with open(f"./data/empiric_vs_model/{save_to_file}.csv", "w") as f:
+            with open(f"./data/empiric_vs_model2/{save_to_file}.csv", "w") as f:
                 f.write(
                     "Day,Suceptible,Exposed,Infected_asymptomatic,Infected_presymptomatic,Infected_symptomatic,Recovered,Hospitalized,Death,R_null\n"
                 )
@@ -717,7 +720,7 @@ class Disease_transmission:
         if lab == "Average":
             plt.plot(x, y, label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
         else:
-            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
+            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=1)  # s=30
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
@@ -1185,15 +1188,15 @@ if __name__ == "__main__":
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-
+    disease_transmission.plot_all_recovered("./data/traffic_light/Traffic_light.", testing_type="Y")
     # disease_transmission.plot_all_recovered(filename="./data/traffic_light/Traffic_light.", testing_type="G")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_weekly")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="not_tested")
 
-    ID = sys.argv[1]
+    # ID = sys.argv[1]
 
-    disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
+    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
 
     # disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
 

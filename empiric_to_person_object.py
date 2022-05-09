@@ -105,6 +105,7 @@ def run_disease_transmission(iterations=10, days=100, ID=0):
     # Creates Disease_transmission objects for the empiric and simulated models
     dis1 = Disease_transmission(graph1)
     dis2 = Disease_transmission(net)
+    dis3 = Disease_transmission(net)
 
     # Generates a dict with keys being (bool, bool). The keys denote whether or not run_transmission
     # should begin on day1 (else day 2) and if it should switch between day 1 and day 2 every other days.
@@ -117,6 +118,7 @@ def run_disease_transmission(iterations=10, days=100, ID=0):
     model_int = dict([(i, {}) for i in range(days)])
     for i in range(0, iterations):
         dic2 = dis2.run_transmission(days=days, plot=False, save_to_file=f"empiric{ID}")
+        dic3 = dis3.run_transmission(days=days, plot=False, save_to_file=f"empiric_static{ID}", static=True)
         for day1, switch in [(True, False), (True, True), (False, False)]:
 
             dic = dis1.run_transmission_empiric(
@@ -128,17 +130,17 @@ def run_disease_transmission(iterations=10, days=100, ID=0):
                 plot=False,
                 save_to_file=f"{day1}{switch}{ID}",
             )
-            for day in range(days):
+            # for day in range(days):
 
-                # Saves the dic to interaction_dict
-                for disease_key in [e for e in Disease_states] + ["R_null"]:
-                    iterations_dict[(day1, switch)][day][disease_key] = (
-                        iterations_dict.get((day1, switch), {}).get(day, {}).get(disease_key, 0) + dic[day][disease_key]
-                    )
+            #     # Saves the dic to interaction_dict
+            #     for disease_key in [e for e in Disease_states] + ["R_null"]:
+            #         iterations_dict[(day1, switch)][day][disease_key] = (
+            #             iterations_dict.get((day1, switch), {}).get(day, {}).get(disease_key, 0) + dic[day][disease_key]
+            #         )
 
-        for day in range(days):
-            for disease_key in [e for e in Disease_states] + ["R_null"]:
-                model_int[day][disease_key] = model_int.get(day, {}).get(disease_key, 0) + dic2[day][disease_key]
+        # for day in range(days):
+        #     for disease_key in [e for e in Disease_states] + ["R_null"]:
+        #         model_int[day][disease_key] = model_int.get(day, {}).get(disease_key, 0) + dic2[day][disease_key]
 
     # # Takes the average of all the days and creates a new dict with day as key and an average disease states dicst as values
     # day1TrueSwitchFalse = {

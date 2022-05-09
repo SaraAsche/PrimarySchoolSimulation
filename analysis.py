@@ -931,7 +931,7 @@ class Analysis:
         # colors = sns.color_palette("dark")
         plt.pie(sizes, labels=labels, colors=colors)  # autopct="%0.0f%%"
         plt.tight_layout()
-        plt.savefig(f"./fig_master/R0_{save_as}.png", transparent=True, dpi=500)
+        # plt.savefig(f"./fig_master/R0_{save_as}.png", transparent=True, dpi=500)
 
         plt.axis("equal")
         plt.show()
@@ -963,5 +963,3 @@ class Analysis:
 
         with open(f"./data/weekly_testing/{networkType}_average_by_p0.csv", "w") as f:
             f.writelines(map(lambda x: str(x) + "\n", l))
-
-    
