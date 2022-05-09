@@ -24,18 +24,19 @@ def main():
     # analysis.average_of_simulations("Traffic_light.Y")
     # analysis.average_of_simulations("Traffic_light.R")
 
-    # analysis.average_of_simulations("empiric")
-    # analysis.average_of_simulations("FalseFalse")
-    # analysis.average_of_simulations("TrueFalse")
-    # analysis.average_of_simulations("TrueTrue")
+    analysis.average_of_simulations("empiric")
+    analysis.average_of_simulations("empiric_static")
+    analysis.average_of_simulations("FalseFalse")
+    analysis.average_of_simulations("TrueFalse")
+    analysis.average_of_simulations("TrueTrue")
 
     # analysis.accumulate_R0("tested_weekly")
     # analysis.accumulate_R0("tested_biweekly")
     # analysis.accumulate_R0("not_tested")
 
-    analysis.pie_chart(filename="./data/traffic_light/Traffic_light.G_average_by_p0.csv", save_as="Green")
-    analysis.pie_chart(filename="./data/traffic_light/Traffic_light.Y_average_by_p0.csv", save_as="Yellow")
-    analysis.pie_chart(filename="./data/traffic_light/Traffic_light.R_average_by_p0.csv", save_as="Red")
+    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.G_average_by_p0.csv", save_as="Green")
+    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.Y_average_by_p0.csv", save_as="Yellow")
+    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.R_average_by_p0.csv", save_as="Red")
 
     # analysis.pie_chart(filename="./data/weekly_testing/not_tested_average_by_p0.csv", save_as="Biweekly")
     # analysis.pie_chart(filename="./data/weekly_testing/tested_biweekly_average_by_p0.csv", save_as="Weekly")

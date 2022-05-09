@@ -1188,7 +1188,7 @@ if __name__ == "__main__":
     network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
 
     disease_transmission = Disease_transmission(network)
-    disease_transmission.plot_all_recovered("./data/traffic_light/Traffic_light.", testing_type="Y")
+    # disease_transmission.plot_all_recovered("./data/traffic_light/Traffic_light.", testing_type="Y")
     # disease_transmission.plot_all_recovered(filename="./data/traffic_light/Traffic_light.", testing_type="G")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
     # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_weekly")
@@ -1217,18 +1217,21 @@ if __name__ == "__main__":
     #     colour="indianred",
     # )
     # mpiric vs model transmission
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/empiric_average.csv", show=False, lab="Model", colour="rosybrown"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
-    # )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Dynamic model", colour="rosybrown"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/empiric_static_average.csv", show=False, lab="Static model", colour="grey"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    )
+    disease_transmission.plot_recovered(
+        "./data/empiric_vs_model2/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
+    )
 
     # testing
     # disease_transmission.plot_recovered(
