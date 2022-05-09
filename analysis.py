@@ -939,14 +939,14 @@ class Analysis:
     def average_of_simulations(self, networkType: str) -> pd.DataFrame:
         dfs = []
         for filename in filter(
-            lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/weekly_testing/")
+            lambda x: networkType in x and "average" not in x and "p0" not in x, os.listdir("./data/traffic_light/")
         ):
-            dfs.append(pd.read_csv(f"./data/weekly_testing/{filename}", header=0))
+            dfs.append(pd.read_csv(f"./data/traffic_light/{filename}", header=0))
 
         new_df = functools.reduce(lambda a, b: a.add(b, fill_value=0), dfs)
 
         new_df = new_df / len(dfs)
-        new_df.to_csv(f"./data/weekly_testing/{networkType}_average.csv", index=False)
+        new_df.to_csv(f"./data/traffic_light/{networkType}_average.csv", index=False)
         return new_df
 
     def accumulate_R0(self, networkType: str) -> pd.DataFrame:

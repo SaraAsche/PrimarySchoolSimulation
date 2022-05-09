@@ -1014,7 +1014,7 @@ class Disease_transmission:
         print(R_null_dict)
 
         for tL, R_null in R_null_dict.items():
-            with open(f"./data/traffic_light/{tL}_infection_by_p0{ID}.csv", "a") as f:
+            with open(f"./data/traffic_light/{tL}_average_by_p0.csv", "a+") as f:
                 f.write(f"{R_null}\n")
         # print(R_null_dict)
         # for key, val in R_null_dict.items():
