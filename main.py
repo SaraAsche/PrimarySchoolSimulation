@@ -18,48 +18,15 @@ def main():
     network.generate_a_day()
     analysis = Analysis(network)
 
-    # analysis.degree_distribution_layers(both=True, experimental=True, sim=network.get_graph())
-    # analysis.pixel_dist_school(network.get_graph(), old=True, both=True)
-    # analysis.average_of_simulations("Traffic_light.G")
-    # analysis.average_of_simulations("Traffic_light.Y")
-    # analysis.average_of_simulations("Traffic_light.R")
+    # Analysis of degree and interaction distribution as well as heatmap.
+    analysis = Analysis(network)
+    analysis.degree_distribution_layers(both=True, experimental=True, sim=network.get_graph())
+    analysis.pixel_dist_school(network.get_graph(), old=True, both=True)
+    analysis.heatmap()
 
-    analysis.average_of_simulations("empiric")
-    analysis.average_of_simulations("empiric_static")
-    analysis.average_of_simulations("FalseFalse")
-    analysis.average_of_simulations("TrueFalse")
-    analysis.average_of_simulations("TrueTrue")
-
-    # analysis.accumulate_R0("tested_weekly")
-    # analysis.accumulate_R0("tested_biweekly")
-    # analysis.accumulate_R0("not_tested")
-
-    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.G_average_by_p0.csv", save_as="Green")
-    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.Y_average_by_p0.csv", save_as="Yellow")
-    # analysis.pie_chart(filename="./data/traffic_light/Traffic_light.R_average_by_p0.csv", save_as="Red")
-
-    # analysis.pie_chart(filename="./data/weekly_testing/not_tested_average_by_p0.csv", save_as="Biweekly")
-    # analysis.pie_chart(filename="./data/weekly_testing/tested_biweekly_average_by_p0.csv", save_as="Weekly")
-    # analysis.pie_chart(filename="./data/weekly_testing/tested_weekly_average_by_p0.csv", save_as="Not")
-
-    # analysis.average_of_simulations("tested_weekly")
-    # analysis.average_of_simulations("tested_biweekly")
-    # analysis.average_of_simulations("not_tested")
-
-    # analysis.pie_chart("./data/weekly_testing/not_tested_infection_by_p0.csv", save_as="not_tested_R0")
-    # analysis.pie_chart("./data/weekly_testing/tested14_infection_by_p0.csv", save_as="tested14_R0")
-    # analysis.pie_chart("./data/weekly_testing/tested7_infection_by_p0.csv", save_as="tested7_R0")
-    # analysis.pie_chart("./data/traffic_light/Traffic_light.G_average_by_p0.csv", save_as="traffic_light.G")
-    # analysis.pie_chart("./data/traffic_light/Traffic_light.Y_average_by_p0.csv", save_as="traffic_light.Y")
-    # analysis.pie_chart("./data/traffic_light/Traffic_light.R_average_by_p0.csv", save_as="traffic_light.R")
-
-    # network.generate_a_day()
-    # analysis = Analysis(network)
-    # analysis.degree_distribution_layers(both=True, experimental=False)
-    # analysis.heatmap_asymptomatic_calibration()
-
-    # disease_transmission = Disease_transmission(network, stoplight=Traffic_light.G)
-    # disease_transmission.run_transmission(days=16, testing=True)
+    # Disease transmission run on 16 days
+    disease_transmission = Disease_transmission(network, stoplight=Traffic_light.G)
+    disease_transmission.run_transmission(days=16, testing=True)
 
 
 main()

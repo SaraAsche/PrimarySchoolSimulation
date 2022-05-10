@@ -37,11 +37,11 @@ def generate_network(day1=True) -> Network:
     """
     # Read dayone and daytwo csv
     dayone = pd.read_csv(
-        "./Empiric_network/dayOneNewIndex.csv",
+        "./data/Empiric_network/dayOneNewIndex.csv",
         names=["time", "stud1", "stud2", "class1", "class2", "count", "old1", "old2"],
     )
     daytwo = pd.read_csv(
-        "./Empiric_network/dayTwoNewIndex.csv",
+        "./data/Empiric_network/dayTwoNewIndex.csv",
         names=["time", "stud1", "stud2", "class1", "class2", "count", "old1", "old2"],
     )
 

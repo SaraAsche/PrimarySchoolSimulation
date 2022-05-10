@@ -236,7 +236,7 @@ class Analysis:
                 plt.show()
 
     def pickle_load(self, name, pixel=True) -> dict:
-        file_to_read = open("./pickles" + ("/pixel/" if pixel else "/degree/") + name, "rb")
+        file_to_read = open("./data/pickles" + ("/pixel/" if pixel else "/degree/") + name, "rb")
         return pickle.load(file_to_read)
 
     def pixel_dist_school(self, graph, old=False, both=False) -> None:
@@ -321,14 +321,14 @@ class Analysis:
                 handles, labels = axis[1, 1].get_legend_handles_labels()
                 figure.legend(handles, labels, loc="upper center")
 
-                plt.savefig("./fig_master/pixelDist_simulated_with.png", transparent=True, dpi=500)
+                plt.savefig("./data/fig_master/pixelDist_simulated_with.png", transparent=True, dpi=500)
 
                 plt.show()
 
             if i == 1:
 
                 figure.legend([])
-                plt.savefig("./fig_master/pixelDist_simulated_without.png", transparent=True, dpi=500)
+                plt.savefig("./data/fig_master/pixelDist_simulated_without.png", transparent=True, dpi=500)
 
                 plt.show()
 
@@ -398,11 +398,11 @@ class Analysis:
             for i in range(0, 2):
                 if i == 0:
                     sns.heatmap(A_M, robust=True)
-                    plt.savefig("./fig_master/heatmap_sim.png", transparent=True, dpi=500)
+                    plt.savefig("./data/fig_master/heatmap_sim.png", transparent=True, dpi=500)
                     plt.show()
                 else:
                     sns.heatmap(A_M, robust=False)
-                    plt.savefig("./fig_master/heatmap_sim_not_robust.png", transparent=True, dpi=500)
+                    plt.savefig("./data/fig_master/heatmap_sim_not_robust.png", transparent=True, dpi=500)
                     plt.show()
 
     # Generates histogram of degree distribution
@@ -685,11 +685,11 @@ class Analysis:
                 ## Adding a combined label according to the labels specified when plotting
                 handles, labels = axis[1, 1].get_legend_handles_labels()
                 figure.legend(handles, labels, loc="center")  # loc="lower center"
-                plt.savefig("./fig_master/degree_dist_sim_with.png", transparent=True, dpi=500)
+                plt.savefig("./data/fig_master/degree_dist_sim_with.png", transparent=True, dpi=500)
                 plt.show()
             if i == 1:
                 figure.legend([])
-                plt.savefig("./fig_master/degree_dist_sim_no_lable.png", transparent=True, dpi=500)
+                plt.savefig("./data/fig_master/degree_dist_sim_no_lable.png", transparent=True, dpi=500)
                 plt.show()
 
     def outlierDist(self, graph) -> None:
@@ -834,7 +834,7 @@ class Analysis:
         ax2.set_ylabel("Frequency")
 
         fig.tight_layout()
-        plt.savefig("./fig_master/full_analysis_simulated.png", transparent=True, dpi=500)
+        plt.savefig("./data/fig_master/full_analysis_simulated.png", transparent=True, dpi=500)
         plt.show()
 
     def getClasses(self, G):  # -> [{1a}, {1b}, {2a}, {2b}, {3a}, {3b}, {4a}, {4b}, {5a}, {5b}]
@@ -877,7 +877,7 @@ class Analysis:
         plt.show()
 
     def heatmap_asymptomatic_calibration(self):
-        pkl = open("./pickles/asymptomatic_calibration35.pickle", "rb")
+        pkl = open("./data/pickles/asymptomatic_calibration35.pickle", "rb")
         asymptotic_dict = pickle.load(pkl)
         print(asymptotic_dict)
         df = pd.DataFrame.from_dict(asymptotic_dict, orient="index")
@@ -934,7 +934,7 @@ class Analysis:
         # colors = sns.color_palette("dark")
         plt.pie(sizes, labels=labels, colors=colors)  # autopct="%0.0f%%"
         plt.tight_layout()
-        # plt.savefig(f"./fig_master/R0_{save_as}.png", transparent=True, dpi=500)
+        # plt.savefig(f"./data/fig_master/R0_{save_as}.png", transparent=True, dpi=500)
 
         plt.axis("equal")
         plt.show()

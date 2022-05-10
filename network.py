@@ -425,7 +425,7 @@ class Network:
             Defauls is pixel = True, meaning it is in the pixel folder
         """
 
-        file_to_read = open("./pickles/" + ("pixel/" if pixel else "degree/") + name, "rb")
+        file_to_read = open("./data/pickles/" + ("pixel/" if pixel else "degree/") + name, "rb")
         return pickle.load(file_to_read)
 
 

@@ -578,7 +578,7 @@ class Disease_transmission:
         )
 
         if block:
-            plt.savefig("./fig_master/transmission.png", transparent=True, dpi=500)
+            plt.savefig("./data/fig_master/transmission.png", transparent=True, dpi=500)
             plt.show(block=True)
 
         else:
@@ -720,7 +720,7 @@ class Disease_transmission:
         if lab == "Average":
             plt.plot(x, y, label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
         else:
-            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=1)  # s=30
+            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
@@ -741,7 +741,7 @@ class Disease_transmission:
             plt.yticks(fontsize=14)
             plt.legend()
             plt.tight_layout()
-            # plt.savefig("./fig_master/red_light_all.png", transparent=True, dpi=500)
+            # plt.savefig("./data/fig_master/red_light_all.png", transparent=True, dpi=500)
             plt.show()
 
     def plot_R0(self, filename):
@@ -792,7 +792,7 @@ class Disease_transmission:
         if plot:
             plt.show()
         else:
-            plt.savefig("./fig_master/R0_and_day.png", transparent=True, dpi=500)
+            plt.savefig("./data/fig_master/R0_and_day.png", transparent=True, dpi=500)
 
     def extract_r0_day(self) -> pd.DataFrame:
         """Extracts the number of infected, R0, symptomatic and count."""
@@ -964,7 +964,7 @@ class Disease_transmission:
             day_list = day_list / 20
             Ias_dict[Ias] = day_list.tolist()
 
-        with open("asymptomatic_calibration.pickle", "wb") as handle:
+        with open(".data/asymptomatic_calibration.pickle", "wb") as handle:
             pickle.dump(Ias_dict, handle)
 
     def sympt_asympt_R_0(self, iterations=100, sympt=True):
@@ -989,6 +989,17 @@ class Disease_transmission:
         df.to_csv(f"./asymptomatic_symptomatic/sympt:{sympt}.csv")
 
     def traffic_light_transmission(self, iterations=1, days=100, ID=0):
+        """Generates transmission for the three different traffic lights
+
+        Parameters
+        ----------
+        iterations : int
+            Determines how many times disease transmission should be run for the 12 days. Default is 100
+        days : bool
+            How many days transmission is run
+        ID : int
+            Used when simulations are run in parallel
+        """
         d = {}
         for e in Traffic_light:
             d[e] = {}
@@ -1027,18 +1038,19 @@ class Disease_transmission:
         #     df.to_csv(f"./data/traffic_light/{key}_infection_by_p0{ID}.csv")
 
     def traffic_light_plots(self):
+        """Plots the result of traffic light simulations"""
         self.plot_recovered(
-            "./data/traffic_light2/Traffic_light.G_average.csv",
+            "./data/traffic_light/Traffic_light.G_average.csv",
             show=False,
             lab="Green",
             colour="darkolivegreen",
             alpha=0.8,
         )
         self.plot_recovered(
-            "./data/traffic_light2/Traffic_light.Y_average.csv", show=False, lab="Yellow", colour="gold", alpha=0.8
+            "./data/traffic_light/Traffic_light.Y_average.csv", show=False, lab="Yellow", colour="gold", alpha=0.8
         )
         self.plot_recovered(
-            "./data/traffic_light2/Traffic_light.R_average.csv", show=True, lab="Red", colour="indianred", alpha=0.8
+            "./data/traffic_light/Traffic_light.R_average.csv", show=True, lab="Red", colour="indianred", alpha=0.8
         )
 
     def save_to_file(self, d, filename):
@@ -1070,6 +1082,15 @@ class Disease_transmission:
                 f.write(f"{key},{s},{e},{ia},{ip},{Is},{r},{h},{death},{r_null}\n")
 
     def calculate_averages(self, d, iterations):
+        """Calculates the average of a disease state dict d for a given number of iterations
+
+        Parameters
+        ----------
+        d : dict
+            Disease state dict containg Disease_states as keys and the number of individuals in a given state as values
+        iterations : int
+            Determines how many times disease transmission should be run for the 12 days. Default is 100
+        """
         dic = {}
 
         for day, states_dic in d.items():
@@ -1088,6 +1109,17 @@ class Disease_transmission:
         return dic
 
     def weekly_testing_transmission(self, iterations=1, days=100, ID=0):
+        """Generates transmission for the three different testing strategies: no testing, biweekly testing and weekly testing
+
+        Parameters
+        ----------
+        iterations : int
+            Determines how many times disease transmission should be run for the 12 days. Default is 100
+        days : bool
+            How many days transmission is run
+        ID : int
+            Used when simulations are run in parallel
+        """
         d = {}
         R_null_dict = {}
 
@@ -1156,7 +1188,15 @@ class Disease_transmission:
             df.to_csv(f"./data/weekly_testing/{key}_infection_by_p0{ID}.csv")
 
     def plot_all_recovered(self, filename, testing_type=None):  # red: indi
+        """Plots the day as a function of the number of recovered in a file containing the amount of individuals in disease states
 
+        Parameters
+        ----------
+        filename : str
+            String of repository for the file
+        testing_type : str
+            String name of file. Can be testing type or traffic light type
+        """
         if testing_type == "G":
             col = "darkolivegreen"
         elif testing_type == "Y":
@@ -1217,21 +1257,21 @@ if __name__ == "__main__":
     #     colour="indianred",
     # )
     # mpiric vs model transmission
-    disease_transmission.plot_recovered(
-        "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Dynamic model", colour="rosybrown"
-    )
-    disease_transmission.plot_recovered(
-        "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-    )
-    disease_transmission.plot_recovered(
-        "./data/empiric_vs_model2/empiric_static_average.csv", show=False, lab="Static model", colour="grey"
-    )
-    disease_transmission.plot_recovered(
-        "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-    )
-    disease_transmission.plot_recovered(
-        "./data/empiric_vs_model2/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
-    )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Dynamic model", colour="rosybrown"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model2/empiric_static_average.csv", show=False, lab="Static model", colour="grey"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
+    # )
+    # disease_transmission.plot_recovered(
+    #     "./data/empiric_vs_model2/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
+    # )
 
     # testing
     # disease_transmission.plot_recovered(

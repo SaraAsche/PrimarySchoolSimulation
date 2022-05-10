@@ -57,7 +57,7 @@ def spring_draw(G):
 
     plt.legend(scatterpoints=1, frameon=False)  # ["1", "2", "3", "4", "5"],
 
-    plt.savefig("./fig_master/sim_graph.png", transparent=True, dpi=500)
+    plt.savefig("./data/fig_master/sim_graph.png", transparent=True, dpi=500)
     plt.show()
     # alpha=0.8
     # Gcc = G
