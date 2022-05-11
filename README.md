@@ -29,7 +29,7 @@ disease_transmission.run_transmission(days=16, testing=True)
 
 ```
 
-This should produce a varying plot of transmission on the network and be a different variation of the image shown below
+This should produce a plot of transmission on the network and be a different variation of the image shown below
 
 ![This is an image](https://github.com/SaraAsche/PrimarySchoolSimulation/blob/master/data/fig_master/transmission.png)
 
