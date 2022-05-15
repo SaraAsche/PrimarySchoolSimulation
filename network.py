@@ -427,10 +427,3 @@ class Network:
 
         file_to_read = open("./data/pickles/" + ("pixel/" if pixel else "degree/") + name, "rb")
         return pickle.load(file_to_read)
-
-
-if __name__ == "__main__":
-    network = Network(num_students=236, num_grades=5, num_classes=2, class_treshold=23)
-    G = network.generate_a_day()
-
-    print(network.remove_all_interactions(G, network.get_students()[32]))

@@ -720,7 +720,7 @@ class Disease_transmission:
         if lab == "Average":
             plt.plot(x, y, label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
         else:
-            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=2)  # s=30
+            plt.plot(x, y, "-", label=lab, color=colour, alpha=alpha, linewidth=1)  # s=30
 
         plt.xlabel("Day")
         plt.ylabel("Recovered")
@@ -1013,29 +1013,30 @@ class Disease_transmission:
                     days=days, save_to_file=str(stoplight) + str(ID), plot=False, R_null=True, recovered_R0=False
                 )
                 R_null_dict[stoplight] = people_infected_by_p0
-                # for day in range(days):
-                #     for disease_key in [e for e in Disease_states] + ["R_null"]:
-                #         d[stoplight][day][disease_key] = d[stoplight][day].get(disease_key, 0) + dict_disease_states[day][disease_key]
-                #     R_null_dict[stoplight].append(people_infected_by_p0)
+                for day in range(days):
+                    for disease_key in [e for e in Disease_states] + ["R_null"]:
+                        d[stoplight][day][disease_key] = (
+                            d[stoplight][day].get(disease_key, 0) + dict_disease_states[day][disease_key]
+                        )
+                    R_null_dict[stoplight].append(people_infected_by_p0)
 
-        # green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
-        # yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
-        # red_averages = self.calculate_averages(d[Traffic_light.R], iterations)
+        green_averages = self.calculate_averages(d[Traffic_light.G], iterations)
+        yellow_averages = self.calculate_averages(d[Traffic_light.Y], iterations)
+        red_averages = self.calculate_averages(d[Traffic_light.R], iterations)
 
-        # self.save_to_file(green_averages, "Traffic_light.G_average.csv")
-        # self.save_to_file(yellow_averages, "Traffic_light.Y_average.csv")
-        # self.save_to_file(red_averages, "Traffic_light.R_average.csv")
-        print(R_null_dict)
+        self.save_to_file(green_averages, "Traffic_light.G_average.csv")
+        self.save_to_file(yellow_averages, "Traffic_light.Y_average.csv")
+        self.save_to_file(red_averages, "Traffic_light.R_average.csv")
 
         for tL, R_null in R_null_dict.items():
             with open(f"./data/traffic_light/{tL}_average_by_p0.csv", "a+") as f:
                 f.write(f"{R_null}\n")
-        # print(R_null_dict)
-        # for key, val in R_null_dict.items():
-        #     print(key)
-        #     R_null_list = val
-        #     df = pd.DataFrame(R_null_list)
-        #     df.to_csv(f"./data/traffic_light/{key}_infection_by_p0{ID}.csv")
+
+        for key, val in R_null_dict.items():
+
+            R_null_list = val
+            df = pd.DataFrame(R_null_list)
+            df.to_csv(f"./data/traffic_light/{key}_infection_by_p0{ID}.csv")
 
     def traffic_light_plots(self):
         """Plots the result of traffic light simulations"""
@@ -1165,13 +1166,13 @@ class Disease_transmission:
 
                         d[test][day][disease_key] = d[test][day].get(disease_key, 0) + dic[day][disease_key]
 
-        # tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
-        # tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
-        # not_tested_average = self.calculate_averages(d["not_tested"], iterations)
+        tested7_average = self.calculate_averages(d["tested_weekly"], iterations)
+        tested14_average = self.calculate_averages(d["tested_biweekly"], iterations)
+        not_tested_average = self.calculate_averages(d["not_tested"], iterations)
 
-        # self.save_to_file(tested7_average, "tested_weekly_average.csv")
-        # self.save_to_file(tested14_average, "tested_biweekly_average.csv")
-        # self.save_to_file(not_tested_average, "not_tested_average.csv")
+        self.save_to_file(tested7_average, "tested_weekly_average.csv")
+        self.save_to_file(tested14_average, "tested_biweekly_average.csv")
+        self.save_to_file(not_tested_average, "not_tested_average.csv")
 
         total_R0 = {}
         for tested, dict_of_iterations in R_null_dict.items():
@@ -1198,7 +1199,8 @@ class Disease_transmission:
             String name of file. Can be testing type or traffic light type
         """
         if testing_type == "G":
-            col = "darkolivegreen"
+            # col = "darkolivegreen"
+            col = "grey"
         elif testing_type == "Y":
             col = "goldenrod"
         elif testing_type == "R":
@@ -1207,7 +1209,7 @@ class Disease_transmission:
             col = "grey"
 
         n = 1
-        for i in range(10, 20):
+        for i in range(1, 11):
             self.plot_recovered(
                 f"{filename}{testing_type}{i}transmission.csv",
                 show=False,
@@ -1222,72 +1224,3 @@ class Disease_transmission:
             lab=f"Average",
             colour=col,
         )
-
-
-if __name__ == "__main__":
-    network = Network(num_students=222, num_grades=5, num_classes=2, class_treshold=23)
-
-    disease_transmission = Disease_transmission(network)
-    # disease_transmission.plot_all_recovered("./data/traffic_light/Traffic_light.", testing_type="Y")
-    # disease_transmission.plot_all_recovered(filename="./data/traffic_light/Traffic_light.", testing_type="G")
-    # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_biweekly")
-    # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="tested_weekly")
-    # disease_transmission.plot_all_recovered(filename="./data/weekly_testing", testing_type="not_tested")
-
-    # ID = sys.argv[1]
-
-    # disease_transmission.traffic_light_transmission(iterations=1, days=150, ID=ID)
-
-    # disease_transmission.weekly_testing_transmission(1, 150, ID=ID)
-
-    # Traffic light
-    # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.G_average.csv", show=False, lab="Green", colour="darkseagreen"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.Y_average.csv",
-    #     show=False,
-    #     lab="Yellow",
-    #     colour="gold",
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/traffic_light/Traffic_light.R_average.csv",
-    #     show=True,
-    #     lab="Red",
-    #     colour="indianred",
-    # )
-    # mpiric vs model transmission
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/empiric_average.csv", show=False, lab="Dynamic model", colour="rosybrown"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/TrueTrue_average.csv", show=False, lab="Switch", colour="cadetblue"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/empiric_static_average.csv", show=False, lab="Static model", colour="grey"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/TrueFalse_average.csv", show=False, lab="Day one", colour="darkgoldenrod"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/empiric_vs_model2/FalseFalse_average.csv", show=True, lab="Day two", colour="khaki"
-    # )
-
-    # testing
-    # disease_transmission.plot_recovered(
-    #     "./data/weekly_testing/not_tested_average.csv", show=False, lab="Not tested", colour="rosybrown"
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/weekly_testing/tested_biweekly_average.csv",
-    #     show=False,
-    #     lab="Biweekly tested",
-    #     colour="darkgoldenrod",
-    #     tested=True,
-    # )
-    # disease_transmission.plot_recovered(
-    #     "./data/weekly_testing/tested_weekly_average.csv",
-    #     show=True,
-    #     lab="Weekly tested",
-    #     colour="darkseagreen",
-    #     tested=True,
-    # )
