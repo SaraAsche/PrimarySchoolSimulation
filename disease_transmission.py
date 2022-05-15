@@ -20,16 +20,13 @@ Date: 14.02.2022
 File: disease_transmission.py
 """
 
-from cProfile import label
-from cgi import test
 
-from matplotlib import testing
 from enums import Disease_states, Traffic_light
 from network import Network
 from person import Person
 import random
 from helpers import Helpers
-from pprint import pprint
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import networkx as nx
