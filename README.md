@@ -37,7 +37,7 @@ If there are any questions regarding the use of the code, do not hesitate to con
 
 [^1]:
     Juliette Stehle, Nicolas Voirin, Alain Barrat, Ciro Cattuto, Lorenzo Isella, Jean-
-Franc ̧ois Pinton, Marco Quaggiotto, Wouter Van den Broeck, Corinne R ́egis,
+Francois Pinton, Marco Quaggiotto, Wouter Van den Broeck, Corinne Regis,
 Bruno Lina, and Philippe Vanhems. High-resolution measurements of face-to-
 face contact patterns in a primary school. PLOS ONE, 6(8):e23176, 08 2011.
 doi:10.1371/journal.pone.0023176.
