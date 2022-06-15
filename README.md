@@ -36,5 +36,8 @@ This should produce a plot of transmission on the network and be a different var
 If there are any questions regarding the use of the code, do not hesitate to contact me on saraj.asche@gmail.com.
 
 [^1]:
-    Alain Barrat, Ciro Cattuto, Alberto. E. Tozzi, Philippe Vanhems, and
-    Nicholar Voirin. Measuring contact patterns with wearable sensors: methods, data characteristics and applications to data-driven simulations of infectious diseases. Clinical Microbiology and Infection, 20(1):10–16, 2014. doi: 10.1111/1469-0691.12472
+    Juliette Stehle, Nicolas Voirin, Alain Barrat, Ciro Cattuto, Lorenzo Isella, Jean-
+Franc ̧ois Pinton, Marco Quaggiotto, Wouter Van den Broeck, Corinne R ́egis,
+Bruno Lina, and Philippe Vanhems. High-resolution measurements of face-to-
+face contact patterns in a primary school. PLOS ONE, 6(8):e23176, 08 2011.
+doi:10.1371/journal.pone.0023176.
